@@ -1,4 +1,4 @@
-use super::init::{build_and_dumb_to_fs, TestHelper};
+use super::init::{build_and_dump_to_fs, TestHelper};
 use radix_engine_interface::prelude::*;
 use scrypto::*;
 use scrypto_test::prelude::*;
@@ -26,7 +26,7 @@ pub fn admin_update_price(
         .deposit_batch(helper.owner_account_address);
 
     helper.test_runner.execute_manifest(
-        build_and_dumb_to_fs(manifest, "admin_update_price".into()),
+        build_and_dump_to_fs(manifest, "admin_update_price".into()),
         vec![NonFungibleGlobalId::from_public_key(
             &helper.owner_public_key,
         )],
@@ -44,7 +44,7 @@ pub fn get_price(
     );
 
     let receipt = helper.test_runner.execute_manifest(
-        build_and_dumb_to_fs(manifest, "get_price".into()),
+        build_and_dump_to_fs(manifest, "get_price".into()),
         vec![NonFungibleGlobalId::from_public_key(
             &helper.owner_public_key,
         )],
@@ -97,7 +97,7 @@ pub fn get_resource(
         .deposit_batch(user_account_address);
 
     helper.test_runner.execute_manifest(
-        build_and_dumb_to_fs(manifest_builder_0, "get_resource".into()),
+        build_and_dump_to_fs(manifest_builder_0, "get_resource".into()),
         vec![NonFungibleGlobalId::from_public_key(&user_public_key)],
     )
 }
@@ -147,7 +147,7 @@ pub fn market_update_pool_state(
     );
 
     let receipt = helper.test_runner.execute_manifest(
-        build_and_dumb_to_fs(manifest, "update_pool_state".into()),
+        build_and_dump_to_fs(manifest, "update_pool_state".into()),
         vec![NonFungibleGlobalId::from_public_key(
             &helper.owner_public_key,
         )],
@@ -183,7 +183,7 @@ pub fn market_contribute(
         .deposit_batch(user_account_address);
 
     helper.test_runner.execute_manifest(
-        build_and_dumb_to_fs(manifest_builder, "contribute".into()),
+        build_and_dump_to_fs(manifest_builder, "contribute".into()),
         vec![NonFungibleGlobalId::from_public_key(&user_public_key)],
     )
 }
@@ -211,7 +211,7 @@ pub fn market_redeem(
         .deposit_batch(user_account_address);
 
     helper.test_runner.execute_manifest(
-        build_and_dumb_to_fs(manifest_builder, "redeem".into()),
+        build_and_dump_to_fs(manifest_builder, "redeem".into()),
         vec![NonFungibleGlobalId::from_public_key(&user_public_key)],
     )
 }
@@ -254,7 +254,7 @@ pub fn market_create_cdp(
         .deposit_batch(user_account_address);
 
     helper.test_runner.execute_manifest(
-        build_and_dumb_to_fs(manifest_builder_0, "create_cdp".into()),
+        build_and_dump_to_fs(manifest_builder_0, "create_cdp".into()),
         vec![NonFungibleGlobalId::from_public_key(&user_public_key)],
     )
 }
@@ -292,7 +292,7 @@ pub fn market_add_collateral(
         .deposit_batch(user_account_address);
 
     helper.test_runner.execute_manifest(
-        build_and_dumb_to_fs(manifest_builder, "add_collateral".into()),
+        build_and_dump_to_fs(manifest_builder, "add_collateral".into()),
         vec![NonFungibleGlobalId::from_public_key(&user_public_key)],
     )
 }
@@ -328,7 +328,7 @@ pub fn market_remove_collateral(
         .deposit_batch(user_account_address);
 
     helper.test_runner.execute_manifest(
-        build_and_dumb_to_fs(manifest_builder, "remove_collateral".into()),
+        build_and_dump_to_fs(manifest_builder, "remove_collateral".into()),
         vec![NonFungibleGlobalId::from_public_key(&user_public_key)],
     )
 }
@@ -363,7 +363,7 @@ pub fn market_borrow(
         .deposit_batch(user_account_address);
 
     helper.test_runner.execute_manifest(
-        build_and_dumb_to_fs(manifest_builder, "borrow".into()),
+        build_and_dump_to_fs(manifest_builder, "borrow".into()),
         vec![NonFungibleGlobalId::from_public_key(&user_public_key)],
     )
 }
@@ -401,7 +401,7 @@ pub fn market_repay(
         .deposit_batch(user_account_address);
 
     helper.test_runner.execute_manifest(
-        build_and_dumb_to_fs(manifest_builder, "repay".into()),
+        build_and_dump_to_fs(manifest_builder, "repay".into()),
         vec![NonFungibleGlobalId::from_public_key(&user_public_key)],
     )
 }
@@ -428,7 +428,7 @@ pub fn market_start_liquidation(
         .deposit_batch(user_account_address);
 
     helper.test_runner.execute_manifest(
-        build_and_dumb_to_fs(manifest_builder, "start_liquidation".into()),
+        build_and_dump_to_fs(manifest_builder, "start_liquidation".into()),
         vec![NonFungibleGlobalId::from_public_key(&user_public_key)],
     )
 }
@@ -476,7 +476,7 @@ pub fn market_end_liquidation(
         });
 
     helper.test_runner.execute_manifest(
-        build_and_dumb_to_fs(manifest_builder, "end_liquidation".into()),
+        build_and_dump_to_fs(manifest_builder, "end_liquidation".into()),
         vec![NonFungibleGlobalId::from_public_key(&user_public_key)],
     )
 }
@@ -526,7 +526,7 @@ pub fn market_fast_liquidation(
         .deposit_batch(user_account_address);
 
     helper.test_runner.execute_manifest(
-        build_and_dumb_to_fs(manifest_builder, "start_liquidation".into()),
+        build_and_dump_to_fs(manifest_builder, "start_liquidation".into()),
         vec![NonFungibleGlobalId::from_public_key(&user_public_key)],
     )
 }

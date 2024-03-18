@@ -5,7 +5,7 @@ use scrypto_test::prelude::*;
 use scrypto_unit::*;
 use std::path::Path;
 
-use crate::helpers::init::build_and_dumb_to_fs;
+use crate::helpers::init::build_and_dump_to_fs;
 
 use super::{faucet::FaucetTestHelper, price_feed::PriceFeedTestHelper};
 
@@ -63,7 +63,7 @@ impl MarketTestHelper {
             .deposit_batch(owner_account_address);
 
         let receipt = test_runner.execute_manifest(
-            build_and_dumb_to_fs(manifest, "Instantiate_market".into()),
+            build_and_dump_to_fs(manifest, "Instantiate_market".into()),
             vec![NonFungibleGlobalId::from_public_key(&owner_public_key)],
         );
         println!("{:?}\n", receipt);
@@ -201,7 +201,7 @@ impl MarketTestHelper {
             .deposit_batch(owner_account_address);
 
         let receipt3 = test_runner.execute_manifest(
-            build_and_dumb_to_fs(manifest_builder, "create_lending_pools".into()),
+            build_and_dump_to_fs(manifest_builder, "create_lending_pools".into()),
             vec![NonFungibleGlobalId::from_public_key(&owner_public_key)],
         );
 

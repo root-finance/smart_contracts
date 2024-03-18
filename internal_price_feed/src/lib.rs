@@ -1,9 +1,43 @@
 use scrypto::prelude::*;
 
+#[derive(ScryptoSbor, Clone, Debug)]
+pub struct PriceData {
+   pub pair_index: u32,
+   pub price: u128,
+   pub timestamp: u64,
+   pub round: u64,
+   pub decimal: u16
+}
+
+impl PriceData {
+   pub fn to_decimal_price(&self) -> Decimal {
+       Decimal::from(self.price) / 10.pow(self.decimal)
+   }
+}
+
+// Define derive data structure to handle the data pairs that are derived using price updates recieved.
+#[derive(ScryptoSbor, Debug)]
+pub struct DerivedData {
+   pub round_difference : i64,
+   pub derived_price : u128,
+   pub decimal : u16
+}
+
 #[derive(ScryptoSbor, Clone)]
 pub struct PriceInfo {
-    pub timestamp: i64,
-    pub price: Decimal,
+   pub timestamp: i64,
+   pub price: Decimal,
+}
+
+
+/// Supra requires price info to be fetched first an then additional entries can be expressed as quotient or multiplication of predefined pairs, 
+/// available here: https://supra.com/docs/data-feeds/data-feeds-index
+#[derive(ScryptoSbor, Clone, Debug)]
+pub enum PriceFeedStrategy {
+    /// Read the price from data pairs (price info must be available): pair_id_1, pair_id_2, operation (0 = multiplication,  1 = division)
+    DataPairs(Vec<(u32, u32, u32)>),
+    /// Read price info directly: index, operation (0 = normal, 1 = inverse)
+    PriceInfo(u32, u32)
 }
 
 #[derive(ScryptoSbor, NonFungibleData)]
@@ -26,6 +60,7 @@ mod price_feed {
             mint_updater_badge => restrict_to: [admin];
             update_updater_badge => restrict_to: [admin];
             admin_update_price => restrict_to: [admin];
+            admin_update_feed => restrict_to: [admin];
 
             update_price => restrict_to: [updater];
 
@@ -33,8 +68,26 @@ mod price_feed {
         }
     }
 
+    extern_blueprint!(
+        "package_sim1ph6xspj0xlmspjju2asxg7xnucy7tk387fufs4jrfwsvt85wvqf70a", // resim sdk
+        // "package_sim1phhyaadjcggz9vs26vp5rl52pvsa0mppqkfkt9ld7rqdndxpzcl9j8", // testing
+        // "package_tdx_2_1p5d0u603fjmut66kwf29wrmjt5l0ug4aaxvugqs7pmlwaxpuemuj04", // stokenet
+        
+        contract_pull as ContractPull {
+             fn verify_proofs_and_get_data(&self, data: Vec<u8>) -> Vec<PriceData>;
+             fn get_derived_svalue(&self, pair_id_1: u32, pair_id_2: u32, operation: u32) -> DerivedData ;
+        }
+    );
+    const CP: Global<ContractPull> = global_component!(
+        ContractPull,
+        "component_sim1cpyeaya6pehau0fn7vgavuggeev64gahsh05dauae2uu25njcsk6j7" // resim sdk
+        // "component_sim1czs7227zwrn4h0wrqfcxsw0pvlkxslt8k5w5aadkl0ctz4aagus7n6" // testing
+        // "component_tdx_2_1czvw86xcxdafjkl9nmk6ejq8yp6rhcj5eydn39pxydaf0ny040k2md" // stokenet
+    );
+
     pub struct PriceFeed {
         prices: IndexMap<ResourceAddress, PriceInfo>,
+        feed: IndexMap<ResourceAddress, (Vec<u8>, PriceFeedStrategy)>,
         updater_badge_manager: ResourceManager,
         updater_counter: u64,
     }
@@ -75,6 +128,7 @@ mod price_feed {
 
             Self {
                 prices: IndexMap::new(),
+                feed: IndexMap::new(),
                 updater_badge_manager,
                 updater_counter: 0,
             }
@@ -114,6 +168,13 @@ mod price_feed {
                 },
             );
         }
+        pub fn admin_update_feed(&mut self, resource: ResourceAddress, proofs: Vec<u8>, strategy: PriceFeedStrategy) {
+           CP.verify_proofs_and_get_data(proofs.clone());
+            self.feed.insert(
+                resource,
+                (proofs, strategy)
+            );
+        }
 
         // * Updater Methods * //
 
@@ -145,7 +206,39 @@ mod price_feed {
         // * Public Methods * //
 
         pub fn get_price(&self, quote: ResourceAddress) -> Option<PriceInfo> {
-            self.prices.get(&quote).cloned()
+            match self.prices.get(&quote) {
+                Some(price_info) => Some(price_info.clone()),
+                None => self.feed.get(&quote).and_then(|(proofs, strategy)| {
+                    let now = Clock::current_time(TimePrecision::Minute).seconds_since_unix_epoch;
+                    match strategy {
+                        PriceFeedStrategy::DataPairs(data_pairs) => {
+                            let price: Decimal = data_pairs.iter().map(|(pair_id_1, pair_id_2, operation)| {
+                                let derived_data = CP.get_derived_svalue(pair_id_1.clone(), pair_id_2.clone(), operation.clone());
+                                derived_data.derived_price
+                            }).fold(1u128, |acc, price| acc * price).into();
+                            Some(PriceInfo {
+                                timestamp: now,
+                                price
+                            })
+                        },
+                        PriceFeedStrategy::PriceInfo(pair_index, operation) => {
+                            match CP.verify_proofs_and_get_data(proofs.clone()).into_iter().find(|e| e.pair_index == *pair_index) {
+                                Some(price_data) => {
+                                    let price: Decimal = match operation {
+                                        1 => 1/price_data.to_decimal_price(),
+                                        _ => price_data.to_decimal_price()
+                                    };
+                                    Some(PriceInfo {
+                                        timestamp: now,
+                                        price
+                                    })
+                                }
+                                None => None
+                            } 
+                        }
+                    }
+                })   
+            }
         }
 
         // * Helpers * //

@@ -92,7 +92,16 @@ pub mod single_resource_pool {
             /* CHECK INPUTS */
             assert_fungible_res_address(pool_res_address, None);
 
+            let pool_res_symbol: String = ResourceManager::from_address(pool_res_address)
+            .get_metadata("symbol").expect("Pool resource symbol not provided").unwrap_or_default();
+
             let pool_unit_res_manager = ResourceBuilder::new_fungible(owner_role)
+                .metadata(metadata! {
+                    init {
+                        "name" => format!("{pool_res_symbol} RToken"), locked;
+                        "symbol" => format!("R{pool_res_symbol}"), locked;
+                    }
+                })
                 .mint_roles(mint_roles! {
                     minter => component_rule.clone();
                     minter_updater => rule!(deny_all);

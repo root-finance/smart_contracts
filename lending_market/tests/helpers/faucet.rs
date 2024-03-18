@@ -5,7 +5,7 @@ use scrypto_test::prelude::*;
 use scrypto_unit::*;
 use std::path::Path;
 
-use crate::helpers::init::build_and_dumb_to_fs;
+use crate::helpers::init::build_and_dump_to_fs;
 
 use super::price_feed::PriceFeedTestHelper;
 
@@ -41,7 +41,7 @@ impl FaucetTestHelper {
             .deposit_batch(owner_account_address);
 
         let receipt_0 = test_runner.execute_manifest(
-            build_and_dumb_to_fs(manifest_builder_0, "faucet_instantiate".into()),
+            build_and_dump_to_fs(manifest_builder_0, "faucet_instantiate".into()),
             vec![NonFungibleGlobalId::from_public_key(&owner_public_key)],
         );
         let result_0 = receipt_0.expect_commit(true);
@@ -73,7 +73,7 @@ impl FaucetTestHelper {
             .deposit_batch(owner_account_address);
 
         let receipt_1 = test_runner.execute_manifest(
-            build_and_dumb_to_fs(manifest_builder_1, "create_resource_USDC".into()),
+            build_and_dump_to_fs(manifest_builder_1, "create_resource_USDC".into()),
             vec![NonFungibleGlobalId::from_public_key(&owner_public_key)],
         );
         let result_1 = receipt_1.expect_commit(true);
@@ -110,7 +110,7 @@ impl FaucetTestHelper {
 
         let _result_2 = test_runner
             .execute_manifest(
-                build_and_dumb_to_fs(manifest_builder_2, "price_feed_update_price".into()),
+                build_and_dump_to_fs(manifest_builder_2, "price_feed_update_price".into()),
                 vec![NonFungibleGlobalId::from_public_key(&owner_public_key)],
             )
             .expect_commit(true);

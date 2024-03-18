@@ -1,37 +1,17 @@
+CALL_METHOD Address("account_sim1cy49ev4j2rzaa0v2qs3ej0r03svmp8z707luw0sjudxacjld96q4z2") "lock_fee" Decimal("100");
 CALL_METHOD
-    Address("account_sim1cy63acqkwe2m9pqkhwutzxrzrd76u5jqvqjcp86vz8tvptv2wl29he")
-    "lock_fee"
-    Decimal("100");
-CALL_METHOD
-    Address("component_sim1cz7nslnl63293nnp3x5qz7hxjhrktwk5vxvs7f9tzhz3fa3y5dt4xx")
-    "start_liquidation"
-    NonFungibleLocalId("#1#")
-    Array<Address>(
-        Address("resource_sim1tknxxxxxxxxxradxrdxxxxxxxxx009923554798xxxxxxxxxakj8n3")
-    )
-    Enum<0u8>();
+    Address("account_sim1cy49ev4j2rzaa0v2qs3ej0r03svmp8z707luw0sjudxacjld96q4z2")
+    "withdraw"
+    Address("resource_sim1tknxxxxxxxxxradxrdxxxxxxxxx009923554798xxxxxxxxxakj8n3")
+    Decimal("10000");
 TAKE_ALL_FROM_WORKTOP
     Address("resource_sim1tknxxxxxxxxxradxrdxxxxxxxxx009923554798xxxxxxxxxakj8n3")
     Bucket("xrd_bucket");
 CALL_METHOD
-    Address("component_sim1cr83jvujvukmf29glqw058dr70adwkn7gfagvn6uuqgerg2fkkkt8c")
+    Address("component_sim1cr2x5le5yz0nmlalgn0ejh8cntw59hzkcrhlsa04tq540m8yyhgw2l")
     "get_resource"
-    Address("resource_sim1t5evcrus703e80qmpajx2rmaz2dtpgs4uf8ad27rk3t8h5spwkgdrz")
+    Address("resource_sim1t46drp02a3jzqt70r4lh8y3y78hv04l73p5r5x9944xgafdc32zt57")
     Bucket("xrd_bucket"); 
-TAKE_ALL_FROM_WORKTOP
-    Address("resource_sim1t5evcrus703e80qmpajx2rmaz2dtpgs4uf8ad27rk3t8h5spwkgdrz")
-    Bucket("udsc_bucket");
-TAKE_ALL_FROM_WORKTOP
-    Address("resource_sim1n20qac3sy55e9xmex9d29c4gpw40u0kxxhrfsqhfkzjpvr8krmv7wc")
-    Bucket("liquidation_term_bucket");
-CALL_METHOD
-    Address("component_sim1cz7nslnl63293nnp3x5qz7hxjhrktwk5vxvs7f9tzhz3fa3y5dt4xx")
-    "end_liquidation"
-    Array<Bucket>(
-        Bucket("udsc_bucket")
-    )
-    Bucket("liquidation_term_bucket");
-CALL_METHOD
-    Address("account_sim1cy63acqkwe2m9pqkhwutzxrzrd76u5jqvqjcp86vz8tvptv2wl29he")
-    "deposit_batch"
-    Expression("ENTIRE_WORKTOP");
+TAKE_ALL_FROM_WORKTOP Address("resource_sim1t46drp02a3jzqt70r4lh8y3y78hv04l73p5r5x9944xgafdc32zt57") Bucket("usdt_bucket");
+CALL_METHOD Address("component_sim1crnu4t6rhpvg3t9wdffp46x7qszj927tcpxuzsykrgd65uw9w6wwjp") "contribute"  Bucket("usdt_bucket");
+CALL_METHOD Address("account_sim1cy49ev4j2rzaa0v2qs3ej0r03svmp8z707luw0sjudxacjld96q4z2") "deposit_batch" Expression("ENTIRE_WORKTOP");

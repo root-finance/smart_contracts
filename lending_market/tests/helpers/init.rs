@@ -55,7 +55,7 @@ impl TestHelper {
     }
 }
 
-pub fn build_and_dumb_to_fs(
+pub fn build_and_dump_to_fs(
     manifest_builder: ManifestBuilder,
     name: String,
 ) -> TransactionManifestV1 {
