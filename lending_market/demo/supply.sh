@@ -1,6 +1,5 @@
 #!/usr/bin/env sh
 
-source ./baseline.sh 
 # ------------------------------------------------------------------------------------ Supply
 resim set-default-account $LP_PROVIDER_ADDRESS  $LP_PROVIDER_PVKEY $LP_PROVIDER_NONFUNGIBLEGLOBALID
 
