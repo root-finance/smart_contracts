@@ -117,6 +117,7 @@ mod lending_market {
 
             // Liquidation methods
 
+            list_liquidable_cdps => PUBLIC;
             refinance => PUBLIC;
             start_liquidation => PUBLIC;
             end_liquidation => PUBLIC;
@@ -501,6 +502,32 @@ mod lending_market {
         }
 
         ///*  CDP CREATION AND MANAGEMENT METHODS * ///
+
+        pub fn list_liquidable_cdps(&mut self) -> Vec<WrappedCDPData> {
+            let range_min = self.cdp_counter.saturating_sub(self.market_config.max_cdp_position as u64);
+            let range_max = self.cdp_counter;
+
+            let mut results = vec![];
+            for cdp_id in range_min..range_max {
+                let cdp_id = &NonFungibleLocalId::Integer(cdp_id.into());
+                if self.cdp_res_manager.non_fungible_exists(cdp_id) {
+                    let (cdp_data, delegator_cdp_data) = self._get_cdp_data(&cdp_id, true);
+
+                    let mut cdp_health_checker = CDPHealthChecker::new(
+                        &cdp_data,
+                        delegator_cdp_data.as_ref(),
+                        &mut self.pool_states,
+                    );
+
+                    if cdp_health_checker
+                        .can_liquidate().is_ok() {
+                        results.push(cdp_data)
+                    }
+                }
+            }
+
+            results
+        }
 
         pub fn create_cdp(
             &mut self,

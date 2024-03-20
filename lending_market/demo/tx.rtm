@@ -1,17 +1,37 @@
-CALL_METHOD Address("") "lock_fee" Decimal("100");
 CALL_METHOD
-    Address("")
-    "withdraw"
-    Address("")
-    Decimal("10000");
+    Address("account_sim1c93cfqlemw3hjm7kfys8kjjfgcmpqvr63t0lh0zdn4x79kughvntr0")
+    "lock_fee"
+    Decimal("100");
+CALL_METHOD
+    Address("component_sim1crnu4t6rhpvg3t9wdffp46x7qszj927tcpxuzsykrgd65uw9w6wwjp")
+    "start_liquidation"
+    NonFungibleLocalId("#1#")
+    Array<Address>(
+        Address("resource_sim1tknxxxxxxxxxradxrdxxxxxxxxx009923554798xxxxxxxxxakj8n3")
+    )
+    Enum<0u8>();
 TAKE_ALL_FROM_WORKTOP
-    Address("")
+    Address("resource_sim1tknxxxxxxxxxradxrdxxxxxxxxx009923554798xxxxxxxxxakj8n3")
     Bucket("xrd_bucket");
 CALL_METHOD
-    Address("")
+    Address("component_sim1cr2x5le5yz0nmlalgn0ejh8cntw59hzkcrhlsa04tq540m8yyhgw2l")
     "get_resource"
-    Address("")
+    Address("resource_sim1t46drp02a3jzqt70r4lh8y3y78hv04l73p5r5x9944xgafdc32zt57")
     Bucket("xrd_bucket"); 
-TAKE_ALL_FROM_WORKTOP Address("") Bucket("usdt_bucket");
-CALL_METHOD Address("") "contribute"  Bucket("usdt_bucket");
-CALL_METHOD Address("") "deposit_batch" Expression("ENTIRE_WORKTOP");
+TAKE_ALL_FROM_WORKTOP
+    Address("resource_sim1t46drp02a3jzqt70r4lh8y3y78hv04l73p5r5x9944xgafdc32zt57")
+    Bucket("udst_bucket");
+TAKE_ALL_FROM_WORKTOP
+    Address("resource_sim1ng9t26lqtx9ymnqqlckestfn2rfl4gexfnx57t3k8ezt4828f86a8x")
+    Bucket("liquidation_term_bucket");
+CALL_METHOD
+    Address("component_sim1crnu4t6rhpvg3t9wdffp46x7qszj927tcpxuzsykrgd65uw9w6wwjp")
+    "end_liquidation"
+    Array<Bucket>(
+        Bucket("udst_bucket")
+    )
+    Bucket("liquidation_term_bucket");
+CALL_METHOD
+    Address("account_sim1c93cfqlemw3hjm7kfys8kjjfgcmpqvr63t0lh0zdn4x79kughvntr0")
+    "deposit_batch"
+    Expression("ENTIRE_WORKTOP");
