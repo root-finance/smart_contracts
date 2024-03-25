@@ -16,10 +16,12 @@ pub struct LiquidationTerm {
     pub cdp_id: NonFungibleLocalId,
     pub payement_value: Decimal,
 }
+
 #[derive(ScryptoSbor)]
 pub enum TransientResDataType {
     BatchFlashloanItem(IndexMap<ResourceAddress, BatchFlashloanItem>),
     LiquidationTerm(LiquidationTerm),
+    LiquidationPeek(Vec<WrappedCDPData>)
 }
 
 #[derive(ScryptoSbor, NonFungibleData)]
@@ -114,8 +116,8 @@ pub fn create_transient_res_manager(
             minter_updater => rule!(deny_all);
         })
         .burn_roles(burn_roles! {
-            burner => component_rule;
-            burner_updater => rule!(deny_all);
+            burner => rule!(allow_all);
+            burner_updater => rule!(allow_all);
         })
         .deposit_roles(deposit_roles! {
             depositor => rule!(deny_all);
