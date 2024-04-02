@@ -3,7 +3,7 @@ source ./baseline.sh
 source ./supply.sh
 source ./borrow.sh
 
-# ------------------------------------------------------------------------------------ Liquidation
+# ------------------------------------------------------------------------------------ List CDPs
 resim set-current-time 2024-03-01T12:07:00Z
 
 resim set-default-account $OWNER_ADDRESS  $OWNER_PVKEY $OWNER_NONFUNGIBLEGLOBALID
