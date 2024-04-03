@@ -42,9 +42,9 @@ pub enum DepositType {
 pub mod staking_pool {
 
     extern_blueprint!(
-        "package_sim1pkwaf2l9zkmake5h924229n44wp5pgckmpn0lvtucwers56awywems", // resim sdk
+        // "package_sim1pkwaf2l9zkmake5h924229n44wp5pgckmpn0lvtucwers56awywems", // resim sdk
         // "package_sim1p40gjy9kwhn9fjwf9jur0axx72f7c36l6tx3z3vzefp0ytczcql99n", // testing
-        // "package_tdx_2_1p4l8s3qymr20yr7hchwex582z3lmm37p8g56qzvtqerm3av8rtn0ue",  // stokenet
+        "package_tdx_2_1p4l8s3qymr20yr7hchwex582z3lmm37p8g56qzvtqerm3av8rtn0ue",  // stokenet
         SingleResourcePool {
 
             fn instantiate(

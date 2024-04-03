@@ -3,13 +3,15 @@ source ./baseline.sh
 
 echo "" > tx.rtm;
 
+export CDP_ID="#2#";
+
 # ------------------------------------------------------------------------------------ Borrow
 echo "CALL_METHOD
     Address(\"$BORROWER_ADDRESS\")
     \"create_proof_of_non_fungibles\"
     Address(\"$LENDING_MARKET_CDP_RESOURCE_ADDRESS\")
     Array<NonFungibleLocalId>(
-        NonFungibleLocalId(\"#1#\")
+        NonFungibleLocalId(\"$CDP_ID\")
     )
 ;" >> tx.rtm
 

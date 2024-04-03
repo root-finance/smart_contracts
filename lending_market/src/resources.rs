@@ -20,8 +20,7 @@ pub struct LiquidationTerm {
 #[derive(ScryptoSbor)]
 pub enum TransientResDataType {
     BatchFlashloanItem(IndexMap<ResourceAddress, BatchFlashloanItem>),
-    LiquidationTerm(LiquidationTerm),
-    LiquidationPeek(Vec<WrappedCDPData>)
+    LiquidationTerm(LiquidationTerm)
 }
 
 #[derive(ScryptoSbor, NonFungibleData)]

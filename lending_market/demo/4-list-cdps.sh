@@ -13,7 +13,7 @@ echo "CALL_METHOD
     \"lock_fee\"
     Decimal(\"100\");" > tx.rtm
 echo "CALL_METHOD Address(\"$OWNER_ADDRESS\") \"create_proof_of_non_fungibles\"  Address(\"$PRICE_FEED_ADMIN_BADGE\")  Array<NonFungibleLocalId>(NonFungibleLocalId(\"#1#\"));" >> tx.rtm
-echo "CALL_METHOD Address(\"$PRICE_FEED_COMPONENT_ADDRESS\") \"admin_update_price\" Address(\"$USDT_RESOURCE_ADDRESS\") Decimal(\"26\");" >> tx.rtm
+echo "CALL_METHOD Address(\"$PRICE_FEED_COMPONENT_ADDRESS\") \"admin_update_price\" Address(\"$USDT_RESOURCE_ADDRESS\") Decimal(\"30\");" >> tx.rtm
 echo "CALL_METHOD Address(\"$OWNER_ADDRESS\") \"deposit_batch\" Expression(\"ENTIRE_WORKTOP\");" >> tx.rtm
 resim run tx.rtm
 
@@ -30,15 +30,6 @@ echo "CALL_METHOD
 echo "CALL_METHOD
     Address(\"$LENDING_MARKET_COMPONENT_ADDRESS\")
     \"list_liquidable_cdps\"
-;" >> tx.rtm
-
-echo "TAKE_ALL_FROM_WORKTOP
-    Address(\"$LENDING_LIQUIDATION_PEEK_RESOURCE_ADDRESS\")
-    Bucket(\"liqidation_peek_bucket\")
-;" >> tx.rtm 
-
-echo "BURN_RESOURCE
-    Bucket(\"liqidation_peek_bucket\")
 ;" >> tx.rtm
 
 resim run tx.rtm
