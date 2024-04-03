@@ -72,12 +72,12 @@ echo "CALL_METHOD
     Expression(\"ENTIRE_WORKTOP\");" >> tx.rtm
 
 
-export LENDING_MARKET_COMPONENT_ADDRESS=component_tdx_2_1czaz7w94hyw4tyus9p7lmc68nruruud2e076dglujp8s7hjq7p2a5h
-export LENDING_MARKET_ADMIN_ADDRESS=resource_tdx_2_1n27z7emuvlmdc4r9s2ncxplwtm33jhd34tqqr2ql7tezfdnd2dv4cl
-export LENDING_MARKET_RESERVE_COLLECTOR_BADGE=resource_tdx_2_1ntyqj3n2p8zwwfemkrtxfhplw52m9z2fjmeqc2m4tyqckr324f3jge
-export LENDING_MARKET_CDP_RESOURCE_ADDRESS=resource_tdx_2_1ng4r8j9qsjc34wdpd07adkwdty5za0huzg3k43mjwf2arcz229tjap
-export LENDING_BATCH_FLASH_LOAN_RESOURCE_ADDRESS=resource_tdx_2_1nfk0rrefj78vr7um8ghx4zn732akyl4pu5gxmwmemyu0g4j2s84ksu
-export LENDING_LIQUIDATION_TERM_RESOURCE_ADDRESS=resource_tdx_2_1nfk0rrefj78vr7um8ghx4zn732akyl4pu5gxmwmemyu0g4j2s84ksu
+export LENDING_MARKET_COMPONENT_ADDRESS=component_tdx_2_1czyar79nj556nafg4m4duxzrf3t8f27wu8cdd903kg7rx8wpgrjzmu
+export LENDING_MARKET_ADMIN_ADDRESS=resource_tdx_2_1ngdatt9haxlr8c68kfpm4pdkm67nda5g67664zg83zwejq8ue850pk
+export LENDING_MARKET_RESERVE_COLLECTOR_BADGE=resource_tdx_2_1nf0x3eg6zk2k2a6z4k3nd9gt562wnl2u0upgt5gq4uxp3k8pnwtmrn
+export LENDING_MARKET_CDP_RESOURCE_ADDRESS=resource_tdx_2_1n2nt0tmjd39kc8gysdrntl76tyylqt5rkeqeawfppds5s2tzszaw38
+export LENDING_BATCH_FLASH_LOAN_RESOURCE_ADDRESS=resource_tdx_2_1ntpyl3zdes5ma30r4jd72vy8taxkjv92pe8zaw09ke9h3je70nhc5m
+export LENDING_LIQUIDATION_TERM_RESOURCE_ADDRESS=resource_tdx_2_1ntpyl3zdes5ma30r4jd72vy8taxkjv92pe8zaw09ke9h3je70nhc5m
 
 # ------------------------------------------------------------------------------------ Create liquidity pools
 echo "CALL_METHOD Address(\"$OWNER_ADDRESS\") \"create_proof_of_non_fungibles\" Address(\"$LENDING_MARKET_ADMIN_ADDRESS\") Array<NonFungibleLocalId>(NonFungibleLocalId(\"#1#\"),NonFungibleLocalId(\"#2#\"),NonFungibleLocalId(\"#3#\"),NonFungibleLocalId(\"#4#\"));" >> tx.rtm
@@ -163,10 +163,10 @@ echo "CALL_METHOD
     Expression(\"ENTIRE_WORKTOP\");" >> tx.rtm
 
 # ------------------------------------------------------------------------------------ Create liquidity pool provider account
-LP_PROVIDER_ADDRESS=account_tdx_2_12890ptdk2m7298eatk65wkgky4zv5vu6uca3qtvqv6zd2tj8t0rl9p
+LP_PROVIDER_ADDRESS=account_tdx_2_1285jcu8wkxlz8kpp3euyhwq08fqwhcrahxt273eapvvsl7wsmyals8
 
 # ------------------------------------------------------------------------------------ Create borrower account
-BORROWER_ADDRESS=account_tdx_2_12xujvlcj5gg2acmwzg8d397kkhek2ly3l0xvtcwwz7n3zpkjutvwdn
+BORROWER_ADDRESS=account_tdx_2_12x326aecwaepr3jmxycxfhk3cde3l9lcew5e04rm7h8nq30kefn33a
 
 # ------------------------------------------------------------------------------------ Create Liquidator account
 LIQUIDATOR_ADDRESS=account_tdx_2_12y8g9hxfa8vx4ut85hqsrkdqehyjxvrgu28htdc0cjanzuu6hxxucl

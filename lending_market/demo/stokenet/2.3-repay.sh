@@ -3,13 +3,15 @@ source ./baseline.sh
 
 echo "" > tx.rtm;
 
+export CDP_ID="#4#";
+
 # ------------------------------------------------------------------------------------ Repay
 
 echo "CALL_METHOD
     Address(\"$BORROWER_ADDRESS\")
     \"withdraw\"
     Address(\"$USDT_RESOURCE_ADDRESS\")
-    Decimal(\"265\");"  >> tx.rtm 
+    Decimal(\"100\");"  >> tx.rtm 
 
 echo "TAKE_ALL_FROM_WORKTOP
     Address(\"$USDT_RESOURCE_ADDRESS\")
@@ -21,7 +23,7 @@ echo "CALL_METHOD
     \"create_proof_of_non_fungibles\"
     Address(\"$LENDING_MARKET_CDP_RESOURCE_ADDRESS\")
     Array<NonFungibleLocalId>(
-        NonFungibleLocalId(\"#1#\")
+        NonFungibleLocalId(\"$CDP_ID\")
     )
 ;" >> tx.rtm
 
@@ -37,4 +39,10 @@ echo "CALL_METHOD
     Array<Bucket>(
         Bucket(\"res_bucket_0\")
     )
+;" >> tx.rtm
+
+echo "CALL_METHOD
+    Address(\"$BORROWER_ADDRESS\")
+    \"deposit_batch\"
+    Expression(\"ENTIRE_WORKTOP\")
 ;" >> tx.rtm

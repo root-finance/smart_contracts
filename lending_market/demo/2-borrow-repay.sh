@@ -46,4 +46,10 @@ echo "CALL_METHOD
     )
 ;" >> tx.rtm
 
+echo "CALL_METHOD
+    Address(\"$BORROWER_ADDRESS\")
+    \"deposit_batch\"
+    Expression(\"ENTIRE_WORKTOP\")
+;" >> tx.rtm
+
 resim run tx.rtm

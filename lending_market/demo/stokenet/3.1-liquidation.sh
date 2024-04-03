@@ -4,10 +4,12 @@ source ./baseline.sh
 
 echo "" > tx.rtm;
 
+export CDP_ID="#3#";
+
 echo "CALL_METHOD
     Address(\"$LENDING_MARKET_COMPONENT_ADDRESS\")
     \"start_liquidation\"
-    NonFungibleLocalId(\"#1#\")
+    NonFungibleLocalId(\"$CDP_ID\")
     Array<Address>(
         Address(\"$XRD\")
     )

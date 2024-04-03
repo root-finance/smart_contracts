@@ -3,7 +3,7 @@ source ./baseline.sh
 
 echo "" > tx.rtm;
 
-export CDP_ID="#2#";
+export CDP_ID="#4#";
 
 # ------------------------------------------------------------------------------------ Borrow
 echo "CALL_METHOD

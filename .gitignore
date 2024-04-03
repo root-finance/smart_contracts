@@ -14,4 +14,4 @@ Cargo.lock
 **/*.rs.bk
 
 # Misc
-.DS_Store
+**/tx.rtm
