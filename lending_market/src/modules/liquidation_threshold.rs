@@ -10,7 +10,7 @@ pub enum UpdateLiquidationThresholdInput {
     AssetTypeEntry(u8, Option<Decimal>),
 }
 
-#[derive(ScryptoSbor, Clone)]
+#[derive(ScryptoSbor, Clone, Debug)]
 pub struct LiquidationThreshold {
     pub identical_resource: Option<Decimal>,
     pub identical_asset_type: Option<Decimal>,

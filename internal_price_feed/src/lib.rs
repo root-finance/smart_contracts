@@ -71,8 +71,8 @@ mod price_feed {
 
     extern_blueprint!(
         // "package_sim1ph6xspj0xlmspjju2asxg7xnucy7tk387fufs4jrfwsvt85wvqf70a", // resim sdk
-        // "package_sim1phhyaadjcggz9vs26vp5rl52pvsa0mppqkfkt9ld7rqdndxpzcl9j8", // testing
-        "package_tdx_2_1p5d0u603fjmut66kwf29wrmjt5l0ug4aaxvugqs7pmlwaxpuemuj04", // stokenet
+        "package_sim1phhyaadjcggz9vs26vp5rl52pvsa0mppqkfkt9ld7rqdndxpzcl9j8", // testing
+        // "package_tdx_2_1p5d0u603fjmut66kwf29wrmjt5l0ug4aaxvugqs7pmlwaxpuemuj04", // stokenet
         
         contract_pull as ContractPull {
              fn verify_proofs_and_get_data(&self, data: Vec<u8>) -> Vec<PriceData>;
@@ -82,8 +82,8 @@ mod price_feed {
     const CP: Global<ContractPull> = global_component!(
         ContractPull,
         // "component_sim1cpyeaya6pehau0fn7vgavuggeev64gahsh05dauae2uu25njcsk6j7" // resim sdk
-        // "component_sim1czs7227zwrn4h0wrqfcxsw0pvlkxslt8k5w5aadkl0ctz4aagus7n6" // testing
-        "component_tdx_2_1czvw86xcxdafjkl9nmk6ejq8yp6rhcj5eydn39pxydaf0ny040k2md" // stokenet
+        "component_sim1czs7227zwrn4h0wrqfcxsw0pvlkxslt8k5w5aadkl0ctz4aagus7n6" // testing
+        // "component_tdx_2_1czvw86xcxdafjkl9nmk6ejq8yp6rhcj5eydn39pxydaf0ny040k2md" // stokenet
     );
 
     pub struct PriceFeed {

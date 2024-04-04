@@ -117,7 +117,9 @@ impl MarketTestHelper {
                         None::<Decimal>,
                         5i64,
                         15i64,
-                        240i64
+                        240i64,
+                        dec!("0.75"),
+                        dec!("1"),
                     ),
                     (
                         dec!(0.05),
@@ -183,7 +185,9 @@ impl MarketTestHelper {
                         None::<Decimal>,
                         5i64,
                         15i64,
-                        240i64
+                        240i64,
+                        dec!("0.75"),
+                        dec!("1"),
                     ),
                     (
                         dec!(0.05),

@@ -63,7 +63,7 @@ impl PositionData {
 }
 
 /// Extends the collateral position with necessary information for the CDP health check
-#[derive(ScryptoSbor, Clone)]
+#[derive(ScryptoSbor, Clone, Debug)]
 pub struct ExtendedCollateralPositionData {
     pub pool_res_address: ResourceAddress,
     pub price: Decimal,
@@ -94,7 +94,7 @@ impl ExtendedCollateralPositionData {
 }
 
 /// Extends the loan position with necessary information for the CDP health check
-#[derive(ScryptoSbor, Clone)]
+#[derive(ScryptoSbor, Clone, Debug)]
 pub struct ExtendedLoanPositionData {
     pub pool_res_address: ResourceAddress,
     pub price: Decimal,
@@ -102,6 +102,7 @@ pub struct ExtendedLoanPositionData {
     pub loan_close_factor: Decimal,
     pub data: PositionData,
     pub discounted_collateral_value: Decimal,
+    pub ltv_limit: Decimal,
 }
 impl ExtendedLoanPositionData {
     pub fn load_onledger_data(
@@ -154,7 +155,7 @@ impl ExtendedLoanPositionData {
 /// Extends the CDP with necessary information for the CDP health check and call method of the related lending pool
 /// In addition the Extended CDP can combine multiple CDP and perform health check on the batch. this is useful for delegatee CDP
 ///
-#[derive(ScryptoSbor, Clone)]
+#[derive(ScryptoSbor, Clone, Debug)]
 pub struct CDPHealthChecker {
     /// The type of the CDP. Tree types are supported: Standard, Delegator and Delegatee
     cdp_type: CDPType,
@@ -330,8 +331,13 @@ impl CDPHealthChecker {
     pub fn check_cdp(&mut self) -> Result<(), String> {
         self._update_health_check_data()?;
 
-        if self.total_loan_to_value_ratio > Decimal::ONE {
-            return Err("LTV need to be lower 1".to_string());
+        for (res, position) in &self.loan_positions {
+            if self.total_loan_to_value_ratio > position.ltv_limit {
+                return Err(format!(
+                    "Loan of resource {:?}: LTV ratio was {} but need to be lower than {}",
+                    res, self.total_loan_to_value_ratio, position.ltv_limit
+                ));
+            }
         }
 
         //
@@ -362,8 +368,13 @@ impl CDPHealthChecker {
     pub fn can_liquidate(&mut self) -> Result<(), String> {
         self._update_health_check_data()?;
 
-        if self.total_loan_to_value_ratio <= Decimal::ONE {
-            return Err("This CDP can not be liquidated: LTV ratio lower than 1".into());
+        for (res, position) in &self.loan_positions {
+            if self.total_loan_to_value_ratio <= position.ltv_limit {
+                return Err(format!(
+                    "Loan of resource {:?} can not be liquidated: LTV ratio of {} is lower than {}",
+                    res, self.total_loan_to_value_ratio, position.ltv_limit
+                ));
+            }
         }
 
         Ok(())
@@ -436,7 +447,7 @@ impl CDPHealthChecker {
                     asset_type: pool_state.pool_config.asset_type,
 
                     loan_close_factor: pool_state.pool_config.loan_close_factor,
-
+                    ltv_limit: pool_state.pool_config.ltv_limit,
                     data: PositionData {
                         units: dec!(0),
                         amount: dec!(0),

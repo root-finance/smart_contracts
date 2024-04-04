@@ -17,6 +17,8 @@ fn get_default_pool_config() -> PoolConfig {
         price_update_period: 3600,
         interest_update_period: 3600,
         price_expiration_period: 3601,
+        optimal_usage: dec!(0.75),
+        ltv_limit: dec!(1),
     }
 }
 

@@ -20,6 +20,9 @@ pub enum UpdatePoolConfigInput {
     InterestUpdatePeriod(i64),
     PriceUpdatePeriod(i64),
     PriceExpirationPeriod(i64),
+
+    OptimalUsage(Decimal),
+    LtvLimit(Decimal),
 }
 
 pub enum CheckPoolConfigLimitInput {
@@ -48,6 +51,9 @@ pub struct PoolConfig {
     pub interest_update_period: i64,
     pub price_update_period: i64,
     pub price_expiration_period: i64,
+
+    pub optimal_usage: Decimal,
+    pub ltv_limit: Decimal,
 }
 impl PoolConfig {
     pub fn check(&self) -> Result<(), String> {
@@ -101,6 +107,14 @@ impl PoolConfig {
 
         if self.price_expiration_period <= self.price_update_period {
             return Err("Price expiration period must be greater than price update period".into());
+        }
+
+        if !is_valid_rate(self.optimal_usage) {
+            return Err("Optimal usage must be between 0 and 1".into());
+        }
+
+        if !is_valid_rate(self.ltv_limit) {
+            return Err("LTV limit must be between 0 and 1".into());
         }
 
         Ok(())
@@ -158,6 +172,12 @@ impl PoolConfig {
 
             UpdatePoolConfigInput::PriceExpirationPeriod(price_expiration_period) => {
                 self.price_expiration_period = price_expiration_period;
+            }
+            UpdatePoolConfigInput::OptimalUsage(optimal_usage) => {
+                self.optimal_usage = optimal_usage;
+            }
+            UpdatePoolConfigInput::LtvLimit(ltv_limit) => {
+                self.ltv_limit = ltv_limit;
             }
         };
 
