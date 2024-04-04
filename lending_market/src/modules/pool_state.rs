@@ -288,7 +288,7 @@ impl LendingPoolState {
 
             self.interest_updated_at = now;
 
-            self.interest_rate = self.interest_strategy.get_interest_rate(pool_utilization)?;
+            self.interest_rate = self.interest_strategy.get_interest_rate(pool_utilization, self.pool_config.optimal_usage)?;
 
             // Calculate interest rate down to a minute (1 YEAR = 525600 minutes)
             let minute_interest_rate = PreciseDecimal::ONE + (self.interest_rate / MINUTE_PER_YEAR);

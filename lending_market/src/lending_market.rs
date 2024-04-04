@@ -23,8 +23,8 @@ pub enum UpdateDelegateeCDPnput {
 mod lending_market {
 
     extern_blueprint!(
-        // "package_sim1p4nk9h5kw2mcmwn5u2xcmlmwap8j6dzet7w7zztzz55p70rgqs4vag", // resim sdk
-        "package_sim1pkc0e8f9yhlvpv38s2ymrplu7q366y3k8zc53zf2srlm7qm64fk043", // testing
+        "package_sim1p4nk9h5kw2mcmwn5u2xcmlmwap8j6dzet7w7zztzz55p70rgqs4vag", // resim sdk
+        // "package_sim1pkc0e8f9yhlvpv38s2ymrplu7q366y3k8zc53zf2srlm7qm64fk043", // testing
         // "package_tdx_2_1phqmc3pcvggna0xtprl6lvdhvrgps4kmkcdlgcp7lamxnna8q440d9",  // stokenet
         SingleResourcePool {
 
@@ -278,7 +278,7 @@ mod lending_market {
             price_feed_component: Global<AnyComponent>,
             pool_res_address: ResourceAddress,
             pool_config: PoolConfig,
-            interest_strategy_break_points: (Decimal, Vec<ISInputBreakPoint>),
+            interest_strategy_break_points: InterestStrategyBreakPoints,
             liquidation_threshold: LiquidationThreshold,
         ) {
             assert!(
@@ -322,10 +322,7 @@ mod lending_market {
 
             // set_breakpoints will check the validity of the breakpoints
             interest_strategy
-                .set_breakpoints(
-                    interest_strategy_break_points.0,
-                    interest_strategy_break_points.1,
-                )
+                .set_breakpoints(interest_strategy_break_points)
                 .expect("Invalid interest strategy breakpoints");
 
             let last_price_info =
@@ -414,14 +411,13 @@ mod lending_market {
         pub fn update_interest_strategy(
             &mut self,
             pool_res_address: ResourceAddress,
-            initial_rate: Decimal,
-            interest_options_break_points: Vec<ISInputBreakPoint>,
+            interest_strategy_break_points: InterestStrategyBreakPoints,
         ) {
             let mut pool_state = self._get_pool_state(&pool_res_address, None, None);
 
             pool_state
                 .interest_strategy
-                .set_breakpoints(initial_rate, interest_options_break_points)
+                .set_breakpoints(interest_strategy_break_points)
                 .expect("Invalid interest strategy breakpoints");
         }
 

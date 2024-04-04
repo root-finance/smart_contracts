@@ -230,14 +230,14 @@ fn test_liquidation() {
     let usd = helper.faucet.usdc_resource_address;
 
     let cdp_id: u64 = 1;
-    // // Borrow 400$  Of USD
+    // // Borrow 300$  Of USD
     market_borrow(
         &mut helper,
         borrower_key,
         borrower_account,
         cdp_id,
         usd,
-        dec!(400),
+        dec!(300),
     )
     .expect_commit_success();
 

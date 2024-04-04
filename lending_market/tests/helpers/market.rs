@@ -118,12 +118,11 @@ impl MarketTestHelper {
                         5i64,
                         15i64,
                         240i64,
-                        dec!("0.75"),
-                        dec!("1"),
+                        dec!("0.45"),
+                        dec!("0.7"),
                     ),
                     (
-                        dec!(0.05),
-                        vec![(dec!(0), dec!("0.3")), (dec!("0.4"), dec!("3"))]
+                        dec!(0), dec!(0.04), dec!(3.00)
                     ),
                     (
                         None::<Decimal>,
@@ -186,12 +185,11 @@ impl MarketTestHelper {
                         5i64,
                         15i64,
                         240i64,
-                        dec!("0.75"),
-                        dec!("1"),
+                        dec!("0.8"),
+                        dec!("0.8"),
                     ),
                     (
-                        dec!(0.05),
-                        vec![(dec!(0), dec!("0.5")), (dec!("0.8"), dec!("5"))]
+                        dec!(0), dec!(0.04), dec!(0.75)
                     ),
                     (
                         None::<Decimal>,

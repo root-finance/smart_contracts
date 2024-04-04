@@ -95,20 +95,12 @@ echo "CALL_METHOD Address(\"$LENDING_MARKET_COMPONENT_ADDRESS\") \"create_lendin
         Enum<0u8>(),
         5i64,
         15i64,
-        240i64
+        240i64,
+        Decimal(\"0.45\"),
+        Decimal(\"0.7\")
     )
     Tuple(
-        Decimal(\"0.05\"),
-        Array<Tuple>(
-            Tuple(
-                Decimal(\"0\"),
-                Decimal(\"0.3\")
-            ),
-            Tuple(
-                Decimal(\"0.4\"),
-                Decimal(\"3\")
-            )
-        )
+        Decimal(\"0\"), Decimal(\"0.04\"), Decimal(\"3.00\")
     )
     Tuple(
         Enum<0u8>(),
@@ -133,20 +125,12 @@ echo "CALL_METHOD Address(\"$LENDING_MARKET_COMPONENT_ADDRESS\") \"create_lendin
         Enum<0u8>(),
         5i64,
         15i64,
-        240i64
+        240i64,
+        Decimal(\"0.8\"),
+        Decimal(\"0.8\")
     )
     Tuple(
-        Decimal(\"0.05\"),
-        Array<Tuple>(
-            Tuple(
-                Decimal(\"0\"),
-                Decimal(\"0.5\")
-            ),
-            Tuple(
-                Decimal(\"0.8\"),
-                Decimal(\"5\")
-            )
-        )
+        Decimal(\"0\"), Decimal(\"0.04\"), Decimal(\"0.75\")
     )
     Tuple(
         Enum<0u8>(),

@@ -16,7 +16,7 @@ echo "CALL_METHOD
     Address(\"$LP_PROVIDER_ADDRESS\")
     \"withdraw\"
     Address(\"$XRD\")
-    Decimal(\"10000\");" >> tx.rtm 
+    Decimal(\"20000\");" >> tx.rtm 
 
 echo "TAKE_ALL_FROM_WORKTOP
     Address(\"$XRD\")

@@ -75,7 +75,7 @@ echo "CALL_METHOD
     Array<Tuple>(
         Tuple(
             Address(\"$USDT_RESOURCE_ADDRESS\"),
-            Decimal(\"265\")
+            Decimal(\"100\")
         )
     )
 ;" >> tx.rtm
