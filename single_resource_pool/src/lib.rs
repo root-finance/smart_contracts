@@ -17,6 +17,12 @@ pub enum WithdrawType {
 }
 
 #[derive(ScryptoSbor, PartialEq)]
+pub enum InterestType {
+    Active,
+    Passive,
+}
+
+#[derive(ScryptoSbor, PartialEq)]
 pub enum DepositType {
     FromTemporaryUse,
     LiquiditySupply,
@@ -74,13 +80,19 @@ pub mod single_resource_pool {
         liquidity: Vault,
 
         /// Amount taken from the pool and not yet returned
-        external_liquidity_amount: Decimal,
+        passive_external_liquidity_amount: Decimal,
+
+        /// Amount to distribute to lenders and not yet distributed
+        active_external_liquidity_amount: Decimal,
 
         /// Pool unit fungible resource manager
         pool_unit_res_manager: ResourceManager,
 
-        /// Ratio between the pool unit and the pooled token
-        unit_to_asset_ratio: PreciseDecimal,
+        /// Ratio between the pool unit and the pooled token for passive interest strategy
+        passive_unit_to_asset_ratio: PreciseDecimal,
+
+        /// Ratio between the pool unit and the pooled token for active interest strategy
+        active_unit_to_asset_ratio: PreciseDecimal,
     }
 
     impl SingleResourcePool {
@@ -115,8 +127,10 @@ pub mod single_resource_pool {
             let pool_component = Self {
                 liquidity: Vault::new(pool_res_address),
                 pool_unit_res_manager,
-                external_liquidity_amount: 0.into(),
-                unit_to_asset_ratio: 1.into(),
+                passive_external_liquidity_amount: 0.into(),
+                active_external_liquidity_amount: 0.into(),
+                passive_unit_to_asset_ratio: 1.into(),
+                active_unit_to_asset_ratio: 1.into(),
             }
             .instantiate();
 
@@ -155,16 +169,19 @@ pub mod single_resource_pool {
             (pool_component, pool_unit_res_address)
         }
 
-        pub fn get_pool_unit_ratio(&self) -> PreciseDecimal {
-            self.unit_to_asset_ratio
+        pub fn get_pool_unit_ratio(&self, interest_type: InterestType) -> PreciseDecimal {
+            match interest_type {
+                InterestType::Active => self.active_unit_to_asset_ratio,
+                InterestType::Passive => self.passive_unit_to_asset_ratio
+            }
         }
 
         pub fn get_pool_unit_supply(&self) -> Decimal {
             self.pool_unit_res_manager.total_supply().unwrap_or(dec!(0))
         }
 
-        pub fn get_pooled_amount(&self) -> (Decimal, Decimal) {
-            (self.liquidity.amount(), self.external_liquidity_amount)
+        pub fn get_pooled_amount(&self) -> (Decimal, Decimal, Decimal) {
+            (self.liquidity.amount(), self.passive_external_liquidity_amount, self.active_external_liquidity_amount)
         }
 
         // Handle request to increase liquidity.
@@ -177,7 +194,7 @@ pub mod single_resource_pool {
             );
 
             let unit_amount =
-                (assets.amount() * self.unit_to_asset_ratio) //
+                (assets.amount() * self.active_unit_to_asset_ratio)
                     .checked_truncate(RoundingMode::ToNearestMidpointToEven)
                     .expect("Error while calculating unit amount to mint");
 
@@ -195,7 +212,7 @@ pub mod single_resource_pool {
                 "Pool unit resource address mismatch"
             );
 
-            let amount = (pool_units.amount() / self.unit_to_asset_ratio) //
+            let amount = (pool_units.amount() / self.active_unit_to_asset_ratio)
                 .checked_truncate(RoundingMode::ToNearestMidpointToEven)
                 .expect("Error while calculating amount to withdraw");
 
@@ -224,9 +241,9 @@ pub mod single_resource_pool {
             let assets = self.liquidity.take_advanced(amount, withdraw_strategy);
 
             if withdraw_type == WithdrawType::ForTemporaryUse {
-                self.external_liquidity_amount += amount;
+                self.passive_external_liquidity_amount += amount;
             } else {
-                self.unit_to_asset_ratio = self._get_unit_to_asset_ratio();
+                self._update_unit_to_asset_ratios();
             }
 
             assets
@@ -241,54 +258,67 @@ pub mod single_resource_pool {
 
             if deposit_type == DepositType::FromTemporaryUse {
                 assert!(
-                    amount <= self.external_liquidity_amount,
+                    amount <= self.passive_external_liquidity_amount,
                     "Provided amount is greater than the external liquidity amount!"
                 );
-                self.external_liquidity_amount -= amount;
+                self.passive_external_liquidity_amount -= amount;
             } else {
-                self.unit_to_asset_ratio = self._get_unit_to_asset_ratio();
+                self._update_unit_to_asset_ratios();
             }
         }
 
-        pub fn increase_external_liquidity(&mut self, amount: Decimal) {
+        pub fn increase_external_liquidity(&mut self, amount: Decimal, interest_type: InterestType) {
             assert!(
                 amount >= 0.into(),
                 "External liquidity amount must not be negative!"
             );
 
-            self.external_liquidity_amount += amount;
+            match interest_type {
+                InterestType::Active => self.active_external_liquidity_amount += amount,
+                InterestType::Passive => self.passive_external_liquidity_amount += amount,
+            }
 
-            self.unit_to_asset_ratio = self._get_unit_to_asset_ratio();
+            self._update_unit_to_asset_ratios();
         }
 
-        pub fn decrease_external_liquidity(&mut self, amount: Decimal) {
+        pub fn decrease_external_liquidity(&mut self, amount: Decimal, interest_type: InterestType) {
             /* INPUT CHECK */
             assert!(
                 amount >= 0.into(),
                 "External liquidity amount must not be negative!"
             );
             assert!(
-                amount <= self.external_liquidity_amount,
+                amount <= self.passive_external_liquidity_amount,
                 "Provided amount is greater than the external liquidity amount!"
             );
 
-            self.external_liquidity_amount -= amount;
+            match interest_type {
+                InterestType::Active => self.active_external_liquidity_amount -= amount,
+                InterestType::Passive => self.passive_external_liquidity_amount -= amount,
+            }
 
-            self.unit_to_asset_ratio = self._get_unit_to_asset_ratio();
+            self._update_unit_to_asset_ratios();
         }
 
         /* PRIVATE UTILITY METHODS */
 
-        fn _get_unit_to_asset_ratio(&mut self) -> PreciseDecimal {
-            let total_liquidity_amount = self.liquidity.amount() + self.external_liquidity_amount;
+        fn _update_unit_to_asset_ratios(&mut self) {
+            let total_active_liquidity_amount = self.liquidity.amount() + self.active_external_liquidity_amount;
+            let total_passive_liquidity_amount = self.liquidity.amount() + self.passive_external_liquidity_amount;
 
             let total_supply = self.pool_unit_res_manager.total_supply().unwrap_or(dec!(0));
 
-            if total_liquidity_amount != 0.into() {
-                PreciseDecimal::from(total_supply) / PreciseDecimal::from(total_liquidity_amount)
+            self.passive_unit_to_asset_ratio = if total_passive_liquidity_amount != 0.into() {
+                PreciseDecimal::from(total_supply) / PreciseDecimal::from(total_passive_liquidity_amount)
             } else {
                 1.into()
-            }
+            };
+
+            self.active_unit_to_asset_ratio = if total_active_liquidity_amount != 0.into() {
+                PreciseDecimal::from(total_supply) / PreciseDecimal::from(total_active_liquidity_amount)
+            } else {
+                1.into()
+            };
         }
     }
 }

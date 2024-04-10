@@ -16,7 +16,7 @@ pub struct CDPUpdatedEvent {
     pub event_type: CDPUpdatedEvenType,
 }
 
-#[derive(ScryptoSbor)]
+#[derive(ScryptoSbor, Clone)]
 pub struct CDPLiquidable {
     pub cdp_data: CollaterizedDebtPositionData,
     pub cdp_id: NonFungibleLocalId,

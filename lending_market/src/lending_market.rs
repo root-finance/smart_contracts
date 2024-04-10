@@ -49,11 +49,11 @@ mod lending_market {
                 withdraw_strategy: WithdrawStrategy
             ) -> Bucket;
 
-            fn increase_external_liquidity(&mut self, amount: Decimal);
+            fn increase_external_liquidity(&mut self, amount: Decimal, interest_type: InterestType);
 
-            fn get_pool_unit_ratio(&self) -> PreciseDecimal;
+            fn get_pool_unit_ratio(&self, interest_type: InterestType) -> PreciseDecimal;
 
-            fn get_pooled_amount(&self) -> (Decimal,Decimal);
+            fn get_pooled_amount(&self) -> (Decimal,Decimal,Decimal);
 
         }
     );
@@ -376,7 +376,7 @@ mod lending_market {
 
                     let price = pool_state.price;
 
-                    let fee = pool_state.reserve.take_all();
+                    let fee = pool_state.collect_reserve();
 
                     (price, fee)
                 })
@@ -499,7 +499,7 @@ mod lending_market {
 
         ///*  CDP CREATION AND MANAGEMENT METHODS * ///
 
-        pub fn list_liquidable_cdps(&mut self) {
+        pub fn list_liquidable_cdps(&self) -> Vec<CDPLiquidable> {
             let range_min = self
                 .cdp_counter
                 .saturating_sub(self.market_config.max_cdp_position as u64);
@@ -511,10 +511,10 @@ mod lending_market {
                 if self.cdp_res_manager.non_fungible_exists(cdp_id) {
                     let (cdp_data, delegator_cdp_data) = self._get_cdp_data(&cdp_id, true);
 
-                    let mut cdp_health_checker = CDPHealthChecker::new(
+                    let mut cdp_health_checker = CDPHealthChecker::new_without_update(
                         &cdp_data,
                         delegator_cdp_data.as_ref(),
-                        &mut self.pool_states,
+                        &self.pool_states,
                     );
 
                     if cdp_health_checker.can_liquidate().is_ok() {
@@ -525,7 +525,8 @@ mod lending_market {
                     }
                 }
             }
-            Runtime::emit_event(CDPLiquidableEvent { cdps: results });
+            Runtime::emit_event(CDPLiquidableEvent { cdps: results.clone() });
+            results
         }
 
         pub fn create_cdp(
@@ -1381,7 +1382,7 @@ mod lending_market {
 
                 let bonus_rate = dec!(1) + pool_state.pool_config.liquidation_bonus_rate;
 
-                let unit_ratio = pool_state.pool.get_pool_unit_ratio();
+                let unit_ratio = pool_state.pool.get_pool_unit_ratio(InterestType::Passive);
 
                 let max_collateral_units = cdp_data.get_collateral_units(pool_res_address);
 
@@ -1469,7 +1470,7 @@ mod lending_market {
                         .get_loan_unit_ratio()
                         .expect("Error getting loan unit ratio for provided resource");
 
-                    let (_, pool_borrowed_amount) = pool_state.pool.get_pooled_amount();
+                    let (_, pool_borrowed_amount, _) = pool_state.pool.get_pooled_amount();
 
                     let position_loan_units = cdp_data.get_loan_unit(pool_res_address);
 
@@ -1530,7 +1531,8 @@ mod lending_market {
             if payment_value.is_some() {
                 assert!(
                     expected_payment_value == dec!(0),
-                    "Insufficient payment value, {} remaining",
+                    "Insufficient payment value {:?}, {} remaining to pay",
+                    payment_value,
                     expected_payment_value
                 );
             }
@@ -1562,7 +1564,7 @@ mod lending_market {
         }
 
         fn _get_cdp_data(
-            &mut self,
+            &self,
             cdp_id: &NonFungibleLocalId,
             get_delegator_cdp_data: bool,
         ) -> (WrappedCDPData, Option<WrappedCDPData>) {
