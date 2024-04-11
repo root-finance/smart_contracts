@@ -9,10 +9,12 @@ fn test_deposit_withdraw_borrow_repay() {
 
     const T2022: i64 = 1640998800;
     const T2023: i64 = 1672534800;
+    let usd = helper.faucet.usdc_resource_address;
 
     helper
         .test_runner
         .advance_to_round_at_timestamp(Round::of(1), T2022);
+    admin_update_price(&mut helper, 1u64, usd, dec!(25)).expect_commit_success();
 
     // SETUP A LP PROVIDER
 
@@ -35,7 +37,7 @@ fn test_deposit_withdraw_borrow_repay() {
         dec!(100_000)
     );
 
-    get_resource(&mut helper, lp_user_key, lp_user_account, dec!(50_000)) //
+    get_resource(&mut helper, lp_user_key, lp_user_account, dec!(50_000), usd) //
         .expect_commit_success();
 
     let usd = helper.faucet.usdc_resource_address;
@@ -115,6 +117,12 @@ fn test_deposit_withdraw_borrow_repay() {
     helper
         .test_runner
         .advance_to_round_at_timestamp(Round::of(2), T2023);
+    admin_update_price(&mut helper, 1u64, usd, dec!(25)).expect_commit_success();
+
+    // borrower investments returned him 2 usd, we buy them from faucet
+    helper.test_runner.load_account_from_faucet(borrower_account);
+    get_resource(&mut helper, borrower_key, borrower_account, dec!(50), usd) //
+        .expect_commit_success();
 
     market_repay(
         &mut helper,
@@ -122,7 +130,7 @@ fn test_deposit_withdraw_borrow_repay() {
         borrower_account,
         1u64,
         usd,
-        dec!(100),
+        dec!(100.250312164987776789),
     )
     .expect_commit_success();
 
@@ -141,7 +149,13 @@ fn test_deposit_withdraw_borrow_repay() {
         helper
             .test_runner
             .get_component_balance(borrower_account, XRD),
-        dec!(10_000)
+        dec!(19_950)
+    );
+    assert_eq!(
+        helper
+            .test_runner
+            .get_component_balance(borrower_account, usd),
+        dec!(1.99974747561171307)
     );
 
     // REDEEM
@@ -165,6 +179,13 @@ fn test_deposit_withdraw_borrow_repay() {
         dec!(2_000),
     ) //
     .expect_commit_success();
+
+    assert_eq!(
+        helper
+            .test_runner
+            .get_component_balance(lp_user_account, usd),
+        dec!(2000.00025252438828693)
+    );
 }
 
 #[test]
@@ -178,6 +199,7 @@ fn test_create_pool_package_address() {
 #[test]
 fn test_liquidation() {
     let mut helper = TestHelper::new();
+    let usd = helper.faucet.usdc_resource_address;
 
     let epoch = helper.test_runner.get_current_epoch();
 
@@ -190,7 +212,7 @@ fn test_liquidation() {
     let (lp_user_key, _, lp_user_account) = helper.test_runner.new_allocated_account();
     helper.test_runner.load_account_from_faucet(lp_user_account);
     helper.test_runner.load_account_from_faucet(lp_user_account);
-    get_resource(&mut helper, lp_user_key, lp_user_account, dec!(25_000)) //
+    get_resource(&mut helper, lp_user_key, lp_user_account, dec!(25_000), usd) //
         .expect_commit_success();
 
     let usd = helper.faucet.usdc_resource_address;
@@ -226,8 +248,6 @@ fn test_liquidation() {
         vec![(XRD, dec!(15_000))],
     ) //
     .expect_commit_success();
-
-    let usd = helper.faucet.usdc_resource_address;
 
     let cdp_id: u64 = 1;
     // // Borrow 300$  Of USD

@@ -50,7 +50,7 @@ impl InterestStrategy {
 
     pub fn get_interest_rate(&self, usage: Decimal, optimal_usage: Decimal) -> Result<Decimal, String> {
         if !is_valid_rate(usage) {
-            return Err("Usage must be between 0 and 1, inclusive".into());
+            return Err(format!("Usage must be between 0 and 1, inclusive, was {usage}"));
         }
         if optimal_usage > dec!(0) && !is_valid_rate(optimal_usage) {
             return Err("Usage must be between 0 exclusive and 1 inclusive".into());

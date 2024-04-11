@@ -14,7 +14,6 @@ radix-engine = { git = "https://github.com/radixdlt/radixdlt-scrypto", tag = "v1
 scrypto-unit = { git = "https://github.com/radixdlt/radixdlt-scrypto", tag = "v1.0.1" }
 scrypto-test = { git = "https://github.com/radixdlt/radixdlt-scrypto", tag = "v1.0.1" }
 radix-engine-interface = { git = "https://github.com/radixdlt/radixdlt-scrypto", tag = "v1.0.1" }
-lending_market = { path = ".", features = ["test"] }
 
 [profile.release]
 opt-level = 'z'        # Optimize for size.

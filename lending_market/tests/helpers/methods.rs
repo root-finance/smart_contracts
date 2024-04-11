@@ -81,6 +81,7 @@ pub fn get_resource(
     user_public_key: Secp256k1PublicKey,
     user_account_address: ComponentAddress,
     xrd_amount: Decimal,
+    resource_address: ResourceAddress,
 ) -> TransactionReceipt {
     let manifest_builder_0 = ManifestBuilder::new()
         .lock_fee_from_faucet()
@@ -91,7 +92,7 @@ pub fn get_resource(
             builder.call_method(
                 helper.faucet.faucet_component_address,
                 "get_resource",
-                manifest_args!(helper.faucet.usdc_resource_address, xrd_buket),
+                manifest_args!(resource_address, xrd_buket),
             )
         })
         .deposit_batch(user_account_address);

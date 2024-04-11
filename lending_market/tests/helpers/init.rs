@@ -17,7 +17,9 @@ pub struct TestHelper {
 
 impl TestHelper {
     pub fn new() -> TestHelper {
-        let mut test_runner = TestRunnerBuilder::new().build();
+        let mut test_runner = TestRunnerBuilder::new()
+        .with_custom_genesis(CustomGenesis::default(Epoch::zero(), CustomGenesis::default_consensus_manager_config()))
+        .build();
 
         let (owner_public_key, owner_private_key, owner_account_address) =
             test_runner.new_allocated_account();
