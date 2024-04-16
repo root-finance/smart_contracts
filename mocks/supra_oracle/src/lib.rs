@@ -35,7 +35,8 @@ mod price_feed {
             .prepare_to_globalize(OwnerRole::None)
             .globalize()
         }
-        pub fn verify_proofs_and_get_data(&self, _data: Vec<u8>) -> Vec<PriceData> {
+        pub fn verify_proofs_and_get_data(&self, data: Vec<u8>) -> Vec<PriceData> {
+            Logger::info(format!("Received supra proof {:?}", data));
             vec![
                 // XRD/USDT = 0.042
                 PriceData { pair_index: 276, price: 42, timestamp: 1710168675, round: 0, decimal: 3 }

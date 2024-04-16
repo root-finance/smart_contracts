@@ -57,7 +57,7 @@ impl CDPType {
     }
 }
 
-#[derive(ScryptoSbor, NonFungibleData, Clone)]
+#[derive(ScryptoSbor, NonFungibleData, Clone, Debug)]
 pub struct CollaterizedDebtPositionData {
     #[mutable]
     pub key_image_url: String,

@@ -105,7 +105,7 @@ impl MarketTestHelper {
                     price_feed.price_feed_component_address,
                     XRD,
                     (
-                        dec!("0.15"),
+                        dec!("0.2"),
                         dec!("0.15"),
                         dec!("0.15"),
                         dec!("0.001"),
@@ -172,7 +172,7 @@ impl MarketTestHelper {
                     price_feed.price_feed_component_address,
                     faucet.usdc_resource_address,
                     (
-                        dec!("0.15"),
+                        dec!("0.2"),
                         dec!("0.15"),
                         dec!("0.15"),
                         dec!("0.001"),

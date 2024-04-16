@@ -81,6 +81,7 @@ pub fn get_resource(
     user_public_key: Secp256k1PublicKey,
     user_account_address: ComponentAddress,
     xrd_amount: Decimal,
+    resource_address: ResourceAddress,
 ) -> TransactionReceipt {
     let manifest_builder_0 = ManifestBuilder::new()
         .lock_fee_from_faucet()
@@ -91,7 +92,7 @@ pub fn get_resource(
             builder.call_method(
                 helper.faucet.faucet_component_address,
                 "get_resource",
-                manifest_args!(helper.faucet.usdc_resource_address, xrd_buket),
+                manifest_args!(resource_address, xrd_buket),
             )
         })
         .deposit_batch(user_account_address);
@@ -543,6 +544,33 @@ pub fn market_take_batch_flashloan(
         "take_batch_flashloan",
         manifest_args!(loan_amounts),
     );
+}
+
+pub fn market_collect_reserve(
+    helper: &mut TestHelper,
+) -> TransactionReceipt {
+    let manifest_builder = ManifestBuilder::new()
+        .lock_fee_from_faucet()
+        .create_proof_from_account_of_non_fungibles(
+            helper.owner_account_address,
+            helper.market.market_reserve_collector_badge,
+            vec![
+                NonFungibleLocalId::integer(1),
+            ],
+        )
+        .with_name_lookup(|builder, _| {
+            builder.call_method(
+                helper.market.market_component_address,
+                "collect_reserve",
+                manifest_args!(),
+            )
+        })
+        .deposit_batch(helper.owner_account_address);
+
+    helper.test_runner.execute_manifest(
+        build_and_dump_to_fs(manifest_builder, "collect_reserve".into()),
+        vec![NonFungibleGlobalId::from_public_key(&helper.owner_public_key)],
+    )
 }
 
 pub fn market_repay_batch_flashloan(

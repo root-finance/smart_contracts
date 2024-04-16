@@ -1,4 +1,4 @@
-use super::{cdp_data::*, liquidation_threshold::*, pool_state::*, utils::InterestType};
+use super::{cdp_data::*, liquidation_threshold::*, pool_state::*};
 use scrypto::prelude::*;
 
 pub enum LoadPositionType {
@@ -57,7 +57,6 @@ impl PositionData {
         };
 
         self.delegator_value = self.delegator_amount * price;
-
         Ok(())
     }
 }
@@ -82,7 +81,7 @@ impl ExtendedCollateralPositionData {
         self.data.load_onledger_data(units, load_type)?;
 
         if self.data.unit_ratio == pdec!(0) {
-            self.data.unit_ratio = pool_state.pool.get_pool_unit_ratio(InterestType::Passive);
+            self.data.unit_ratio = pool_state.pool.get_pool_unit_ratio();
         };
 
         Ok(())
@@ -253,7 +252,7 @@ impl CDPHealthChecker {
         let cdp_type = cdp_data.cdp_type.clone();
 
         let mut extended_cdp = CDPHealthChecker {
-            cdp_type: cdp_data.cdp_type,
+            cdp_type: cdp_data.cdp_type.clone(),
             collateral_positions: IndexMap::new(),
             loan_positions: IndexMap::new(),
             total_loan_value: Decimal::ZERO,
@@ -384,8 +383,8 @@ impl CDPHealthChecker {
         for (res, position) in &self.loan_positions {
             if self.total_loan_to_value_ratio > position.ltv_limit {
                 return Err(format!(
-                    "Loan of resource {:?}: LTV ratio was {} but need to be lower than {}",
-                    res, self.total_loan_to_value_ratio, position.ltv_limit
+                    "Loan of resource {:?}: total_loan_to_value_ratio need to be lower than {}. CDP={:?}",
+                    res, position.ltv_limit, self
                 ));
             }
         }
@@ -444,6 +443,7 @@ impl CDPHealthChecker {
         &mut self,
         pool_state: &KeyValueEntryRef<'_, LendingPoolState>,
     ) -> Result<&mut ExtendedCollateralPositionData, String> {
+
         if !self
             .collateral_positions
             .contains_key(&pool_state.pool_res_address)
@@ -541,7 +541,6 @@ impl CDPHealthChecker {
                         mut self_closable_loan_value,
                     )| {
                         extended_loan.update_data(&self.collateral_positions)?;
-
                         //
 
                         self_loan_value += extended_loan.data.value;

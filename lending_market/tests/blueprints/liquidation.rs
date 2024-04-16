@@ -5,6 +5,7 @@ use radix_engine_interface::{blueprints::consensus_manager::TimePrecision, prelu
 #[test]
 fn test_liquidation() {
     let mut helper = TestHelper::new();
+    let usd = helper.faucet.usdc_resource_address;
 
     print!(
         "Begin {:?}",
@@ -15,7 +16,7 @@ fn test_liquidation() {
     let (lp_user_key, _, lp_user_account) = helper.test_runner.new_allocated_account();
     helper.test_runner.load_account_from_faucet(lp_user_account);
     helper.test_runner.load_account_from_faucet(lp_user_account);
-    get_resource(&mut helper, lp_user_key, lp_user_account, dec!(25_000)) //
+    get_resource(&mut helper, lp_user_key, lp_user_account, dec!(25_000), usd) //
         .expect_commit_success();
 
     let usd = helper.faucet.usdc_resource_address;

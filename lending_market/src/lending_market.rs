@@ -23,8 +23,8 @@ pub enum UpdateDelegateeCDPnput {
 mod lending_market {
 
     extern_blueprint!(
-        "package_sim1p4nk9h5kw2mcmwn5u2xcmlmwap8j6dzet7w7zztzz55p70rgqs4vag", // resim sdk
-        // "package_sim1pkc0e8f9yhlvpv38s2ymrplu7q366y3k8zc53zf2srlm7qm64fk043", // testing
+        // "package_sim1p4nk9h5kw2mcmwn5u2xcmlmwap8j6dzet7w7zztzz55p70rgqs4vag", // resim sdk
+        "package_sim1pkc0e8f9yhlvpv38s2ymrplu7q366y3k8zc53zf2srlm7qm64fk043", // testing
         // "package_tdx_2_1phqmc3pcvggna0xtprl6lvdhvrgps4kmkcdlgcp7lamxnna8q440d9",  // stokenet
         SingleResourcePool {
 
@@ -49,11 +49,11 @@ mod lending_market {
                 withdraw_strategy: WithdrawStrategy
             ) -> Bucket;
 
-            fn increase_external_liquidity(&mut self, amount: Decimal, interest_type: InterestType);
+            fn increase_external_liquidity(&mut self, amount: Decimal);
 
-            fn get_pool_unit_ratio(&self, interest_type: InterestType) -> PreciseDecimal;
+            fn get_pool_unit_ratio(&self) -> PreciseDecimal;
 
-            fn get_pooled_amount(&self) -> (Decimal,Decimal,Decimal);
+            fn get_pooled_amount(&self) -> (Decimal, Decimal);
 
         }
     );
@@ -342,7 +342,10 @@ mod lending_market {
                     .seconds_since_unix_epoch,
 
                 total_loan: 0.into(),
+                total_deposit: 0.into(),
                 total_loan_unit: 0.into(),
+                total_deposit_unit: 0.into(),
+                total_reserved_amount: 0.into(),
                 interest_rate: 0.into(),
                 interest_updated_at: Clock::current_time(TimePrecision::Minute)
                     .seconds_since_unix_epoch,
@@ -352,6 +355,7 @@ mod lending_market {
                 liquidation_threshold,
                 pool_config,
                 operating_status: OperatingStatus::new(),
+                pool_utilization: 0.into()
             };
 
             //
@@ -378,7 +382,7 @@ mod lending_market {
 
                     let price = pool_state.price;
 
-                    let fee = pool_state.collect_reserve();
+                    let fee = pool_state.reserve.take_all();
 
                     (price, fee)
                 })
@@ -951,7 +955,7 @@ mod lending_market {
         pub fn contribute(&mut self, assets: Bucket) -> Bucket {
             self._check_operating_status(OperatingService::Contribute);
 
-            let pool_state = self._get_pool_state(
+            let mut pool_state = self._get_pool_state(
                 &assets.resource_address(),
                 Some(OperatingService::Contribute),
                 None,
@@ -1452,7 +1456,7 @@ mod lending_market {
 
                 let bonus_rate = dec!(1) + pool_state.pool_config.liquidation_bonus_rate;
 
-                let unit_ratio = pool_state.pool.get_pool_unit_ratio(InterestType::Passive);
+                let unit_ratio = pool_state.pool.get_pool_unit_ratio();
 
                 let max_collateral_units = cdp_data.get_collateral_units(pool_res_address);
 
@@ -1540,7 +1544,7 @@ mod lending_market {
                         .get_loan_unit_ratio()
                         .expect("Error getting loan unit ratio for provided resource");
 
-                    let (_, pool_borrowed_amount, _) = pool_state.pool.get_pooled_amount();
+                    let (_, pool_borrowed_amount) = pool_state.pool.get_pooled_amount();
 
                     let position_loan_units = cdp_data.get_loan_unit(pool_res_address);
 

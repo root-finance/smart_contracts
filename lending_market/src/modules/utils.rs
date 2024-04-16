@@ -22,13 +22,6 @@ pub enum DepositType {
     LiquiditySupply,
 }
 
-#[derive(ScryptoSbor, PartialEq)]
-pub enum InterestType {
-    Active,
-    Passive,
-}
-
-
 #[derive(ScryptoSbor, Clone)]
 pub struct PriceInfo {
     pub timestamp: i64,

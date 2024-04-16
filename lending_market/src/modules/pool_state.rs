@@ -76,7 +76,13 @@ pub struct LendingPoolState {
     pub total_loan: Decimal,
 
     ///
-    pub total_loan_unit: Decimal,
+    pub total_deposit: Decimal,
+
+    ///
+    pub total_loan_unit: PreciseDecimal,
+
+    ///
+    pub total_deposit_unit: PreciseDecimal,
 
     ///* Configs *///
 
@@ -94,6 +100,12 @@ pub struct LendingPoolState {
 
     ///
     pub operating_status: OperatingStatus,
+
+    ///
+    pub pool_utilization: Decimal,
+
+    ///
+    pub total_reserved_amount: PreciseDecimal,
 }
 
 impl LendingPoolState {
@@ -118,7 +130,24 @@ impl LendingPoolState {
         };
 
         if ratio > 1.into() {
-            return Err("Loan unit ratio cannot be greater than 1".to_string());
+            return Err(format!("Loan unit ratio cannot be greater than 1, was {} (total_loan is {})", ratio, self.total_loan));
+        }
+
+        Ok(ratio)
+    }
+
+        /// Get the current deposit unit ratio ///
+
+    pub fn get_deposit_unit_ratio(&self) -> Result<PreciseDecimal, String> {
+        // convert total_deposit_unit and total_deposit to PreciseDecimal to improve precision and reduce rounding errors
+        let ratio = if self.total_deposit != 0.into() {
+            PreciseDecimal::from(self.total_deposit_unit) / PreciseDecimal::from(self.total_deposit)
+        } else {
+            1.into()
+        };
+
+        if ratio > 1.into() {
+            return Err(format!("Deposit unit ratio cannot be greater than 1, was {} (total_deposit is {})", ratio, self.total_deposit));
         }
 
         Ok(ratio)
@@ -126,15 +155,15 @@ impl LendingPoolState {
 
     ///* CORE LOGIC AND UTILITY METHODS *///
 
-    pub fn contribute_proxy(&self, assets: Bucket) -> Result<Bucket, String> {
+    pub fn contribute_proxy(&mut self, assets: Bucket) -> Result<Bucket, String> {
         let amount = assets.amount();
 
-        let (pool_available_amount, _, pool_contributed_amount) = self.pool.get_pooled_amount();
+        let (pool_available_amount, pool_borrowed_amount) = self.pool.get_pooled_amount();
 
         // Check if the pool deposit limit is reached
         self.pool_config
             .check_limit(CheckPoolConfigLimitInput::DepositLimit(
-                pool_available_amount + pool_contributed_amount + amount,
+                pool_available_amount + pool_borrowed_amount + amount,
             ))?;
 
         Runtime::emit_event(LendingPoolUpdatedEvent {
@@ -143,17 +172,39 @@ impl LendingPoolState {
             amount
         });
 
-        Ok(self.pool.contribute(assets))
+        let contributed = self.pool.contribute(assets);
+        self._update_deposit_unit(amount)?;
+        self.update_interest_and_price(Some((true, true)))?;
+        Ok(contributed)
     }
 
-    pub fn redeem_proxy(&self, assets: Bucket) -> Bucket {
+    pub fn redeem_proxy(&mut self, pool_units: Bucket) -> Bucket {
         Runtime::emit_event(LendingPoolUpdatedEvent {
             pool_res_address: self.pool_res_address,
             event_type: LendingPoolUpdatedEventType::DepositState,
             amount: assets.amount()
         });
 
-        self.pool.redeem(assets)
+        let unit_ratio = pool_units.amount() / self.total_deposit_unit;
+        // Reseved amount has already been deducted from the pool. Remove it from the redeemed amount
+        let reserved_amount_for_position = (unit_ratio * self.total_reserved_amount)
+            .checked_truncate(RoundingMode::ToNearestMidpointToEven)
+            .unwrap();
+        Logger::debug(format!("REDEEM unit_ratio * total_reserved_amount {:?} = reserved_amount_for_position {:?}", self.total_reserved_amount, reserved_amount_for_position));
+        
+
+        let mut redeemed = self.pool.redeem(pool_units);
+        let reserve_amount = redeemed.take(reserved_amount_for_position);
+        self.total_reserved_amount -= reserved_amount_for_position;
+        self.reserve.put(reserve_amount);
+
+        Logger::debug(format!("REDEEMED AMOUNT = {:?} RESERVE AMOUNT = {:?}", redeemed.amount(), self.reserve.amount()));
+
+        self._update_deposit_unit(-redeemed.amount())
+            .expect("update deposit unit for redeem");
+        self.update_interest_and_price(Some((true, true)))
+            .expect("update interest and price for redeem");
+        redeemed
     }
 
     pub fn add_pool_units_as_collateral(&mut self, pool_units: Bucket) -> Result<(), String> {
@@ -208,7 +259,7 @@ impl LendingPoolState {
             return Err("Amount must be positive".into());
         }
 
-        let (pool_available_amount, pool_borrowed_amount, _) = self.pool.get_pooled_amount();
+        let (pool_available_amount, pool_borrowed_amount) = self.pool.get_pooled_amount();
 
         // Check if the borrow limit is reached
         self.pool_config
@@ -234,6 +285,8 @@ impl LendingPoolState {
             ),
             loan_unit,
         );
+
+        self.update_interest_and_price(Some((true, true)))?;
 
         Runtime::emit_event(LendingPoolUpdatedEvent {
             pool_res_address: self.pool_res_address,
@@ -262,6 +315,8 @@ impl LendingPoolState {
             event_type: LendingPoolUpdatedEventType::LoanState,
             amount: payment_amount
         });
+
+        self.update_interest_and_price(Some((true, true)))?;
 
         // returned unit should be negative or 0
         // Send back positive loan_unit to evoid confusion at higher level in the stack
@@ -305,42 +360,50 @@ impl LendingPoolState {
 
         /* UPDATING INTEREST RATE */
 
-        // Debounce interest update to configured period (in minutes)
-        let period_in_minute = (now - self.interest_updated_at) / SECOND_PER_MINUTE;
-        if period_in_minute >= self.pool_config.interest_update_period || bypass_interest_debounce {
-            let (passive_pool_utilization, active_pool_utilization) = self._get_pool_utilization();
+        // Debounce interest update to configured period (in minutes, Radix time resolution)
+        let one_year_in_seconds: PreciseDecimal = 31_556_952.into();
+        let period_in_seconds = now - self.interest_updated_at;
+        if period_in_seconds >= self.pool_config.interest_update_period || bypass_interest_debounce {
+            self.pool_utilization = if self.pool_utilization == Decimal::ZERO { self._get_pool_utilization() } else { self.pool_utilization };
+            
+            let active_interest_rate = self.pool_utilization * self.interest_rate * (PreciseDecimal::ONE - self.pool_config.protocol_interest_fee_rate);
 
-            self.interest_updated_at = now;
+            Logger::debug(format!("INTEREST period_in_seconds: {:?}", period_in_seconds)); 
 
-            self.interest_rate = self.interest_strategy.get_interest_rate(passive_pool_utilization, self.pool_config.optimal_usage)?;
+            Logger::debug(format!("INTEREST interest_rate {:?} - pool_utilization {:?} - active_interest_rate {:?}", self.interest_rate, self.pool_utilization, active_interest_rate));
 
-            // Calculate interest rate down to a minute (1 YEAR = 525600 minutes)
-            let minute_interest_rate = PreciseDecimal::ONE + (self.interest_rate / MINUTE_PER_YEAR);
+            let new_total_loan_amount = self.interest_rate * (PreciseDecimal::ONE + self.total_loan) * period_in_seconds / one_year_in_seconds;
+            let new_total_deposit_amount = active_interest_rate * (PreciseDecimal::ONE + self.total_deposit) * period_in_seconds / one_year_in_seconds;
 
-            let new_total_loan_amount =
-                self.total_loan * minute_interest_rate.checked_powi(period_in_minute).unwrap();
+            let reserve_delta = new_total_loan_amount - new_total_deposit_amount;
+            self.total_reserved_amount += reserve_delta;
 
-            let passive_accrued_interest_amount = new_total_loan_amount - self.total_loan;
+            let accrued_interest_amount = if new_total_loan_amount - self.total_loan < PreciseDecimal::ZERO { new_total_loan_amount } else { new_total_loan_amount - self.total_loan };
 
-            self.total_loan = new_total_loan_amount
+            Logger::debug(format!("INTEREST new_total_loan_amount {:?} ; new_total_deposit_amount {:?}; reserve_delta {:?}; accrued_interest_amount {:?}", new_total_loan_amount, new_total_deposit_amount, reserve_delta, accrued_interest_amount));
+
+
+            self.total_loan += new_total_loan_amount
+                .checked_truncate(RoundingMode::ToNearestMidpointToEven)
+                .unwrap();
+            self.total_deposit += new_total_deposit_amount
                 .checked_truncate(RoundingMode::ToNearestMidpointToEven)
                 .unwrap();
 
-            let active_accrued_interest_amount: PreciseDecimal = active_pool_utilization * passive_accrued_interest_amount * (1 - self.pool_config.protocol_interest_fee_rate);
-            // Virtually increase pooled liquidity with accrued interest amount
-            self.pool.increase_external_liquidity(
-                passive_accrued_interest_amount
-                    .checked_truncate(RoundingMode::ToNearestMidpointToEven)
-                    .unwrap(),
-                    InterestType::Passive
-            );
-            self.pool.increase_external_liquidity(
-                active_accrued_interest_amount
-                    .checked_truncate(RoundingMode::ToNearestMidpointToEven)
-                    .unwrap(),
-                    InterestType::Active
-            );
+            Logger::debug(format!("INTEREST updated totals: total_loan {:?} - total_deposit {:?}", self.total_loan, self.total_deposit));
 
+            // Virtually increase pooled liquidity with accrued interest amount
+            self.pool.increase_external_liquidity(accrued_interest_amount
+                .checked_truncate(RoundingMode::ToNearestMidpointToEven)
+                .unwrap());
+
+            self.pool_utilization = self._get_pool_utilization();
+            let interest_rate = self.interest_strategy.get_interest_rate(self.pool_utilization, self.pool_config.optimal_usage)?;
+            if interest_rate != self.interest_rate {
+                self.interest_updated_at = now;
+                self.interest_rate = interest_rate;
+                Logger::debug(format!("INTEREST update: now {:?} - pool_utilization {:?} - interest_rate {:?}", self.interest_updated_at, self.pool_utilization, self.interest_rate));
+            }
 
             Runtime::emit_event(LendingPoolUpdatedEvent {
                 pool_res_address: self.pool_res_address,
@@ -352,40 +415,16 @@ impl LendingPoolState {
         Ok(())
     }
 
-    pub fn collect_reserve(&mut self) -> Bucket {
-        let (_, passive_interest_amount, _) = self.pool.get_pooled_amount();
-        self.update_interest_and_price(Some((true, true)))
-            .expect("update interest and price before collect reserve");
-        let (_, active_pool_utilization) = self._get_pool_utilization();
-
-        let reserve_amount = active_pool_utilization * passive_interest_amount * self.pool_config.protocol_interest_fee_rate;
-        self.reserve.put(self.pool.protected_withdraw(
-            reserve_amount,
-            WithdrawType::LiquidityWithdrawal,
-            WithdrawStrategy::Rounded(RoundingMode::ToNearestMidpointToEven),
-        ));
-        
-        self.reserve.take_all()
-    }
-
     ///* PRIVATE UTILITY METHODS *///
 
-    fn _get_pool_utilization(&self) -> (Decimal, Decimal) {
-        let (available_amount, passive_interest_amount, active_interest_amount) = self.pool.get_pooled_amount();
-        let total_passive_liquidity = passive_interest_amount + available_amount;
-        let passive_utilization = if total_passive_liquidity == 0.into() {
+    fn _get_pool_utilization(&self) -> Decimal {
+        let (available_amount, _) = self.pool.get_pooled_amount();
+        if available_amount == 0.into() {
             Decimal::ZERO
         } else {
-            passive_interest_amount / total_passive_liquidity
-        };
-
-        let total_active_liquidity = active_interest_amount + available_amount;
-        let active_utilization = if total_active_liquidity == 0.into() {
-            Decimal::ZERO
-        } else {
-            active_interest_amount / total_active_liquidity
-        };
-        (passive_utilization, active_utilization)
+            // passive_interest_amount / (passive_interest_amount + available_amount)
+            self.total_loan / self.total_deposit
+        }
     }
 
     fn _update_loan_unit(&mut self, amount: Decimal) -> Result<Decimal, String> {
@@ -405,6 +444,28 @@ impl LendingPoolState {
 
         if self.total_loan < 0.into() {
             return Err("Total loan cannot be negative".to_string());
+        }
+
+        Ok(units)
+    }
+
+    fn _update_deposit_unit(&mut self, amount: Decimal) -> Result<Decimal, String> {
+        let unit_ratio = self.get_deposit_unit_ratio()?;
+
+        let units = (amount * unit_ratio) //
+            .checked_truncate(RoundingMode::ToNearestMidpointToEven)
+            .unwrap();
+
+        self.total_deposit += amount;
+
+        self.total_deposit_unit += units;
+
+        if self.total_deposit_unit < 0.into() {
+            self.total_deposit_unit = 0.into();
+        }
+
+        if self.total_deposit < 0.into() {
+            self.total_deposit = 0.into();
         }
 
         Ok(units)

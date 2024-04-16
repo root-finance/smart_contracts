@@ -104,7 +104,7 @@ echo "CALL_METHOD Address(\"$OWNER_ADDRESS\")\"lock_fee\" Decimal(\"5000\");" > 
 echo "CALL_METHOD Address(\"$OWNER_ADDRESS\") \"create_proof_of_non_fungibles\" Address(\"$LENDING_MARKET_ADMIN_ADDRESS\") Array<NonFungibleLocalId>(NonFungibleLocalId(\"#1#\"),NonFungibleLocalId(\"#2#\"),NonFungibleLocalId(\"#3#\"),NonFungibleLocalId(\"#4#\"));" >> tx.rtm
 echo "CALL_METHOD Address(\"$LENDING_MARKET_COMPONENT_ADDRESS\") \"create_lending_pool\" Address(\"$PRICE_FEED_COMPONENT_ADDRESS\") Address(\"$XRD\")
     Tuple(
-        Decimal(\"0.15\"),
+        Decimal(\"0.2\"),
         Decimal(\"0.15\"),
         Decimal(\"0.15\"),
         Decimal(\"0.001\"),
