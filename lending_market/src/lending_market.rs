@@ -53,7 +53,7 @@ mod lending_market {
 
             fn get_pool_unit_ratio(&self) -> PreciseDecimal;
 
-            fn get_pooled_amount(&self) -> (Decimal,Decimal);
+            fn get_pooled_amount(&self) -> (Decimal, Decimal);
 
         }
     );
@@ -345,6 +345,7 @@ mod lending_market {
                 total_deposit: 0.into(),
                 total_loan_unit: 0.into(),
                 total_deposit_unit: 0.into(),
+                total_reserved_amount: 0.into(),
                 interest_rate: 0.into(),
                 interest_updated_at: Clock::current_time(TimePrecision::Minute)
                     .seconds_since_unix_epoch,
@@ -381,7 +382,7 @@ mod lending_market {
 
                     let price = pool_state.price;
 
-                    let fee = pool_state.collect_reserve();
+                    let fee = pool_state.reserve.take_all();
 
                     (price, fee)
                 })

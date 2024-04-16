@@ -55,8 +55,7 @@ pub mod single_resource_pool {
 
             protected_deposit => restrict_to :[admin];
             protected_withdraw => restrict_to :[admin];
-
-            decrease_external_liquidity => restrict_to :[admin];
+            
             increase_external_liquidity => restrict_to :[admin];
 
             contribute => restrict_to :[can_contribute];
@@ -79,8 +78,9 @@ pub mod single_resource_pool {
         /// Pool unit fungible resource manager
         pool_unit_res_manager: ResourceManager,
 
-        /// Ratio between the pool unit and the pooled token for passive interest strategy
+        /// Ratio between the pool unit and the pooled token
         unit_to_asset_ratio: PreciseDecimal,
+
     }
 
     impl SingleResourcePool {
@@ -98,8 +98,8 @@ pub mod single_resource_pool {
             let pool_unit_res_manager = ResourceBuilder::new_fungible(owner_role)
                 .metadata(metadata! {
                     init {
-                        "name" => format!("{pool_res_symbol} RToken"), locked;
-                        "symbol" => format!("R{pool_res_symbol}"), locked;
+                        "name" => format!("{pool_res_symbol} Root Token"), locked;
+                        "symbol" => format!("rt{pool_res_symbol}"), locked;
                     }
                 })
                 .mint_roles(mint_roles! {
@@ -261,34 +261,18 @@ pub mod single_resource_pool {
             self._update_unit_to_asset_ratios();
         }
 
-        pub fn decrease_external_liquidity(&mut self, amount: Decimal) {
-            /* INPUT CHECK */
-            assert!(
-                amount >= 0.into(),
-                "External liquidity amount must not be negative!"
-            );
-            assert!(
-                amount <= self.external_liquidity_amount,
-                "Provided amount is greater than the external liquidity amount!"
-            );
-
-            self.external_liquidity_amount -= amount;
-
-            self._update_unit_to_asset_ratios();
-        }
-
         /* PRIVATE UTILITY METHODS */
 
         fn _update_unit_to_asset_ratios(&mut self) {
-            let total_passive_liquidity_amount = self.liquidity.amount() + self.external_liquidity_amount;
+            let total_liquidity_amount = self.liquidity.amount() + self.external_liquidity_amount;
 
             let total_supply = self.pool_unit_res_manager.total_supply().unwrap_or(dec!(0));
 
-            self.unit_to_asset_ratio = if total_passive_liquidity_amount != 0.into() {
-                PreciseDecimal::from(total_supply) / PreciseDecimal::from(total_passive_liquidity_amount)
+            self.unit_to_asset_ratio = if total_liquidity_amount != 0.into() {
+                PreciseDecimal::from(total_supply) / PreciseDecimal::from(total_liquidity_amount)
             } else {
                 1.into()
-            }
+            };
         }
     }
 }

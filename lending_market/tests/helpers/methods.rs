@@ -546,6 +546,33 @@ pub fn market_take_batch_flashloan(
     );
 }
 
+pub fn market_collect_reserve(
+    helper: &mut TestHelper,
+) -> TransactionReceipt {
+    let manifest_builder = ManifestBuilder::new()
+        .lock_fee_from_faucet()
+        .create_proof_from_account_of_non_fungibles(
+            helper.owner_account_address,
+            helper.market.market_reserve_collector_badge,
+            vec![
+                NonFungibleLocalId::integer(1),
+            ],
+        )
+        .with_name_lookup(|builder, _| {
+            builder.call_method(
+                helper.market.market_component_address,
+                "collect_reserve",
+                manifest_args!(),
+            )
+        })
+        .deposit_batch(helper.owner_account_address);
+
+    helper.test_runner.execute_manifest(
+        build_and_dump_to_fs(manifest_builder, "collect_reserve".into()),
+        vec![NonFungibleGlobalId::from_public_key(&helper.owner_public_key)],
+    )
+}
+
 pub fn market_repay_batch_flashloan(
     helper: &mut TestHelper,
     _user_public_key: Secp256k1PublicKey,
