@@ -1320,9 +1320,7 @@ mod lending_market {
                 .map(|asset| {
                     let pool_state_ref = self.pool_states.get(&asset).unwrap();
                     let pool_state = pool_state_ref;
-                    let utilization_rate = pool_state.pool.get_pool_unit_ratio(
-                        InterestType::Passive
-                    );
+                    let utilization_rate = pool_state.pool.get_pool_unit_ratio();
 
                     let deposit_rate =
                         utilization_rate *
@@ -1345,7 +1343,7 @@ mod lending_market {
                     let total_borrow = pool_state.pool.get_pooled_amount().1;
 
                     let total_supply =
-                        pool_state.pool.get_pool_unit_ratio(InterestType::Passive) *
+                        pool_state.pool.get_pool_unit_ratio() *
                         total_liquidity;
 
                     total_supply_all_pools += total_supply;

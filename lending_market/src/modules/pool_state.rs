@@ -182,7 +182,7 @@ impl LendingPoolState {
         Runtime::emit_event(LendingPoolUpdatedEvent {
             pool_res_address: self.pool_res_address,
             event_type: LendingPoolUpdatedEventType::DepositState,
-            amount: assets.amount()
+            amount: pool_units.amount()
         });
 
         let unit_ratio = pool_units.amount() / self.total_deposit_unit;
