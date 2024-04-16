@@ -588,6 +588,7 @@ impl CDPHealthChecker {
                 self_loan_to_value_ratio = Decimal::ZERO;
                 total_loan_to_value_ratio = Decimal::ZERO;
             } else {
+                // This happens when there is no collateral at all, or by mistake you are trying to borrow the same currency as the collateral
                 self_loan_to_value_ratio = Decimal::MAX;
                 total_loan_to_value_ratio = Decimal::MAX;
             };

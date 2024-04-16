@@ -3,7 +3,7 @@ source ./baseline.sh
 
 echo "" > tx.rtm;
 
-LP_UNITS_RESOURCE_ADDRESS=resource_tdx_2_1t5uvmkv7ygqrfhxf8a4ca6vmpgwn72zz3p7asdmup46kdxp83k8pw0
+LP_UNITS_RESOURCE_ADDRESS=resource_tdx_2_1thpnp4lj8fkzrjk50qyhennv63hdpg8uxavru5gghlrmh54dx4guj4
 
 echo "CALL_METHOD
     Address(\"$LP_PROVIDER_ADDRESS\")

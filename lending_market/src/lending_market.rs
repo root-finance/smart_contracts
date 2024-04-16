@@ -25,7 +25,7 @@ mod lending_market {
     extern_blueprint!(
         // "package_sim1p4nk9h5kw2mcmwn5u2xcmlmwap8j6dzet7w7zztzz55p70rgqs4vag", // resim sdk
         "package_sim1pkc0e8f9yhlvpv38s2ymrplu7q366y3k8zc53zf2srlm7qm64fk043", // testing
-        // "package_tdx_2_1phqmc3pcvggna0xtprl6lvdhvrgps4kmkcdlgcp7lamxnna8q440d9",  // stokenet
+        // "package_tdx_2_1phfufkduwj8d2et440pqwucr9xu4vzr6ykykcpwl7hypuyyuwdr0dw",  // stokenet
         SingleResourcePool {
 
             fn instantiate(
@@ -506,28 +506,26 @@ mod lending_market {
         ///*  CDP CREATION AND MANAGEMENT METHODS * ///
 
         pub fn list_liquidable_cdps(&self) -> Vec<CDPLiquidable> {
-            let range_min = self
-                .cdp_counter
-                .saturating_sub(self.market_config.max_cdp_position as u64);
-            let range_max = self.cdp_counter.saturating_add(1);
-
             let mut results = vec![];
-            for cdp_id in range_min..range_max {
+            Logger::debug(format!("self.cdp_counter  {}", self.cdp_counter ));
+            for cdp_id in 0..(self.cdp_counter + 1) {
                 let cdp_id = &NonFungibleLocalId::Integer(cdp_id.into());
+                Logger::debug(format!("Search cdp {} exists= {}", cdp_id, self.cdp_res_manager.non_fungible_exists(cdp_id)));
                 if self.cdp_res_manager.non_fungible_exists(cdp_id) {
                     let (cdp_data, delegator_cdp_data) = self._get_cdp_data(&cdp_id, true);
+                    if !cdp_data.cdp_data.collaterals.is_empty() {
+                        let mut cdp_health_checker = CDPHealthChecker::new_without_update(
+                            &cdp_data,
+                            delegator_cdp_data.as_ref(),
+                            &self.pool_states,
+                        );
 
-                    let mut cdp_health_checker = CDPHealthChecker::new_without_update(
-                        &cdp_data,
-                        delegator_cdp_data.as_ref(),
-                        &self.pool_states,
-                    );
-
-                    if cdp_health_checker.can_liquidate().is_ok() {
-                        results.push(CDPLiquidable {
-                            cdp_id: cdp_data.cdp_id,
-                            cdp_data: cdp_data.cdp_data,
-                        });
+                        if cdp_health_checker.can_liquidate().is_ok() {
+                            results.push(CDPLiquidable {
+                                cdp_id: cdp_data.cdp_id,
+                                cdp_data: cdp_data.cdp_data,
+                            });
+                        }
                     }
                 }
             }
@@ -1141,6 +1139,10 @@ mod lending_market {
             };
 
             let (mut cdp_data, mut delegator_cdp_data) = self._get_cdp_data(&cdp_id, true);
+
+            if cdp_data.cdp_data.collaterals.is_empty() {
+                panic!("Position was liquidated");
+            }
 
             let (remainders, payment_value) = self._repay_internal(
                 &mut cdp_data,

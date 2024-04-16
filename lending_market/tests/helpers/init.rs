@@ -75,3 +75,14 @@ pub fn build_and_dump_to_fs(
 
     manifest
 }
+
+
+pub fn find_event_in_result<T: ScryptoDecode>(result: &CommitResult, event_type: &str) -> Option<T> {
+    result.application_events.iter().find_map(|(EventTypeIdentifier(_, id), event)|{
+        if id == &event_type {
+            Some(scrypto_decode::<T>(&event).unwrap())
+        } else {
+            None
+        }
+    })
+}

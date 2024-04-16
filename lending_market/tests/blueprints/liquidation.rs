@@ -1,16 +1,19 @@
 use crate::helpers::{init::TestHelper, methods::*};
-use radix_engine_interface::{blueprints::consensus_manager::TimePrecision, prelude::*};
+use radix_engine_interface::prelude::*;
 
-// ! ISSUE WITH TEST RUNNER: CANNOT MOVE TIME FORWARD
 #[test]
 fn test_liquidation() {
     let mut helper = TestHelper::new();
     let usd = helper.faucet.usdc_resource_address;
 
-    print!(
-        "Begin {:?}",
-        helper.test_runner.get_current_time(TimePrecision::Minute)
-    );
+    const T2024: i64 = 1704067200;
+    const T6_MONTHS: i64 = 15778476000;
+
+    helper
+        .test_runner
+        .advance_to_round_at_timestamp(Round::of(1), T2024);
+    admin_update_price(&mut helper, 1u64, usd, dec!(25)).expect_commit_success();
+
 
     // SET UP A LP PROVIDER
     let (lp_user_key, _, lp_user_account) = helper.test_runner.new_allocated_account();
@@ -66,6 +69,10 @@ fn test_liquidation() {
         dec!(420),
     )
     .expect_commit_success();
+
+    helper
+        .test_runner
+        .advance_to_round_at_timestamp(Round::of(1), T2024 + T6_MONTHS);
 
     // Change USD (in XRD) PRICE
     admin_update_price(&mut helper, 1u64, usd, dec!(27)).expect_commit_success();

@@ -161,6 +161,30 @@ pub fn market_update_pool_state(
     receipt
 }
 
+pub fn market_list_liquidable_cdps(
+    helper: &mut TestHelper,
+) -> TransactionReceiptV1 {
+    let manifest = ManifestBuilder::new().lock_fee_from_faucet().call_method(
+        helper.market.market_component_address,
+        "list_liquidable_cdps",
+        manifest_args!()
+    );
+
+    let receipt = helper.test_runner.execute_manifest(
+        build_and_dump_to_fs(manifest, "list_liquidable_cdps".into()),
+        vec![NonFungibleGlobalId::from_public_key(
+            &helper.owner_public_key,
+        )],
+    );
+
+    receipt.expect_commit_success();
+
+    println!("{:?}\n", receipt);
+
+    receipt
+}
+
+
 pub fn market_contribute(
     helper: &mut TestHelper,
     user_public_key: Secp256k1PublicKey,
@@ -407,77 +431,61 @@ pub fn market_repay(
     )
 }
 
-pub fn market_start_liquidation(
+pub fn market_liquidation(
     helper: &mut TestHelper,
     user_public_key: Secp256k1PublicKey,
     user_account_address: ComponentAddress,
     cdp_id: u64,
     requested_collaterals: Vec<ResourceAddress>,
     total_payment_value: Option<Decimal>,
+    payments: Vec<(ResourceAddress, Decimal)>,
 ) -> TransactionReceipt {
-    let manifest_builder = ManifestBuilder::new()
-        .lock_fee_from_faucet()
+    let mut manifest_builder = ManifestBuilder::new()
+        .lock_fee(FAUCET, 20000)
         .call_method(
             helper.market.market_component_address,
             "start_liquidation",
             manifest_args!(
                 NonFungibleLocalId::integer(cdp_id),
-                requested_collaterals,
+                requested_collaterals.clone(),
                 total_payment_value
             ),
-        )
+        );
+
+    let mut payment_buckets = Vec::<ManifestBucket>::new();
+    for (res_address, amount) in payments {
+        manifest_builder = manifest_builder
+            .withdraw_from_account(user_account_address, res_address, amount)
+            .take_all_from_worktop(
+                res_address,
+                format!("payment_bucket_{:?}", res_address.as_node_id()),
+            )
+            .with_name_lookup(|builder, lookup| {
+                payment_buckets
+                    .push(lookup.bucket(format!("payment_bucket_{:?}", res_address.as_node_id())));
+                builder
+            });
+    }
+
+    manifest_builder = manifest_builder
+        .take_all_from_worktop(
+            helper.market.liquidation_term_resource_address,
+            "liquidation_term_bucket",
+        );
+
+    manifest_builder = manifest_builder
+        .with_name_lookup(|builder, _lookup| {
+            let liquidation_term_bucket = _lookup.bucket("liquidation_term_bucket");
+            builder.call_method(
+                helper.market.market_component_address,
+                "end_liquidation",
+                manifest_args!(payment_buckets, liquidation_term_bucket)
+            )
+        })
         .deposit_batch(user_account_address);
 
     helper.test_runner.execute_manifest(
-        build_and_dump_to_fs(manifest_builder, "start_liquidation".into()),
-        vec![NonFungibleGlobalId::from_public_key(&user_public_key)],
-    )
-}
-
-pub fn market_end_liquidation(
-    helper: &mut TestHelper,
-    user_public_key: Secp256k1PublicKey,
-    user_account_address: ComponentAddress,
-    payments: Vec<(ResourceAddress, Decimal)>,
-) -> TransactionReceipt {
-    let mut payment_buckets = Vec::<ManifestBucket>::new();
-    let manifest_builder = ManifestBuilder::new()
-        .lock_fee_from_faucet()
-        .take_all_from_worktop(
-            helper.market.liquidation_term_resource_address,
-            "liquidation_term",
-        )
-        .with_name_lookup(|builder, _lookup| {
-            let liquidation_term_bucket = _lookup.bucket("liquidation_term_bucket");
-            let (_, newbuilder) =
-                payments
-                    .iter()
-                    .fold((0, builder), |(i, builder), (res_address, amount)| {
-                        (
-                            i,
-                            builder
-                                .withdraw_from_account(user_account_address, *res_address, *amount)
-                                .take_all_from_worktop(
-                                    *res_address,
-                                    format!("payment_bucket_{}", i),
-                                )
-                                .with_name_lookup(|builder, lookup| {
-                                    payment_buckets
-                                        .push(lookup.bucket(format!("payment_bucket_{}", i)));
-                                    builder
-                                }),
-                        )
-                    });
-
-            newbuilder.call_method(
-                helper.market.market_component_address,
-                "end_liquidation",
-                manifest_args!(payment_buckets, liquidation_term_bucket),
-            )
-        });
-
-    helper.test_runner.execute_manifest(
-        build_and_dump_to_fs(manifest_builder, "end_liquidation".into()),
+        build_and_dump_to_fs(manifest_builder, "market_liquidation".into()),
         vec![NonFungibleGlobalId::from_public_key(&user_public_key)],
     )
 }

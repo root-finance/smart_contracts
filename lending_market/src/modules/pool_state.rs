@@ -190,7 +190,7 @@ impl LendingPoolState {
         let reserved_amount_for_position = (unit_ratio * self.total_reserved_amount)
             .checked_truncate(RoundingMode::ToNearestMidpointToEven)
             .unwrap();
-        Logger::debug(format!("REDEEM unit_ratio * total_reserved_amount {:?} = reserved_amount_for_position {:?}", self.total_reserved_amount, reserved_amount_for_position));
+        // Logger::debug(format!("REDEEM unit_ratio * total_reserved_amount {:?} = reserved_amount_for_position {:?}", self.total_reserved_amount, reserved_amount_for_position));
         
 
         let mut redeemed = self.pool.redeem(pool_units);
@@ -198,7 +198,7 @@ impl LendingPoolState {
         self.total_reserved_amount -= reserved_amount_for_position;
         self.reserve.put(reserve_amount);
 
-        Logger::debug(format!("REDEEMED AMOUNT = {:?} RESERVE AMOUNT = {:?}", redeemed.amount(), self.reserve.amount()));
+        // Logger::debug(format!("REDEEMED AMOUNT = {:?} RESERVE AMOUNT = {:?}", redeemed.amount(), self.reserve.amount()));
 
         self._update_deposit_unit(-redeemed.amount())
             .expect("update deposit unit for redeem");
@@ -368,9 +368,9 @@ impl LendingPoolState {
             
             let active_interest_rate = self.pool_utilization * self.interest_rate * (PreciseDecimal::ONE - self.pool_config.protocol_interest_fee_rate);
 
-            Logger::debug(format!("INTEREST period_in_seconds: {:?}", period_in_seconds)); 
+            // Logger::debug(format!("INTEREST period_in_seconds: {:?}", period_in_seconds)); 
 
-            Logger::debug(format!("INTEREST interest_rate {:?} - pool_utilization {:?} - active_interest_rate {:?}", self.interest_rate, self.pool_utilization, active_interest_rate));
+            // Logger::debug(format!("INTEREST interest_rate {:?} - pool_utilization {:?} - active_interest_rate {:?}", self.interest_rate, self.pool_utilization, active_interest_rate));
 
             let new_total_loan_amount = self.interest_rate * (PreciseDecimal::ONE + self.total_loan) * period_in_seconds / one_year_in_seconds;
             let new_total_deposit_amount = active_interest_rate * (PreciseDecimal::ONE + self.total_deposit) * period_in_seconds / one_year_in_seconds;
@@ -380,7 +380,7 @@ impl LendingPoolState {
 
             let accrued_interest_amount = if new_total_loan_amount - self.total_loan < PreciseDecimal::ZERO { new_total_loan_amount } else { new_total_loan_amount - self.total_loan };
 
-            Logger::debug(format!("INTEREST new_total_loan_amount {:?} ; new_total_deposit_amount {:?}; reserve_delta {:?}; accrued_interest_amount {:?}", new_total_loan_amount, new_total_deposit_amount, reserve_delta, accrued_interest_amount));
+            // Logger::debug(format!("INTEREST new_total_loan_amount {:?} ; new_total_deposit_amount {:?}; reserve_delta {:?}; accrued_interest_amount {:?}", new_total_loan_amount, new_total_deposit_amount, reserve_delta, accrued_interest_amount));
 
 
             self.total_loan += new_total_loan_amount
@@ -390,7 +390,7 @@ impl LendingPoolState {
                 .checked_truncate(RoundingMode::ToNearestMidpointToEven)
                 .unwrap();
 
-            Logger::debug(format!("INTEREST updated totals: total_loan {:?} - total_deposit {:?}", self.total_loan, self.total_deposit));
+            // Logger::debug(format!("INTEREST updated totals: total_loan {:?} - total_deposit {:?}", self.total_loan, self.total_deposit));
 
             // Virtually increase pooled liquidity with accrued interest amount
             self.pool.increase_external_liquidity(accrued_interest_amount
@@ -402,7 +402,7 @@ impl LendingPoolState {
             if interest_rate != self.interest_rate {
                 self.interest_updated_at = now;
                 self.interest_rate = interest_rate;
-                Logger::debug(format!("INTEREST update: now {:?} - pool_utilization {:?} - interest_rate {:?}", self.interest_updated_at, self.pool_utilization, self.interest_rate));
+                // Logger::debug(format!("INTEREST update: now {:?} - pool_utilization {:?} - interest_rate {:?}", self.interest_updated_at, self.pool_utilization, self.interest_rate));
             }
 
             Runtime::emit_event(LendingPoolUpdatedEvent {
