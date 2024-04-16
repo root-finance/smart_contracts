@@ -17,6 +17,29 @@ pub enum LendingPoolUpdatedEventType {
 pub struct LendingPoolUpdatedEvent {
     pub pool_res_address: ResourceAddress,
     pub event_type: LendingPoolUpdatedEventType,
+    pub amount: Decimal,
+}
+
+#[derive(ScryptoSbor)]
+pub struct MarketStatsPool {
+    pub asset_address: ResourceAddress,
+    pub total_liquidity: Decimal,
+    pub total_supply: PreciseDecimal,
+    pub total_borrow: Decimal,
+    pub supply_apy: PreciseDecimal,
+    pub borrow_apy: PreciseDecimal,
+    pub deposit_limit: Option<Decimal>,
+    pub borrow_limit: Option<Decimal>,
+    pub utilization_limit: Option<Decimal>,
+    pub optimal_usage: Decimal,
+    pub ltv_limit: Decimal,
+}
+
+#[derive(ScryptoSbor)]
+pub struct MarketStatsAllPools {
+    pub total_supply_all_pools: PreciseDecimal,
+    pub total_borrow_all_pools: Decimal,
+    pub market_stats_pools: Vec<MarketStatsPool>,
 }
 
 #[derive(ScryptoSbor)]
@@ -117,6 +140,7 @@ impl LendingPoolState {
         Runtime::emit_event(LendingPoolUpdatedEvent {
             pool_res_address: self.pool_res_address,
             event_type: LendingPoolUpdatedEventType::DepositState,
+            amount
         });
 
         Ok(self.pool.contribute(assets))
@@ -126,13 +150,15 @@ impl LendingPoolState {
         Runtime::emit_event(LendingPoolUpdatedEvent {
             pool_res_address: self.pool_res_address,
             event_type: LendingPoolUpdatedEventType::DepositState,
+            amount: assets.amount()
         });
 
         self.pool.redeem(assets)
     }
 
     pub fn add_pool_units_as_collateral(&mut self, pool_units: Bucket) -> Result<(), String> {
-        if pool_units.amount() == 0.into() {
+        let pool_units_amount = pool_units.amount();
+        if pool_units_amount == 0.into() {
             return Ok(());
         }
 
@@ -145,6 +171,7 @@ impl LendingPoolState {
         Runtime::emit_event(LendingPoolUpdatedEvent {
             pool_res_address: self.pool_res_address,
             event_type: LendingPoolUpdatedEventType::CollateralState,
+            amount: pool_units_amount
         });
 
         Ok(())
@@ -165,6 +192,7 @@ impl LendingPoolState {
         Runtime::emit_event(LendingPoolUpdatedEvent {
             pool_res_address: self.pool_res_address,
             event_type: LendingPoolUpdatedEventType::CollateralState,
+            amount: pool_unit_amount
         });
 
         Ok(self.collaterals.take_advanced(
@@ -210,6 +238,7 @@ impl LendingPoolState {
         Runtime::emit_event(LendingPoolUpdatedEvent {
             pool_res_address: self.pool_res_address,
             event_type: LendingPoolUpdatedEventType::LoanState,
+            amount
         });
 
         Ok(result)
@@ -218,6 +247,7 @@ impl LendingPoolState {
     /// Handle request to decrease borrowed amount.
     /// it add back liquidity and updated the pool loan state based on input interest strategy
     pub fn deposit_for_repay(&mut self, payment: Bucket) -> Result<Decimal, String> {
+        let payment_amount = payment.amount();
         if payment.resource_address() != self.pool_res_address {
             return Err("Payment resource address mismatch".into());
         }
@@ -230,6 +260,7 @@ impl LendingPoolState {
         Runtime::emit_event(LendingPoolUpdatedEvent {
             pool_res_address: self.pool_res_address,
             event_type: LendingPoolUpdatedEventType::LoanState,
+            amount: payment_amount
         });
 
         // returned unit should be negative or 0
@@ -268,6 +299,7 @@ impl LendingPoolState {
             Runtime::emit_event(LendingPoolUpdatedEvent {
                 pool_res_address: self.pool_res_address,
                 event_type: LendingPoolUpdatedEventType::Price,
+                amount: Decimal::zero()
             });
         }
 
@@ -313,6 +345,7 @@ impl LendingPoolState {
             Runtime::emit_event(LendingPoolUpdatedEvent {
                 pool_res_address: self.pool_res_address,
                 event_type: LendingPoolUpdatedEventType::Interest,
+                amount: Decimal::zero()
             });
         }
 

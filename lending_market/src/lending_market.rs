@@ -116,12 +116,14 @@ mod lending_market {
             repay => PUBLIC;
 
             // Liquidation methods
-
             list_liquidable_cdps => PUBLIC;
             refinance => PUBLIC;
             start_liquidation => PUBLIC;
             end_liquidation => PUBLIC;
             fast_liquidation => PUBLIC;
+
+            // Statistics queries
+            list_info_stats => PUBLIC;
         }
 
     }
@@ -1299,6 +1301,74 @@ mod lending_market {
             emit_cdp_event!(cdp_id, CDPUpdatedEvenType::Liquidate);
 
             (remainders, returned_collaterals, total_payment_value)
+        }
+
+        //*  PUBLIC QUERIES   *//
+
+        pub fn list_info_stats(&self) -> MarketStatsAllPools {
+            let second_per_year = 31536000;
+            let mut total_supply_all_pools = PreciseDecimal::zero();
+            let mut total_borrow_all_pools = Decimal::zero();
+
+            let market_stats = self.listed_assets
+                .clone()
+                .into_iter()
+                .map(|asset| {
+                    let pool_state_ref = self.pool_states.get(&asset).unwrap();
+                    let pool_state = pool_state_ref;
+                    let utilization_rate = pool_state.pool.get_pool_unit_ratio(
+                        InterestType::Passive
+                    );
+
+                    let deposit_rate =
+                        utilization_rate *
+                        pool_state.interest_rate *
+                        (1 - pool_state.pool_config.protocol_liquidation_fee_rate);
+
+                    let supply_apy_term: PreciseDecimal = 1 + deposit_rate / second_per_year;
+                    let supply_apy =
+                        supply_apy_term.checked_powi(second_per_year).unwrap() - dec!(1);
+
+                    let borrow_apy_term: PreciseDecimal =
+                        pdec!(1) + pool_state.interest_rate / second_per_year;
+                    let borrow_apy =
+                        borrow_apy_term.checked_powi(second_per_year).unwrap() - dec!(1);
+
+                    let total_liquidity =
+                        pool_state.pool.get_pooled_amount().0 +
+                        pool_state.pool.get_pooled_amount().1;
+
+                    let total_borrow = pool_state.pool.get_pooled_amount().1;
+
+                    let total_supply =
+                        pool_state.pool.get_pool_unit_ratio(InterestType::Passive) *
+                        total_liquidity;
+
+                    total_supply_all_pools += total_supply;
+                    total_borrow_all_pools += total_borrow;
+
+                    MarketStatsPool {
+                        asset_address: pool_state.pool_res_address,
+                        total_liquidity,
+                        total_supply,
+                        total_borrow,
+                        supply_apy,
+                        borrow_apy,
+                        deposit_limit: pool_state.pool_config.deposit_limit,
+                        borrow_limit: pool_state.pool_config.borrow_limit,
+                        utilization_limit: pool_state.pool_config.utilization_limit,
+                        optimal_usage: pool_state.pool_config.optimal_usage,
+                        ltv_limit: pool_state.pool_config.ltv_limit,
+                    }
+                })
+                .collect::<Vec<MarketStatsPool>>();
+
+            let market_total_stats = MarketStatsAllPools {
+                total_supply_all_pools,
+                total_borrow_all_pools,
+                market_stats_pools: market_stats,
+            };
+            market_total_stats
         }
 
         //*  PRIVATE UTILITY METHODS   *//
