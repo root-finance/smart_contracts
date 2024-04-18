@@ -107,7 +107,7 @@ impl MarketTestHelper {
                     (
                         dec!("0.2"),
                         dec!("0.15"),
-                        dec!("0.15"),
+                        dec!("0.4"),
                         dec!("0.001"),
                         0u8,
                         dec!("0.05"),
@@ -174,7 +174,7 @@ impl MarketTestHelper {
                     (
                         dec!("0.2"),
                         dec!("0.15"),
-                        dec!("0.15"),
+                        dec!("0.4"),
                         dec!("0.001"),
                         1u8,
                         dec!("0.05"),

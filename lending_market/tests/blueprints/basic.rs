@@ -350,7 +350,7 @@ fn test_liquidation() {
         payments,
     ).expect_commit_success();
 
-    assert_eq!(dec!(9467.347193243989866335), helper
+    assert_eq!(dec!(9348.111082497843898245), helper
         .test_runner
         .get_component_balance(liquidator_user_account, XRD) - xrd_balance);
 
@@ -364,7 +364,6 @@ fn test_liquidation() {
     let event: CDPLiquidableEvent = find_event_in_result(receipt.expect_commit_success(), "CDPLiquidableEvent").expect("CDPLiquidableEvent not found");
     
     assert!(event.cdps.is_empty());
-
 
      // ENTERS A NEW BORROWER
      let (borrower2_key, _, borrower2_account) = helper.test_runner.new_allocated_account();

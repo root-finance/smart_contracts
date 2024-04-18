@@ -106,7 +106,7 @@ echo "CALL_METHOD Address(\"$LENDING_MARKET_COMPONENT_ADDRESS\") \"create_lendin
     Tuple(
         Decimal(\"0.2\"),
         Decimal(\"0.15\"),
-        Decimal(\"0.15\"),
+        Decimal(\"0.4\"),
         Decimal(\"0.001\"),
         0u8,
         Decimal(\"0.08\"),
@@ -134,9 +134,9 @@ echo "CALL_METHOD Address(\"$LENDING_MARKET_COMPONENT_ADDRESS\") \"create_lendin
     );" >> tx.rtm
 echo "CALL_METHOD Address(\"$LENDING_MARKET_COMPONENT_ADDRESS\") \"create_lending_pool\" Address(\"$PRICE_FEED_COMPONENT_ADDRESS\") Address(\"$USDT_RESOURCE_ADDRESS\")
     Tuple(
+        Decimal(\"0.2\"),
         Decimal(\"0.15\"),
-        Decimal(\"0.15\"),
-        Decimal(\"0.15\"),
+        Decimal(\"0.4\"),
         Decimal(\"0.001\"),
         1u8,
         Decimal(\"0.08\"),
