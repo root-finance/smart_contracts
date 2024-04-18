@@ -243,7 +243,7 @@ impl LendingPoolState {
         Runtime::emit_event(LendingPoolUpdatedEvent {
             pool_res_address: self.pool_res_address,
             event_type: LendingPoolUpdatedEventType::CollateralState,
-            amount: pool_unit_amount
+            amount: -pool_unit_amount
         });
 
         Ok(self.collaterals.take_advanced(
