@@ -47,16 +47,41 @@ FAUCET_ADMIN_BADGE=resource_tdx_2_1nfh62hky7df7kwlwkq4pr3uxkjetrth6nq37szmqwvyy2
 
 # ------------------------------------------------------------------------------------ Instantiate resources
 echo "CALL_METHOD Address(\"$OWNER_ADDRESS\") \"create_proof_of_non_fungibles\"  Address(\"$FAUCET_ADMIN_BADGE\")  Array<NonFungibleLocalId>(NonFungibleLocalId(\"#1#\"));" >> tx.rtm
-echo "CALL_METHOD Address(\"$FAUCET_COMPONENT_ADDRESS\") \"create_resource\" \"USDT\" \"USDT\" \"https://res.cloudinary.com/daisvxhyu/image/upload/v1679440531/825_lkjddk.png\"  Decimal(\"1000000\");" >> tx.rtm
-echo "CALL_METHOD Address(\"$OWNER_ADDRESS\") \"deposit_batch\" Expression(\"ENTIRE_WORKTOP\");" >> tx.rtm
-export USDT_RESOURCE_ADDRESS=resource_tdx_2_1tkak2k6lycwcakgqdgkqe7whja3rr24j25j6ncdef0lcp3yut6lv4p
+echo "CALL_METHOD Address(\"$FAUCET_COMPONENT_ADDRESS\") \"create_resource\" \"xUSDT\" \"xUSDT\" \"https://res.cloudinary.com/daisvxhyu/image/upload/v1679440531/825_lkjddk.png\"  Decimal(\"1000000\");" >> tx.rtm
 
+echo "CALL_METHOD Address(\"$OWNER_ADDRESS\") \"create_proof_of_non_fungibles\"  Address(\"$FAUCET_ADMIN_BADGE\")  Array<NonFungibleLocalId>(NonFungibleLocalId(\"#1#\"));" >> tx.rtm
+echo "CALL_METHOD Address(\"$FAUCET_COMPONENT_ADDRESS\") \"create_resource\" \"xWBTC\" \"xWBTC\" \"https://res.cloudinary.com/daisvxhyu/image/upload/v1679440531/825_lkjddk.png\"  Decimal(\"1000000\");" >> tx.rtm
+echo "CALL_METHOD Address(\"$OWNER_ADDRESS\") \"create_proof_of_non_fungibles\"  Address(\"$FAUCET_ADMIN_BADGE\")  Array<NonFungibleLocalId>(NonFungibleLocalId(\"#1#\"));" >> tx.rtm
+echo "CALL_METHOD Address(\"$FAUCET_COMPONENT_ADDRESS\") \"create_resource\" \"xETH\" \"xETH\" \"https://res.cloudinary.com/daisvxhyu/image/upload/v1679440531/825_lkjddk.png\"  Decimal(\"1000000\");" >> tx.rtm
+echo "CALL_METHOD Address(\"$OWNER_ADDRESS\") \"create_proof_of_non_fungibles\"  Address(\"$FAUCET_ADMIN_BADGE\")  Array<NonFungibleLocalId>(NonFungibleLocalId(\"#1#\"));" >> tx.rtm
+echo "CALL_METHOD Address(\"$FAUCET_COMPONENT_ADDRESS\") \"create_resource\" \"LSU\" \"LSU\" \"https://res.cloudinary.com/daisvxhyu/image/upload/v1679440531/825_lkjddk.png\"  Decimal(\"1000000\");" >> tx.rtm
+echo "CALL_METHOD Address(\"$OWNER_ADDRESS\") \"create_proof_of_non_fungibles\"  Address(\"$FAUCET_ADMIN_BADGE\")  Array<NonFungibleLocalId>(NonFungibleLocalId(\"#1#\"));" >> tx.rtm
+echo "CALL_METHOD Address(\"$FAUCET_COMPONENT_ADDRESS\") \"create_resource\" \"HUG\" \"HUG\" \"https://res.cloudinary.com/daisvxhyu/image/upload/v1679440531/825_lkjddk.png\"  Decimal(\"1000000\");" >> tx.rtm
+echo "CALL_METHOD Address(\"$OWNER_ADDRESS\") \"create_proof_of_non_fungibles\"  Address(\"$FAUCET_ADMIN_BADGE\")  Array<NonFungibleLocalId>(NonFungibleLocalId(\"#1#\"));" >> tx.rtm
+echo "CALL_METHOD Address(\"$FAUCET_COMPONENT_ADDRESS\") \"create_resource\" \"xUSDC\" \"xUSDC\" \"https://res.cloudinary.com/daisvxhyu/image/upload/v1679440531/825_lkjddk.png\"  Decimal(\"1000000\");" >> tx.rtm
+echo "CALL_METHOD Address(\"$OWNER_ADDRESS\") \"deposit_batch\" Expression(\"ENTIRE_WORKTOP\");" >> tx.rtm
+
+export USDT_RESOURCE_ADDRESS=resource_tdx_2_1tkak2k6lycwcakgqdgkqe7whja3rr24j25j6ncdef0lcp3yut6lv4p
+export XWBTC_RESOURCE_ADDRESS=resource_tdx_2_1tkatgs43legl0rjetydl3a96593rzgvwpxzt6uyg8hc4sztpkss752
+export XETH_RESOURCE_ADDRESS=resource_tdx_2_1t59ttjcqftthpy59qug635fw2qrv4nq02ht4ywp0sdtqzelerx6dwq
+export LSU_RESOURCE_ADDRESS=resource_tdx_2_1thset9xxx5lt00g2xf5fw3jqeh98ptn7750295zufk83qlvxnmn76j
+export HUG_RESOURCE_ADDRESS=resource_tdx_2_1t4u3tqp5hl4y22urfh2yjr44v85wq2sp27p5y7sjaearkg2qljpdmz
+export XUSDC_RESOURCE_ADDRESS=resource_tdx_2_1t5ahd2zd55u775l8fnf7at32sj9wunvrgjp267qdzst8mgul90kalm
 
 # ------------------------------------------------------------------------------------ Set prices
 echo "CALL_METHOD Address(\"$OWNER_ADDRESS\") \"create_proof_of_non_fungibles\"  Address(\"$PRICE_FEED_ADMIN_BADGE\")  Array<NonFungibleLocalId>(NonFungibleLocalId(\"#1#\"));" >> tx.rtm
 echo "CALL_METHOD Address(\"$PRICE_FEED_COMPONENT_ADDRESS\") \"admin_update_feed\" Address(\"$USDT_RESOURCE_ADDRESS\") Bytes(\"$SUPRA_PROOF\") Enum<1u8>(276u32, 1u32);" >> tx.rtm
 echo "CALL_METHOD Address(\"$OWNER_ADDRESS\") \"create_proof_of_non_fungibles\"  Address(\"$PRICE_FEED_ADMIN_BADGE\")  Array<NonFungibleLocalId>(NonFungibleLocalId(\"#1#\"));" >> tx.rtm
 echo "CALL_METHOD Address(\"$PRICE_FEED_COMPONENT_ADDRESS\") \"admin_update_price\" Address(\"$XRD\") Decimal(\"1\");" >> tx.rtm
+
+echo "CALL_METHOD Address(\"$OWNER_ADDRESS\") \"create_proof_of_non_fungibles\"  Address(\"$PRICE_FEED_ADMIN_BADGE\")  Array<NonFungibleLocalId>(NonFungibleLocalId(\"#1#\"));" >> tx.rtm
+
+echo "CALL_METHOD Address(\"$PRICE_FEED_COMPONENT_ADDRESS\") \"admin_update_price\" Address(\"$XWBTC_RESOURCE_ADDRESS\") Decimal(\"1\");" >> tx.rtm
+echo "CALL_METHOD Address(\"$PRICE_FEED_COMPONENT_ADDRESS\") \"admin_update_price\" Address(\"$XETH_RESOURCE_ADDRESS\") Decimal(\"1\");" >> tx.rtm
+echo "CALL_METHOD Address(\"$PRICE_FEED_COMPONENT_ADDRESS\") \"admin_update_price\" Address(\"$LSU_RESOURCE_ADDRESS\") Decimal(\"1\");" >> tx.rtm
+echo "CALL_METHOD Address(\"$PRICE_FEED_COMPONENT_ADDRESS\") \"admin_update_price\" Address(\"$HUG_RESOURCE_ADDRESS\") Decimal(\"1\");" >> tx.rtm
+echo "CALL_METHOD Address(\"$PRICE_FEED_COMPONENT_ADDRESS\") \"admin_update_price\" Address(\"$XUSDC_RESOURCE_ADDRESS\") Decimal(\"1\");" >> tx.rtm
+
 echo "CALL_METHOD Address(\"$OWNER_ADDRESS\") \"deposit_batch\" Expression(\"ENTIRE_WORKTOP\");" >> tx.rtm
 
 # ------------------------------------------------------------------------------------ Create lending market component
@@ -111,7 +136,168 @@ echo "CALL_METHOD Address(\"$LENDING_MARKET_COMPONENT_ADDRESS\") \"create_lendin
         Map<U8, Decimal>(),
         Decimal(\"0.7\")
     );" >> tx.rtm
+
 echo "CALL_METHOD Address(\"$LENDING_MARKET_COMPONENT_ADDRESS\") \"create_lending_pool\" Address(\"$PRICE_FEED_COMPONENT_ADDRESS\") Address(\"$USDT_RESOURCE_ADDRESS\")
+    Tuple(
+        Decimal(\"0.2\"),
+        Decimal(\"0.15\"),
+        Decimal(\"0.4\"),
+        Decimal(\"0.001\"),
+        1u8,
+        Decimal(\"0.08\"),
+        Decimal(\"1\"),
+        Enum<0u8>(),
+        Enum<0u8>(),
+        Enum<0u8>(),
+        5i64,
+        15i64,
+        240i64,
+        Decimal(\"0.8\"),
+        Decimal(\"0.75\")
+    )
+    Tuple(
+        Decimal(\"0\"), Decimal(\"0.04\"), Decimal(\"0.75\")
+    )
+    Tuple(
+        Enum<0u8>(),
+        Enum<1u8>(
+            Decimal(\"0.8\")
+        ),
+        Map<Address, Decimal>(),
+        Map<U8, Decimal>(),
+        Decimal(\"0\")
+    );" >> tx.rtm
+echo "CALL_METHOD
+    Address(\"$OWNER_ADDRESS\")
+    \"deposit_batch\"
+    Expression(\"ENTIRE_WORKTOP\");" >> tx.rtm
+
+
+echo "CALL_METHOD Address(\"$OWNER_ADDRESS\") \"create_proof_of_non_fungibles\" Address(\"$LENDING_MARKET_ADMIN_ADDRESS\") Array<NonFungibleLocalId>(NonFungibleLocalId(\"#1#\"),NonFungibleLocalId(\"#2#\"),NonFungibleLocalId(\"#3#\"),NonFungibleLocalId(\"#4#\"));" >> tx.rtm
+echo "CALL_METHOD Address(\"$LENDING_MARKET_COMPONENT_ADDRESS\") \"create_lending_pool\" Address(\"$PRICE_FEED_COMPONENT_ADDRESS\") Address(\"$XWBTC_RESOURCE_ADDRESS\")
+    Tuple(
+        Decimal(\"0.2\"),
+        Decimal(\"0.15\"),
+        Decimal(\"0.4\"),
+        Decimal(\"0.001\"),
+        0u8,
+        Decimal(\"0.08\"),
+        Decimal(\"1\"),
+        Enum<0u8>(),
+        Enum<0u8>(),
+        Enum<0u8>(),
+        5i64,
+        15i64,
+        240i64,
+        Decimal(\"0.45\"),
+        Decimal(\"0.7\")
+    )
+    Tuple(
+        Decimal(\"0\"), Decimal(\"0.04\"), Decimal(\"3.00\")
+    )
+    Tuple(
+        Enum<0u8>(),
+        Enum<1u8>(
+            Decimal(\"0.8\")
+        ),
+        Map<Address, Decimal>(),
+        Map<U8, Decimal>(),
+        Decimal(\"0.7\")
+    );" >> tx.rtm
+
+echo "CALL_METHOD Address(\"$LENDING_MARKET_COMPONENT_ADDRESS\") \"create_lending_pool\" Address(\"$PRICE_FEED_COMPONENT_ADDRESS\") Address(\"$XETH_RESOURCE_ADDRESS\")
+    Tuple(
+        Decimal(\"0.2\"),
+        Decimal(\"0.15\"),
+        Decimal(\"0.4\"),
+        Decimal(\"0.001\"),
+        0u8,
+        Decimal(\"0.08\"),
+        Decimal(\"1\"),
+        Enum<0u8>(),
+        Enum<0u8>(),
+        Enum<0u8>(),
+        5i64,
+        15i64,
+        240i64,
+        Decimal(\"0.45\"),
+        Decimal(\"0.7\")
+    )
+    Tuple(
+        Decimal(\"0\"), Decimal(\"0.04\"), Decimal(\"3.00\")
+    )
+    Tuple(
+        Enum<0u8>(),
+        Enum<1u8>(
+            Decimal(\"0.8\")
+        ),
+        Map<Address, Decimal>(),
+        Map<U8, Decimal>(),
+        Decimal(\"0.7\")
+    );" >> tx.rtm
+
+echo "CALL_METHOD Address(\"$LENDING_MARKET_COMPONENT_ADDRESS\") \"create_lending_pool\" Address(\"$PRICE_FEED_COMPONENT_ADDRESS\") Address(\"$LSU_RESOURCE_ADDRESS\")
+    Tuple(
+        Decimal(\"0.2\"),
+        Decimal(\"0.15\"),
+        Decimal(\"0.4\"),
+        Decimal(\"0.001\"),
+        0u8,
+        Decimal(\"0.08\"),
+        Decimal(\"1\"),
+        Enum<0u8>(),
+        Enum<0u8>(),
+        Enum<0u8>(),
+        5i64,
+        15i64,
+        240i64,
+        Decimal(\"0.45\"),
+        Decimal(\"0.7\")
+    )
+    Tuple(
+        Decimal(\"0\"), Decimal(\"0.04\"), Decimal(\"3.00\")
+    )
+    Tuple(
+        Enum<0u8>(),
+        Enum<1u8>(
+            Decimal(\"0.8\")
+        ),
+        Map<Address, Decimal>(),
+        Map<U8, Decimal>(),
+        Decimal(\"0.7\")
+    );" >> tx.rtm
+
+echo "CALL_METHOD Address(\"$LENDING_MARKET_COMPONENT_ADDRESS\") \"create_lending_pool\" Address(\"$PRICE_FEED_COMPONENT_ADDRESS\") Address(\"$HUG_RESOURCE_ADDRESS\")
+    Tuple(
+        Decimal(\"0.2\"),
+        Decimal(\"0.15\"),
+        Decimal(\"0.4\"),
+        Decimal(\"0.001\"),
+        0u8,
+        Decimal(\"0.08\"),
+        Decimal(\"1\"),
+        Enum<0u8>(),
+        Enum<0u8>(),
+        Enum<0u8>(),
+        5i64,
+        15i64,
+        240i64,
+        Decimal(\"0.45\"),
+        Decimal(\"0.25\")
+    )
+    Tuple(
+        Decimal(\"0\"), Decimal(\"0.04\"), Decimal(\"3.00\")
+    )
+    Tuple(
+        Enum<0u8>(),
+        Enum<1u8>(
+            Decimal(\"0.8\")
+        ),
+        Map<Address, Decimal>(),
+        Map<U8, Decimal>(),
+        Decimal(\"0.7\")
+    );" >> tx.rtm
+echo "CALL_METHOD Address(\"$LENDING_MARKET_COMPONENT_ADDRESS\") \"create_lending_pool\" Address(\"$PRICE_FEED_COMPONENT_ADDRESS\") Address(\"$XUSDC_RESOURCE_ADDRESS\")
     Tuple(
         Decimal(\"0.2\"),
         Decimal(\"0.15\"),
@@ -145,6 +331,7 @@ echo "CALL_METHOD
     Address(\"$OWNER_ADDRESS\")
     \"deposit_batch\"
     Expression(\"ENTIRE_WORKTOP\");" >> tx.rtm
+
 
 # ------------------------------------------------------------------------------------ Create liquidity pool provider account
 LP_PROVIDER_ADDRESS=account_tdx_2_1285jcu8wkxlz8kpp3euyhwq08fqwhcrahxt273eapvvsl7wsmyals8
