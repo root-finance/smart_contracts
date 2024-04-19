@@ -572,7 +572,7 @@ impl CDPHealthChecker {
         )?;
 
         // Calculate total discounted collateral value which is the sum of all discounted collateral value
-        let total_discounted_collateral_value = if total_loan_value == 0.into() {
+        let total_discounted_collateral_value = if total_loan_value < dec!(0.0000000000001) {
             Decimal::ZERO
         } else {
             total_weighted_discounted_collateral_value / total_loan_value
@@ -584,7 +584,7 @@ impl CDPHealthChecker {
         if total_discounted_collateral_value == Decimal::ZERO {
             // In case the total discounted collateral value is zero,
             // we set the LTV to zero if the total loan value is also zero and to max if the total loan value is not zero
-            if total_loan_value == Decimal::ZERO {
+            if total_loan_value < dec!(0.0000000000001) {
                 self_loan_to_value_ratio = Decimal::ZERO;
                 total_loan_to_value_ratio = Decimal::ZERO;
             } else {
