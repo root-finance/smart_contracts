@@ -24,8 +24,8 @@ mod lending_market {
 
     extern_blueprint!(
         // "package_sim1p4nk9h5kw2mcmwn5u2xcmlmwap8j6dzet7w7zztzz55p70rgqs4vag", // resim sdk
-        // "package_sim1pkc0e8f9yhlvpv38s2ymrplu7q366y3k8zc53zf2srlm7qm64fk043", // testing
-        "package_tdx_2_1p4twa63f87utfvqatt0u9ucvea4ykhjnv67pum8x807m459w04lgfd",  // stokenet
+        "package_sim1pkc0e8f9yhlvpv38s2ymrplu7q366y3k8zc53zf2srlm7qm64fk043", // testing
+        // "package_tdx_2_1p4twa63f87utfvqatt0u9ucvea4ykhjnv67pum8x807m459w04lgfd",  // stokenet
         SingleResourcePool {
 
             fn instantiate(
@@ -1313,7 +1313,7 @@ mod lending_market {
 
         pub fn list_info_stats(&self) -> MarketStatsAllPools {
             let second_per_year = 31536000;
-            let mut total_supply_all_pools = PreciseDecimal::zero();
+            let mut total_supply_all_pools = Decimal::zero();
             let mut total_borrow_all_pools = Decimal::zero();
 
             let market_stats = self.listed_assets
@@ -1322,14 +1322,14 @@ mod lending_market {
                 .map(|asset| {
                     let pool_state_ref = self.pool_states.get(&asset).unwrap();
                     let pool_state = pool_state_ref;
-                    let utilization_rate = pool_state.pool.get_pool_unit_ratio();
+                    let utilization_rate = pool_state.get_pool_utilization();
 
                     let deposit_rate =
                         utilization_rate *
                         pool_state.interest_rate *
-                        (1 - pool_state.pool_config.protocol_liquidation_fee_rate);
+                        (1 - pool_state.pool_config.protocol_interest_fee_rate);
 
-                    let supply_apy_term: PreciseDecimal = 1 + deposit_rate / second_per_year;
+                    let supply_apy_term: PreciseDecimal = PreciseDecimal::ONE + deposit_rate / second_per_year;
                     let supply_apy =
                         supply_apy_term.checked_powi(second_per_year).unwrap() - dec!(1);
 
@@ -1342,11 +1342,10 @@ mod lending_market {
                         pool_state.pool.get_pooled_amount().0 +
                         pool_state.pool.get_pooled_amount().1;
 
-                    let total_borrow = pool_state.pool.get_pooled_amount().1;
+                    let total_borrow = pool_state.total_loan;
 
                     let total_supply =
-                        pool_state.pool.get_pool_unit_ratio() *
-                        total_liquidity;
+                        pool_state.total_deposit;
 
                     total_supply_all_pools += total_supply;
                     total_borrow_all_pools += total_borrow;

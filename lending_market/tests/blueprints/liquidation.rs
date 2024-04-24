@@ -75,7 +75,7 @@ fn test_liquidation() {
         .advance_to_round_at_timestamp(Round::of(1), T2024 + T6_MONTHS);
 
     // Change USD (in XRD) PRICE
-    admin_update_price(&mut helper, 1u64, usd, dec!(27)).expect_commit_success();
+    admin_update_price(&mut helper, 1u64, usd, dec!(28)).expect_commit_success();
 
     market_update_pool_state(&mut helper, usd).expect_commit_success();
 

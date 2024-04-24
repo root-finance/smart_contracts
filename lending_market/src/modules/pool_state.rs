@@ -24,7 +24,7 @@ pub struct LendingPoolUpdatedEvent {
 pub struct MarketStatsPool {
     pub asset_address: ResourceAddress,
     pub total_liquidity: Decimal,
-    pub total_supply: PreciseDecimal,
+    pub total_supply: Decimal,
     pub total_borrow: Decimal,
     pub supply_apy: PreciseDecimal,
     pub borrow_apy: PreciseDecimal,
@@ -37,7 +37,7 @@ pub struct MarketStatsPool {
 
 #[derive(ScryptoSbor)]
 pub struct MarketStatsAllPools {
-    pub total_supply_all_pools: PreciseDecimal,
+    pub total_supply_all_pools: Decimal,
     pub total_borrow_all_pools: Decimal,
     pub market_stats_pools: Vec<MarketStatsPool>,
 }
@@ -364,7 +364,7 @@ impl LendingPoolState {
         let one_year_in_seconds: PreciseDecimal = 31_556_952.into();
         let period_in_seconds = now - self.interest_updated_at;
         if period_in_seconds >= self.pool_config.interest_update_period || bypass_interest_debounce {
-            self.pool_utilization = if self.pool_utilization == Decimal::ZERO { self._get_pool_utilization() } else { self.pool_utilization };
+            self.pool_utilization = if self.pool_utilization == Decimal::ZERO { self.get_pool_utilization() } else { self.pool_utilization };
             
             let active_interest_rate = self.pool_utilization * self.interest_rate * (PreciseDecimal::ONE - self.pool_config.protocol_interest_fee_rate);
 
@@ -397,7 +397,7 @@ impl LendingPoolState {
                 .checked_truncate(RoundingMode::ToNearestMidpointToEven)
                 .unwrap());
 
-            self.pool_utilization = self._get_pool_utilization();
+            self.pool_utilization = self.get_pool_utilization();
             let interest_rate = self.interest_strategy.get_interest_rate(self.pool_utilization, self.pool_config.optimal_usage)?;
             if interest_rate != self.interest_rate {
                 self.interest_updated_at = now;
@@ -415,9 +415,7 @@ impl LendingPoolState {
         Ok(())
     }
 
-    ///* PRIVATE UTILITY METHODS *///
-
-    fn _get_pool_utilization(&self) -> Decimal {
+    pub fn get_pool_utilization(&self) -> Decimal {
         let (available_amount, _) = self.pool.get_pooled_amount();
         if available_amount == 0.into() {
             Decimal::ZERO
@@ -426,6 +424,8 @@ impl LendingPoolState {
             self.total_loan / self.total_deposit
         }
     }
+
+    ///* PRIVATE UTILITY METHODS *///
 
     fn _update_loan_unit(&mut self, amount: Decimal) -> Result<Decimal, String> {
         let unit_ratio = self.get_loan_unit_ratio()?;
