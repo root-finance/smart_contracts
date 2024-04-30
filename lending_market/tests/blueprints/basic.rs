@@ -11,11 +11,13 @@ fn test_deposit_withdraw_borrow_repay() {
     const T2022: i64 = 1640998800;
     const T2023: i64 = 1672534800;
     let usd = helper.faucet.usdc_resource_address;
+    let btc = helper.faucet.btc_resource_address;
 
     helper
         .test_runner
         .advance_to_round_at_timestamp(Round::of(1), T2022);
     admin_update_price(&mut helper, 1u64, usd, dec!(25)).expect_commit_success();
+    admin_update_price(&mut helper, 1u64, btc, dec!(1300000)).expect_commit_success();
 
     // SETUP A LP PROVIDER
 
@@ -41,8 +43,6 @@ fn test_deposit_withdraw_borrow_repay() {
     get_resource(&mut helper, lp_user_key, lp_user_account, dec!(50_000), usd) //
         .expect_commit_success();
 
-    let usd = helper.faucet.usdc_resource_address;
-
     assert_eq!(
         helper
             .test_runner
@@ -57,11 +57,27 @@ fn test_deposit_withdraw_borrow_repay() {
 
     let (borrower_key, _, borrower_account) = helper.test_runner.new_allocated_account();
 
+    helper.test_runner.load_account_from_faucet(borrower_account);
+    helper.test_runner.load_account_from_faucet(borrower_account);
+
+    get_resource(&mut helper, borrower_key, borrower_account, dec!(20_000), btc) //
+        .expect_commit_success();
+
+    assert_eq!(
+        helper
+            .test_runner
+            .get_component_balance(borrower_account, btc),
+        dec!(0.0153846153846)
+    );
+
     market_create_cdp(
         &mut helper,
         borrower_key,
         borrower_account,
-        vec![(XRD, dec!(10_000))],
+        vec![
+            (XRD, dec!(10_000)),
+            (btc, dec!(0.0001))
+        ],
     ) //
     .expect_commit_success();
 
@@ -119,6 +135,7 @@ fn test_deposit_withdraw_borrow_repay() {
         .test_runner
         .advance_to_round_at_timestamp(Round::of(2), T2023);
     admin_update_price(&mut helper, 1u64, usd, dec!(25)).expect_commit_success();
+    admin_update_price(&mut helper, 1u64, btc, dec!(1300000)).expect_commit_success();
 
     // borrower investments returned him 2 usd, we buy them from faucet
     helper.test_runner.load_account_from_faucet(borrower_account);
@@ -201,6 +218,7 @@ fn test_create_pool_package_address() {
 fn test_liquidation() {
     let mut helper = TestHelper::new();
     let usd = helper.faucet.usdc_resource_address;
+    let btc = helper.faucet.btc_resource_address;
 
     const T2024: i64 = 1704067200;
     const T6_MONTHS: i64 = 15778476000;
@@ -212,6 +230,7 @@ fn test_liquidation() {
         .test_runner
         .advance_to_round_at_timestamp(Round::of(1), T2024);
     admin_update_price(&mut helper, 1u64, usd, dec!(25)).expect_commit_success();
+    admin_update_price(&mut helper, 1u64, btc, dec!(1300000)).expect_commit_success();
 
 
     // SET UP A LP PROVIDER
@@ -350,7 +369,7 @@ fn test_liquidation() {
         payments,
     ).expect_commit_success();
 
-    assert_eq!(dec!(9348.111082497843898245), helper
+    assert_eq!(dec!(9497.462828072445019418), helper
         .test_runner
         .get_component_balance(liquidator_user_account, XRD) - xrd_balance);
 

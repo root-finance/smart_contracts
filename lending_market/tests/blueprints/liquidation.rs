@@ -5,6 +5,7 @@ use radix_engine_interface::prelude::*;
 fn test_liquidation() {
     let mut helper = TestHelper::new();
     let usd = helper.faucet.usdc_resource_address;
+    let btc = helper.faucet.btc_resource_address;
 
     const T2024: i64 = 1704067200;
     const T6_MONTHS: i64 = 15778476000;
@@ -13,6 +14,7 @@ fn test_liquidation() {
         .test_runner
         .advance_to_round_at_timestamp(Round::of(1), T2024);
     admin_update_price(&mut helper, 1u64, usd, dec!(25)).expect_commit_success();
+    admin_update_price(&mut helper, 1u64, btc, dec!(1300000)).expect_commit_success();
 
 
     // SET UP A LP PROVIDER
@@ -21,8 +23,6 @@ fn test_liquidation() {
     helper.test_runner.load_account_from_faucet(lp_user_account);
     get_resource(&mut helper, lp_user_key, lp_user_account, dec!(25_000), usd) //
         .expect_commit_success();
-
-    let usd = helper.faucet.usdc_resource_address;
 
     assert_eq!(
         helper
@@ -56,8 +56,6 @@ fn test_liquidation() {
     ) //
     .expect_commit_success();
 
-    let usd = helper.faucet.usdc_resource_address;
-
     let cdp_id: u64 = 1;
     // Borrow 420$  Of USD
     market_borrow(
@@ -76,6 +74,7 @@ fn test_liquidation() {
 
     // Change USD (in XRD) PRICE
     admin_update_price(&mut helper, 1u64, usd, dec!(28)).expect_commit_success();
+    admin_update_price(&mut helper, 1u64, btc, dec!(1300000)).expect_commit_success();
 
     market_update_pool_state(&mut helper, usd).expect_commit_success();
 

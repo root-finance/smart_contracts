@@ -83,6 +83,7 @@ impl MarketTestHelper {
         // // Pools
 
         let mut pools = IndexMap::new();
+        
 
         // // Initialize XRD lending pool
 
@@ -110,7 +111,7 @@ impl MarketTestHelper {
                         dec!("0.4"),
                         dec!("0.001"),
                         0u8,
-                        dec!("0.05"),
+                        dec!("0.08"),
                         dec!("1"),
                         None::<Decimal>,
                         None::<Decimal>,
@@ -132,6 +133,7 @@ impl MarketTestHelper {
                         dec!("0.7")
                     )
                 ),
+                
             )
             .deposit_batch(owner_account_address)
             .build();
@@ -153,7 +155,7 @@ impl MarketTestHelper {
 
         // Initialize USD lending pool
 
-        let manifest_builder = ManifestBuilder::new()
+        let manifest3 = ManifestBuilder::new()
             .lock_fee_from_faucet()
             .create_proof_from_account_of_non_fungibles(
                 owner_account_address,
@@ -200,23 +202,95 @@ impl MarketTestHelper {
                     )
                 ),
             )
-            .deposit_batch(owner_account_address);
+            .deposit_batch(owner_account_address)
+            .build();
 
         let receipt3 = test_runner.execute_manifest(
-            build_and_dump_to_fs(manifest_builder, "create_lending_pools".into()),
+            manifest3,
             vec![NonFungibleGlobalId::from_public_key(&owner_public_key)],
         );
 
         println!("{:?}\n", receipt3);
-        let _result3 = receipt3.expect_commit(true);
+        let result3 = receipt3.expect_commit(true);
 
         pools.insert(
             faucet.usdc_resource_address,
             (
-                _result3.new_component_addresses()[0],
-                _result3.new_resource_addresses()[0],
+                result3.new_component_addresses()[0],
+                result3.new_resource_addresses()[0],
             ),
         );
+
+        // Initialize BTC lending pool
+
+        let manifest4 = ManifestBuilder::new()
+            .lock_fee_from_faucet()
+            .create_proof_from_account_of_non_fungibles(
+                owner_account_address,
+                market_admin_badge,
+                vec![
+                    NonFungibleLocalId::integer(1),
+                    NonFungibleLocalId::integer(2),
+                    NonFungibleLocalId::integer(3),
+                    NonFungibleLocalId::integer(6),
+                ],
+            )
+            .call_method(
+                market_component_address,
+                "create_lending_pool",
+                manifest_args!(
+                    price_feed.price_feed_component_address,
+                    faucet.btc_resource_address,
+                    (
+                        dec!("0.2"),
+                        dec!("0.15"),
+                        dec!("0.4"),
+                        dec!("0.001"),
+                        0u8,
+                        dec!("0.08"),
+                        dec!("1"),
+                        None::<Decimal>,
+                        None::<Decimal>,
+                        None::<Decimal>,
+                        5i64,
+                        15i64,
+                        240i64,
+                        dec!("0.45"),
+                        dec!("0.7"),
+                    ),
+                    (
+                        dec!(0), dec!(0.04), dec!(3.00)
+                    ),
+                    (
+                        None::<Decimal>,
+                        Some(dec!("0.8")),
+                        IndexMap::<ResourceAddress, Decimal>::new(),
+                        IndexMap::<u8, Decimal>::new(),
+                        dec!("0.7")
+                    )
+                ),
+            )
+            .deposit_batch(owner_account_address)
+            .build();
+
+        let receipt4 = test_runner.execute_manifest(
+            manifest4,
+            vec![NonFungibleGlobalId::from_public_key(&owner_public_key)],
+        );
+
+        println!("{:?}\n", receipt4);
+        let result4 = receipt4.expect_commit(true);
+
+        pools.insert(
+            faucet.btc_resource_address,
+            (
+                result4.new_component_addresses()[0],
+                result4.new_resource_addresses()[0],
+            ),
+        );
+
+
+        println!("{:?}\n", pools);
 
         Self {
             market_component_address,

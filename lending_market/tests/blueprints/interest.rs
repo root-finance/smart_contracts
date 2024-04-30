@@ -9,6 +9,7 @@ fn test_interest() {
     const T6_MONTHS: i64 = 15778476000;
 
     let usd = helper.faucet.usdc_resource_address;
+    let btc = helper.faucet.btc_resource_address;
     let usd_pu = helper.market.pools.get(&usd).unwrap().clone().1;
 
     // 1) Alice deposits 1000 USD
@@ -16,6 +17,7 @@ fn test_interest() {
         .test_runner
         .advance_to_round_at_timestamp(Round::of(1), T2024);
     admin_update_price(&mut helper, 1u64, usd, dec!(15)).expect_commit_success();
+    admin_update_price(&mut helper, 1u64, btc, dec!(1300000)).expect_commit_success();
 
     let (alice_key, _, alice_account) = helper.test_runner.new_allocated_account();
 
@@ -66,6 +68,7 @@ fn test_interest() {
         .test_runner
         .advance_to_round_at_timestamp(Round::of(2), T2024 + T6_MONTHS);
     admin_update_price(&mut helper, 1u64, usd, dec!(15)).expect_commit_success();
+    admin_update_price(&mut helper, 1u64, btc, dec!(1300000)).expect_commit_success();
 
     // 4) Charles deposits 2000 USD
     let (charles_key, _, charles_account) = helper.test_runner.new_allocated_account();
@@ -96,6 +99,7 @@ fn test_interest() {
         .test_runner
         .advance_to_round_at_timestamp(Round::of(3), T2024 + T6_MONTHS * 2);
     admin_update_price(&mut helper, 1u64, usd, dec!(15)).expect_commit_success();
+    admin_update_price(&mut helper, 1u64, btc, dec!(1300000)).expect_commit_success();
 
     // 6) Charles redeems his 2000 USD
     market_redeem(
@@ -152,6 +156,7 @@ fn test_interest() {
         .test_runner
         .advance_to_round_at_timestamp(Round::of(5), T2024 + T6_MONTHS * 4);
     admin_update_price(&mut helper, 1u64, usd, dec!(15)).expect_commit_success();
+    admin_update_price(&mut helper, 1u64, btc, dec!(1300000)).expect_commit_success();
 
     // 9) Alice redeems her 1000 USD
     market_redeem(

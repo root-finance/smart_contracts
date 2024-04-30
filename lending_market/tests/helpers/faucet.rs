@@ -13,6 +13,7 @@ pub struct FaucetTestHelper {
     pub faucet_component_address: ComponentAddress,
     pub faucet_admin_badge: ResourceAddress,
     pub usdc_resource_address: ResourceAddress,
+    pub btc_resource_address: ResourceAddress,
 }
 impl FaucetTestHelper {
     pub fn new(
@@ -70,19 +71,34 @@ impl FaucetTestHelper {
                     dec!(1_000_000)
                 ),
             )
+            .call_method(
+                faucet_component_address,
+                "create_resource",
+                manifest_args!(
+                    "BTC",
+                    "BTC",
+                    "https://res.cloudinary.com/daisvxhyu/image/upload/v1679440531/825_lkjddk.png",
+                    dec!(1_000_000)
+                ),
+            )
             .deposit_batch(owner_account_address);
 
         let receipt_1 = test_runner.execute_manifest(
-            build_and_dump_to_fs(manifest_builder_1, "create_resource_USDC".into()),
+            build_and_dump_to_fs(manifest_builder_1, "create_resource_USDC_BTC".into()),
             vec![NonFungibleGlobalId::from_public_key(&owner_public_key)],
         );
         let result_1 = receipt_1.expect_commit(true);
 
         let resource_addresses_created = result_1.new_resource_addresses();
         let usdc_resource_address = resource_addresses_created[0];
+        let btc_resource_address = resource_addresses_created[1];
 
         assert_eq!(
             test_runner.get_component_balance(owner_account_address, usdc_resource_address),
+            dec!(1_000_000)
+        );
+        assert_eq!(
+            test_runner.get_component_balance(owner_account_address, btc_resource_address),
             dec!(1_000_000)
         );
 
@@ -106,6 +122,11 @@ impl FaucetTestHelper {
                 price_feed.price_feed_component_address,
                 "admin_update_price",
                 manifest_args!(usdc_resource_address, dec!(25)),
+            ) 
+            .call_method(
+                price_feed.price_feed_component_address,
+                "admin_update_price",
+                manifest_args!(btc_resource_address, dec!(1300000)),
             );
 
         let _result_2 = test_runner
@@ -119,6 +140,7 @@ impl FaucetTestHelper {
             faucet_component_address,
             faucet_admin_badge,
             usdc_resource_address,
+            btc_resource_address
         }
     }
 }

@@ -256,6 +256,7 @@ pub fn market_create_cdp(
                 deposits
                     .iter()
                     .fold((0, builder), |(i, builder), (res_address, amount)| {
+                        let i = i + 1;
                         (
                             i,
                             builder
