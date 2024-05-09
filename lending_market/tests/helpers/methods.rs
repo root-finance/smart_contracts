@@ -1,6 +1,5 @@
 use super::init::{build_and_dump_to_fs, TestHelper};
 use radix_engine_interface::prelude::*;
-use scrypto::*;
 use scrypto_test::prelude::*;
 
 pub fn admin_update_price(

@@ -1,5 +1,4 @@
 use lending_market::modules::interest_strategy::*;
-use scrypto::*;
 use scrypto_test::prelude::*;
 
 #[test]

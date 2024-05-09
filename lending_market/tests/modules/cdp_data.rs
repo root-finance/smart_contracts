@@ -1,5 +1,4 @@
 use lending_market::modules::cdp_data::*;
-use scrypto::*;
 use scrypto_test::prelude::*;
 
 #[test]

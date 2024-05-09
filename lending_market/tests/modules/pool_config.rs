@@ -1,5 +1,4 @@
 use lending_market::modules::pool_config::*;
-use scrypto::*;
 use scrypto_test::prelude::*;
 
 fn get_default_pool_config() -> PoolConfig {

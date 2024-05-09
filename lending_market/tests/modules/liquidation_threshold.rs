@@ -1,5 +1,4 @@
 use lending_market::modules::liquidation_threshold::LiquidationThreshold;
-use scrypto::*;
 use scrypto_test::prelude::*;
 
 fn create_sample_liquidation_threshold() -> LiquidationThreshold {
