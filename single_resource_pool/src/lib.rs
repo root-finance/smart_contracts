@@ -69,14 +69,14 @@ pub mod single_resource_pool {
     }
 
     pub struct SingleResourcePool {
-        /// Vault containing the pooled token
-        liquidity: Vault,
+        /// The pool
+        pool: Global<OneResourcePool>,
 
+        /// The pooled resource address
+        pool_resource_address: ResourceAddress,
+        
         /// Amount taken from the pool and not yet returned
         external_liquidity_amount: Decimal,
-
-        /// Pool unit fungible resource manager
-        pool_unit_res_manager: ResourceManager,
 
         /// Ratio between the pool unit and the pooled token
         unit_to_asset_ratio: PreciseDecimal,
@@ -85,42 +85,31 @@ pub mod single_resource_pool {
 
     impl SingleResourcePool {
         pub fn instantiate_locally(
-            pool_res_address: ResourceAddress,
+            pool_resource_address: ResourceAddress,
             owner_role: OwnerRole,
             component_rule: AccessRule,
         ) -> (Owned<SingleResourcePool>, ResourceAddress) {
             /* CHECK INPUTS */
-            assert_fungible_res_address(pool_res_address, None);
+            assert_fungible_res_address(pool_resource_address, None);
 
-            let pool_res_symbol: String = ResourceManager::from_address(pool_res_address)
-            .get_metadata("symbol").expect("Pool resource symbol not provided").unwrap_or_default();
+            let pool = Blueprint::<OneResourcePool>::instantiate(
+                owner_role,
+                component_rule,
+                pool_resource_address,
+                None,
+            );
 
-            let pool_unit_res_manager = ResourceBuilder::new_fungible(owner_role)
-                .metadata(metadata! {
-                    init {
-                        "name" => format!("{pool_res_symbol} Root Token"), locked;
-                        "symbol" => format!("rt{pool_res_symbol}"), locked;
-                    }
-                })
-                .mint_roles(mint_roles! {
-                    minter => component_rule.clone();
-                    minter_updater => rule!(deny_all);
-                })
-                .burn_roles(burn_roles! {
-                    burner => component_rule;
-                    burner_updater => rule!(deny_all);
-                })
-                .create_with_no_initial_supply();
-
+            let pool_unit_res_address = Self::_get_pool_unit_resource_address(&pool);
+            
             let pool_component = Self {
-                liquidity: Vault::new(pool_res_address),
-                pool_unit_res_manager,
+                pool,
+                pool_resource_address,
                 external_liquidity_amount: 0.into(),
                 unit_to_asset_ratio: 1.into(),
             }
             .instantiate();
 
-            (pool_component, pool_unit_res_manager.address())
+            (pool_component, pool_unit_res_address)
         }
 
         pub fn instantiate(
@@ -160,11 +149,13 @@ pub mod single_resource_pool {
         }
 
         pub fn get_pool_unit_supply(&self) -> Decimal {
-            self.pool_unit_res_manager.total_supply().unwrap_or(dec!(0))
+            let pool_unit_res_address = Self::_get_pool_unit_resource_address(&self.pool);
+            let pool_unit_res_manager = ResourceManager::from_address(pool_unit_res_address);
+            pool_unit_res_manager.total_supply().unwrap_or(dec!(0))
         }
 
         pub fn get_pooled_amount(&self) -> (Decimal, Decimal) {
-            (self.liquidity.amount(), self.external_liquidity_amount)
+            (self.pool.get_vault_amount(), self.external_liquidity_amount)
         }
 
         // Handle request to increase liquidity.
@@ -172,7 +163,7 @@ pub mod single_resource_pool {
         pub fn contribute(&mut self, assets: Bucket) -> Bucket {
             /* CHECK INPUT */
             assert!(
-                assets.resource_address() == self.liquidity.resource_address(),
+                assets.resource_address() == self.pool_resource_address,
                 "Pool resource address mismatch"
             );
 
@@ -181,17 +172,24 @@ pub mod single_resource_pool {
                     .checked_truncate(RoundingMode::ToNearestMidpointToEven)
                     .expect("Error while calculating unit amount to mint");
 
-            self.liquidity.put(assets);
+            let mut contributed = self.pool.contribute(assets);
 
-            self.pool_unit_res_manager.mint(unit_amount)
+            let diff = contributed.amount() - unit_amount;
+            if diff > dec!(0) {
+                let remaining = self.pool.redeem(contributed.take(diff));
+                self.pool.protected_deposit(remaining);
+            }
+
+            contributed
         }
 
         // Handle request to decrease liquidity.
         // Remove liquidity from the pool and and burn corresponding pool units
         pub fn redeem(&mut self, pool_units: Bucket) -> Bucket {
+            let pool_unit_res_address = Self::_get_pool_unit_resource_address(&self.pool);
             /* INPUT CHECK */
             assert!(
-                pool_units.resource_address() == self.pool_unit_res_manager.address(),
+                pool_units.resource_address() == pool_unit_res_address,
                 "Pool unit resource address mismatch"
             );
 
@@ -199,17 +197,19 @@ pub mod single_resource_pool {
                 .checked_truncate(RoundingMode::ToNearestMidpointToEven)
                 .expect("Error while calculating amount to withdraw");
 
-            self.pool_unit_res_manager.burn(pool_units);
-
             assert!(
-                amount <= self.liquidity.amount(),
-                "Not enough liquidity to withdraw {}, liquidity is {}", amount, self.liquidity.amount()
+                amount <= self.pool.get_vault_amount(),
+                "Not enough liquidity to withdraw {}, liquidity is {}", amount, self.pool.get_vault_amount()
             );
 
-            self.liquidity.take_advanced(
-                amount,
-                WithdrawStrategy::Rounded(RoundingMode::ToNearestMidpointToEven),
-            )
+            let mut redeemed = self.pool.redeem(pool_units);
+
+            let diff = amount - redeemed.amount();
+            if diff > dec!(0) {
+                redeemed.put(self.pool.protected_withdraw(diff, WithdrawStrategy::Rounded(RoundingMode::ToNearestMidpointToEven)));
+            }
+
+            redeemed
         }
 
         pub fn protected_withdraw(
@@ -221,7 +221,7 @@ pub mod single_resource_pool {
             /* INPUT CHECK */
             assert!(amount >= 0.into(), "Withdraw amount must not be negative!");
 
-            let assets = self.liquidity.take_advanced(amount, withdraw_strategy);
+            let assets = self.pool.protected_withdraw(amount, withdraw_strategy);
 
             if withdraw_type == WithdrawType::ForTemporaryUse {
                 self.external_liquidity_amount += amount;
@@ -237,7 +237,7 @@ pub mod single_resource_pool {
             assert_fungible_res_address(assets.resource_address(), None);
 
             let amount = assets.amount();
-            self.liquidity.put(assets);
+            self.pool.protected_deposit(assets);
 
             if deposit_type == DepositType::FromTemporaryUse {
                 assert!(
@@ -263,10 +263,16 @@ pub mod single_resource_pool {
 
         /* PRIVATE UTILITY METHODS */
 
-        fn _update_unit_to_asset_ratios(&mut self) {
-            let total_liquidity_amount = self.liquidity.amount() + self.external_liquidity_amount;
+        fn _get_pool_unit_resource_address(pool: &Global<OneResourcePool>) -> ResourceAddress {
+            let metadata_val: GlobalAddress = pool.get_metadata("pool_unit").expect("Find pool unit resource address").unwrap();
+            ResourceAddress::try_from_hex(&metadata_val.to_hex())
+                .expect("Pool unit resource address from metadata")
+        }
 
-            let total_supply = self.pool_unit_res_manager.total_supply().unwrap_or(dec!(0));
+        fn _update_unit_to_asset_ratios(&mut self) {
+            let total_liquidity_amount = self.pool.get_vault_amount() + self.external_liquidity_amount;
+
+            let total_supply = self.get_pool_unit_supply();
 
             self.unit_to_asset_ratio = if total_liquidity_amount != 0.into() {
                 PreciseDecimal::from(total_supply) / PreciseDecimal::from(total_liquidity_amount)

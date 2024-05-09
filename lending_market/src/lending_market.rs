@@ -314,11 +314,21 @@ mod lending_market {
 
             let (pool, pool_unit_res_address) = Blueprint::<SingleResourcePool>::instantiate(
                 pool_res_address,
-                OwnerRole::None,
+                OwnerRole::Fixed(component_rule.clone()),
                 component_rule.clone(),
                 component_rule.clone(),
                 component_rule,
             );
+
+            let pool_unit_res_manager = ResourceManager::from_address(pool_unit_res_address);
+
+            let pool_res_symbol: String = ResourceManager::from_address(pool_res_address)
+            .get_metadata("symbol").expect("Pool resource symbol not provided").unwrap_or_default();
+
+            pool_unit_res_manager.set_metadata("name", format!("{pool_res_symbol} rtToken"));
+            pool_unit_res_manager.lock_metadata("name");
+            pool_unit_res_manager.set_metadata("symbol", format!("rt{pool_res_symbol}"));
+            pool_unit_res_manager.lock_metadata("symbol");
 
             let mut interest_strategy = InterestStrategy::new();
 
