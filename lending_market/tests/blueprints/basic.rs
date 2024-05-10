@@ -230,14 +230,17 @@ fn test_liquidation() {
         .test_runner
         .advance_to_round_at_timestamp(Round::of(1), T2024);
     admin_update_price(&mut helper, 1u64, usd, dec!(25)).expect_commit_success();
-    admin_update_price(&mut helper, 1u64, btc, dec!(1300000)).expect_commit_success();
+    admin_update_price(&mut helper, 1u64, btc, dec!(1_300_000)).expect_commit_success();
 
 
     // SET UP A LP PROVIDER
     let (lp_user_key, _, lp_user_account) = helper.test_runner.new_allocated_account();
     helper.test_runner.load_account_from_faucet(lp_user_account);
     helper.test_runner.load_account_from_faucet(lp_user_account);
+    helper.test_runner.load_account_from_faucet(lp_user_account);
     get_resource(&mut helper, lp_user_key, lp_user_account, dec!(25_000), usd) //
+        .expect_commit_success();
+    get_resource(&mut helper, lp_user_key, lp_user_account, dec!(10_000), btc) //
         .expect_commit_success();
 
 
@@ -247,8 +250,16 @@ fn test_liquidation() {
             .get_component_balance(lp_user_account, usd),
         dec!(1_000)
     );
+    assert_eq!(
+        helper
+            .test_runner
+            .get_component_balance(lp_user_account, btc),
+        dec!(0.0076923076923)
+    );
 
     market_contribute(&mut helper, lp_user_key, lp_user_account, usd, dec!(800))
+        .expect_commit_success();
+    market_contribute(&mut helper, lp_user_key, lp_user_account, btc, dec!(0.005))
         .expect_commit_success();
 
     assert_eq!(
@@ -257,31 +268,47 @@ fn test_liquidation() {
             .get_component_balance(lp_user_account, usd),
         dec!(200)
     );
+    assert_eq!(
+        helper
+            .test_runner
+            .get_component_balance(lp_user_account, btc),
+        dec!(0.0026923076923)
+    );
+
 
     // SET UP A BORROWER
     let (borrower_key, _, borrower_account) = helper.test_runner.new_allocated_account();
-    helper
-        .test_runner
-        .load_account_from_faucet(borrower_account);
+    helper.test_runner.load_account_from_faucet(borrower_account);
+    helper.test_runner.load_account_from_faucet(borrower_account);
 
-    //Create CDP WITH 15000 XRD AS Collateral <=> 600$
+    //Create CDP WITH 21900 XRD AS Collateral
     market_create_cdp(
         &mut helper,
         borrower_key,
         borrower_account,
-        vec![(XRD, dec!(15_000))],
+        vec![(XRD, dec!(21_900))],
     ) //
     .expect_commit_success();
 
     let cdp_id: u64 = 1;
-    // // Borrow 300$  Of USD
+    // // Borrow 200$  Of USD and 0.001 BTC
     market_borrow(
         &mut helper,
         borrower_key,
         borrower_account,
         cdp_id,
         usd,
-        dec!(300),
+        dec!(200),
+    )
+    .expect_commit_success();
+
+    market_borrow(
+        &mut helper,
+        borrower_key,
+        borrower_account,
+        cdp_id,
+        btc,
+        dec!(0.005),
     )
     .expect_commit_success();
 
@@ -293,15 +320,18 @@ fn test_liquidation() {
     helper
         .test_runner
         .advance_to_round_at_timestamp(Round::of(1), T2024 + T6_MONTHS);
-    admin_update_price(&mut helper, 1u64, usd, dec!(30)).expect_commit_success();
+    admin_update_price(&mut helper, 1u64, usd, dec!(25)).expect_commit_success();
+    admin_update_price(&mut helper, 1u64, btc, dec!(2_800_000)).expect_commit_success();
     market_update_pool_state(&mut helper, usd).expect_commit_success();
+    market_update_pool_state(&mut helper, btc).expect_commit_success();
 
     let receipt = market_list_liquidable_cdps(&mut helper);
     let event: CDPLiquidableEvent = find_event_in_result(receipt.expect_commit_success(), "CDPLiquidableEvent").expect("CDPLiquidableEvent not found");
     
     assert!(!event.cdps.is_empty());
-    assert_eq!(dec!(15000), *event.cdps[0].cdp_data.collaterals.get(&XRD).unwrap());
-    assert_eq!(dec!(300), *event.cdps[0].cdp_data.loans.get(&usd).unwrap());
+    assert_eq!(dec!(21900), *event.cdps[0].cdp_data.collaterals.get(&XRD).unwrap());
+    assert_eq!(dec!(200), *event.cdps[0].cdp_data.loans.get(&usd).unwrap());
+    assert_eq!(dec!(0.005), *event.cdps[0].cdp_data.loans.get(&btc).unwrap());
 
 
     // SET UP LIQUIDATOR
@@ -323,7 +353,7 @@ fn test_liquidation() {
         .test_runner
         .load_account_from_faucet(liquidator_user_account);
 
-    // SWAP XRD TO Cover USD debt
+    // SWAP XRD TO Cover USD and BTC debt
     swap(
         &mut helper,
         liquidator_user_account,
@@ -332,6 +362,14 @@ fn test_liquidation() {
         XRD,
         usd,
    ).expect_commit_success();
+   swap(
+        &mut helper,
+        liquidator_user_account,
+        liquidator_user_key,
+        dec!(15000),
+        XRD,
+        btc,
+    ).expect_commit_success();
 
    let xrd_balance = helper
    .test_runner
@@ -341,13 +379,17 @@ fn test_liquidation() {
     let usd_balance = helper
         .test_runner
         .get_component_balance(liquidator_user_account, usd);
+    
+    let btc_balance = helper
+        .test_runner
+        .get_component_balance(liquidator_user_account, btc);
 
     let mut requested_collaterals: Vec<ResourceAddress> = Vec::new();
     requested_collaterals.push(XRD);
 
     // START LIQUIDATION
 
-    let payments: Vec<(ResourceAddress, Decimal)> = vec![(usd, dec!(100))];
+    let payments: Vec<(ResourceAddress, Decimal)> = vec![(usd, dec!(100)), (btc, dec!(0.1))];
     market_liquidation(
         &mut helper,
         liquidator_user_key,
@@ -358,7 +400,7 @@ fn test_liquidation() {
         payments,
     ).expect_commit_failure();
 
-    let payments: Vec<(ResourceAddress, Decimal)> = vec![(usd, dec!(384.656056849216616369))];
+    let payments: Vec<(ResourceAddress, Decimal)> = vec![(usd, dec!(384.656056849216616369)), (btc, dec!(0.002))];
     market_liquidation(
         &mut helper,
         liquidator_user_key,
