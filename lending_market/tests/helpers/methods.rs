@@ -431,14 +431,31 @@ pub fn market_repay(
     )
 }
 
+pub fn check_cdp_for_liquidation(
+    helper: &mut TestHelper,
+    user_public_key: Secp256k1PublicKey,
+    cdp_id: u64,
+) -> TransactionReceipt {
+    let manifest_builder = ManifestBuilder::new()
+    .lock_fee_from_faucet()
+    .call_method(
+        helper.market.market_component_address,
+        "check_cdp_for_liquidation",
+        manifest_args!(NonFungibleLocalId::integer(cdp_id)),
+    );
+    helper.test_runner.execute_manifest(
+        build_and_dump_to_fs(manifest_builder, "check_cdp_for_liquidation".into()),
+        vec![NonFungibleGlobalId::from_public_key(&user_public_key)],
+    )
+}
+
 pub fn market_liquidation(
     helper: &mut TestHelper,
     user_public_key: Secp256k1PublicKey,
     user_account_address: ComponentAddress,
     cdp_id: u64,
-    requested_collaterals: Vec<ResourceAddress>,
-    total_payment_value: Option<Decimal>,
     payments: Vec<(ResourceAddress, Decimal)>,
+    requested_collaterals: Vec<ResourceAddress>,
 ) -> TransactionReceipt {
     let mut manifest_builder = ManifestBuilder::new()
         .lock_fee(FAUCET, 20000)
@@ -448,7 +465,7 @@ pub fn market_liquidation(
             manifest_args!(
                 NonFungibleLocalId::integer(cdp_id),
                 requested_collaterals.clone(),
-                total_payment_value
+                None::<Decimal>
             ),
         );
 
@@ -507,7 +524,7 @@ pub fn market_fast_liquidation(
                     .iter()
                     .fold((0, builder), |(i, builder), (res_address, amount)| {
                         (
-                            i,
+                            i + 1,
                             builder
                                 .withdraw_from_account(user_account_address, *res_address, *amount)
                                 .take_all_from_worktop(

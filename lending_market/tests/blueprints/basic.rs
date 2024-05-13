@@ -291,7 +291,7 @@ fn test_liquidation() {
     .expect_commit_success();
 
     let cdp_id: u64 = 1;
-    // // Borrow 200$  Of USD and 0.001 BTC
+    // // Borrow 200$  Of USD and 0.005 BTC
     market_borrow(
         &mut helper,
         borrower_key,
@@ -388,6 +388,7 @@ fn test_liquidation() {
     requested_collaterals.push(XRD);
 
     // START LIQUIDATION
+    check_cdp_for_liquidation(&mut helper, liquidator_user_key, cdp_id).expect_commit_success();
 
     let payments: Vec<(ResourceAddress, Decimal)> = vec![(usd, dec!(100)), (btc, dec!(0.1))];
     market_liquidation(
@@ -395,29 +396,31 @@ fn test_liquidation() {
         liquidator_user_key,
         liquidator_user_account,
         cdp_id,
-        requested_collaterals.clone(),
-        None::<Decimal>,
         payments,
+        requested_collaterals.clone(),
     ).expect_commit_failure();
 
-    let payments: Vec<(ResourceAddress, Decimal)> = vec![(usd, dec!(384.656056849216616369)), (btc, dec!(0.002))];
+    let payments: Vec<(ResourceAddress, Decimal)> = vec![(usd, dec!(384.656056849216616369)), (btc, dec!(0.005))];
     market_liquidation(
         &mut helper,
         liquidator_user_key,
         liquidator_user_account,
         cdp_id,
-        requested_collaterals,
-        None::<Decimal>,
         payments,
+        requested_collaterals,
     ).expect_commit_success();
 
-    assert_eq!(dec!(9497.462828072445019418), helper
+    assert_eq!(dec!(19896.193275087784143415), helper
         .test_runner
         .get_component_balance(liquidator_user_account, XRD) - xrd_balance);
 
-    assert_eq!(dec!(81.834188287576062491), helper
+    assert_eq!(dec!(183.39980971546301431), helper
         .test_runner
         .get_component_balance(liquidator_user_account, usd) - usd_balance + dec!(384.656056849216616369));
+
+    assert_eq!(dec!(0), helper
+        .test_runner
+        .get_component_balance(liquidator_user_account, btc) - btc_balance + dec!(0.005));
  
  
 

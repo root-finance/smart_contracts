@@ -3,7 +3,7 @@ source ./baseline.sh
 source ./supply.sh 
 
 # ------------------------------------------------------------------------------------ Redeem
-LP_UNITS_RESOURCE_ADDRESS=`resim show $LP_PROVIDER_ADDRESS | grep "RUSDT" | cut -d " " -f2 | cut -d ":" -f1`
+LP_UNITS_RESOURCE_ADDRESS=`resim show $LP_PROVIDER_ADDRESS | grep "rtUSDT" | cut -d " " -f2 | cut -d ":" -f1`
 
 echo "CALL_METHOD Address(\"$LP_PROVIDER_ADDRESS\") \"lock_fee\" Decimal(\"100\");" > tx.rtm 
 

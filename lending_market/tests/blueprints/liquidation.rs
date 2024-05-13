@@ -2,7 +2,7 @@ use crate::helpers::{init::TestHelper, methods::*};
 use radix_engine_interface::prelude::*;
 
 #[test]
-fn test_liquidation() {
+fn test_fast_liquidation() {
     let mut helper = TestHelper::new();
     let usd = helper.faucet.usdc_resource_address;
     let btc = helper.faucet.btc_resource_address;
@@ -107,6 +107,7 @@ fn test_liquidation() {
 
     payments.push((usd, usd_balance_after_swap));
 
+    check_cdp_for_liquidation(&mut helper, liquidator_user_key, cdp_id).expect_commit_success();
     let receipt = market_fast_liquidation(
         &mut helper,
         liquidator_user_key,
@@ -115,8 +116,6 @@ fn test_liquidation() {
         payments,
         requested_collaterals,
     );
-
-    println!("{:?}", receipt);
 
     receipt.expect_commit_success();
 }

@@ -28,6 +28,11 @@ echo "CALL_METHOD
 
 echo "CALL_METHOD
     Address(\"$LENDING_MARKET_COMPONENT_ADDRESS\")
+    \"check_cdp_for_liquidation\"
+    NonFungibleLocalId(\"#1#\");" >> tx.rtm
+
+echo "CALL_METHOD
+    Address(\"$LENDING_MARKET_COMPONENT_ADDRESS\")
     \"start_liquidation\"
     NonFungibleLocalId(\"#1#\")
     Array<Address>(

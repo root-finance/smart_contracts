@@ -7,13 +7,10 @@ const ZERO_EPSILON: Decimal = dec!(0.0000000000001);
 pub enum LoadPositionType {
     Collateral,
     Loan,
-    DelegatorLoan,
-    DelegatorCollateral,
 }
 
 pub enum LoadDataType {
     Own,
-    Delegator,
 }
 
 #[derive(ScryptoSbor, Debug, Clone)]
@@ -21,10 +18,6 @@ pub struct PositionData {
     pub units: Decimal,
     pub amount: Decimal,
     pub value: Decimal,
-
-    pub delegator_units: Decimal,
-    pub delegator_amount: Decimal,
-    pub delegator_value: Decimal,
 
     pub unit_ratio: PreciseDecimal,
 }
@@ -36,7 +29,6 @@ impl PositionData {
     ) -> Result<(), String> {
         match load_type {
             LoadDataType::Own => self.units += units,
-            LoadDataType::Delegator => self.delegator_units += units,
         }
 
         Ok(())
@@ -51,15 +43,6 @@ impl PositionData {
         };
 
         self.value = self.amount * price;
-
-        self.delegator_amount = match (self.delegator_units / self.unit_ratio)
-            .checked_truncate(RoundingMode::ToNearestMidpointToEven)
-        {
-            Some(amount) => amount,
-            None => return Err("Error calculating position delegator amount".to_string()),
-        };
-
-        self.delegator_value = self.delegator_amount * price;
         Ok(())
     }
 }
@@ -143,7 +126,7 @@ impl ExtendedLoanPositionData {
                     .min(liquidation_threshold);
 
                 discounted_collateral_value += liquidation_threshold
-                    * (collateral_position.data.value + collateral_position.data.delegator_value);
+                    * collateral_position.data.value;
 
                 discounted_collateral_value
             },
@@ -155,28 +138,22 @@ impl ExtendedLoanPositionData {
 
 ///
 /// Extends the CDP with necessary information for the CDP health check and call method of the related lending pool
-/// In addition the Extended CDP can combine multiple CDP and perform health check on the batch. this is useful for delegatee CDP
+/// In addition the Extended CDP can combine multiple CDP and perform health check on the batch.
 ///
 #[derive(ScryptoSbor, Clone, Debug)]
 pub struct CDPHealthChecker {
-    /// The type of the CDP. Tree types are supported: Standard, Delegator and Delegatee
+    /// The type of the CDP
     cdp_type: CDPType,
 
-    /// The total value of the loan in the CDP including the delegator loan
+    /// The total value of the loan in the CDP 
     total_loan_value: Decimal,
 
-    /// The loan to value ratio is the ratio between the total loan value, including the delegator loan, and the total collateral value.
+    /// The loan to value ratio is the ratio between the total loan value, and the total collateral value.
     total_loan_to_value_ratio: Decimal,
 
-    /// Loan value in the CDP without the delegator loan
-    self_loan_value: Decimal,
-
-    /// Max loan value in the CDP that can be repaid by the delegator
+    /// Max loan value in the CDP that can be repaid
     pub self_closable_loan_value: Decimal,
-
-    /// Self loan to value ratio is the ratio between the total loan value and the total collateral value.
-    self_loan_to_value_ratio: Decimal,
-
+    
     /// IndexMap of all the collateral positions in the CDP. The key is the resource address of the asset used as collateral.
     pub collateral_positions: IndexMap<ResourceAddress, ExtendedCollateralPositionData>,
 
@@ -188,26 +165,23 @@ impl CDPHealthChecker {
 
     pub fn new(
         wrapped_cdp_data: &WrappedCDPData,
-        wrapped_delegator_cdp_data: Option<&WrappedCDPData>,
         pool_states: &mut KeyValueStore<ResourceAddress, LendingPoolState>,
     ) -> CDPHealthChecker {
         Self::update_interest_and_price(wrapped_cdp_data, pool_states).expect("Error updating interest and price for CDP health checker");
-        Self::create_health_checker(wrapped_cdp_data, wrapped_delegator_cdp_data, pool_states)
+        Self::create_health_checker(wrapped_cdp_data, pool_states)
             .expect("Error creating CDP health checker")
     }
 
     pub fn new_without_update(
         wrapped_cdp_data: &WrappedCDPData,
-        wrapped_delegator_cdp_data: Option<&WrappedCDPData>,
         pool_states: &KeyValueStore<ResourceAddress, LendingPoolState>,
     ) -> CDPHealthChecker {
-        Self::create_health_checker(wrapped_cdp_data, wrapped_delegator_cdp_data, pool_states)
+        Self::create_health_checker(wrapped_cdp_data, pool_states)
             .expect("Error creating CDP health checker")
     }
 
     fn update_interest_and_price(wrapped_cdp_data: &WrappedCDPData, pool_states: &mut KeyValueStore<ResourceAddress, LendingPoolState>) -> Result<(), String> {
         let cdp_data: CollaterizedDebtPositionData = wrapped_cdp_data.get_data();
-        let cdp_type = cdp_data.cdp_type.clone();
 
         // Load the collateral positions
         cdp_data
@@ -229,30 +203,14 @@ impl CDPHealthChecker {
                 }
             });
 
-        // If the CDP is a delegator, also load his delegatee loans
-
-        if cdp_type.is_delegator() {
-            cdp_data
-                .delegatee_loans
-                .iter()
-                .for_each(|(pool_res_address, _)| {
-                    if let Some(mut pool_state) = pool_states.get_mut(pool_res_address) {
-                        pool_state.update_interest_and_price(None).expect("update interest and price");
-                    }
-                });
-        }
-
         Ok(())
     }
 
     fn create_health_checker(
         wrapped_cdp_data: &WrappedCDPData,
-        wrapped_delegator_cdp_data: Option<&WrappedCDPData>,
         pool_states: &KeyValueStore<ResourceAddress, LendingPoolState>,
     ) -> Result<CDPHealthChecker, String> {
         let cdp_data: CollaterizedDebtPositionData = wrapped_cdp_data.get_data();
-
-        let cdp_type = cdp_data.cdp_type.clone();
 
         let mut extended_cdp = CDPHealthChecker {
             cdp_type: cdp_data.cdp_type.clone(),
@@ -260,8 +218,6 @@ impl CDPHealthChecker {
             loan_positions: IndexMap::new(),
             total_loan_value: Decimal::ZERO,
             total_loan_to_value_ratio: Decimal::ZERO,
-            self_loan_value: Decimal::ZERO,
-            self_loan_to_value_ratio: Decimal::ZERO,
             self_closable_loan_value: Decimal::ZERO,
         };
 
@@ -287,26 +243,9 @@ impl CDPHealthChecker {
                         &pool_state,
                     )?
                 }
-                LoadPositionType::DelegatorCollateral => {
-                    let collateral_position =
-                        extended_cdp.get_collateral_position(&pool_state)?;
-                    collateral_position.load_onledger_data(
-                        units,
-                        LoadDataType::Delegator,
-                        &pool_state,
-                    )?
-                }
                 LoadPositionType::Loan => {
                     let loan_position = extended_cdp._get_loan_position(&pool_state)?;
                     loan_position.load_onledger_data(units, LoadDataType::Own, &pool_state)?;
-                }
-                LoadPositionType::DelegatorLoan => {
-                    let loan_position = extended_cdp._get_loan_position(&pool_state)?;
-                    loan_position.load_onledger_data(
-                        units,
-                        LoadDataType::Delegator,
-                        &pool_state,
-                    )?;
                 }
             }
 
@@ -329,53 +268,6 @@ impl CDPHealthChecker {
                 load_data(pool_res_address, *units, LoadPositionType::Loan)
             })?;
 
-        // If the CDP is a delegator, also load his delegatee loans
-
-        if cdp_type.is_delegator() {
-            cdp_data
-                .delegatee_loans
-                .iter()
-                .try_for_each(|(pool_res_address, units)| {
-                    load_data(pool_res_address, *units, LoadPositionType::DelegatorLoan)
-                })?;
-        }
-
-        // If the CDP is a delegatee CDP, load the delegator loans and collaterals
-        if let Some(wrapped_delegator_cdp_data) = wrapped_delegator_cdp_data {
-            let delegator_cdp_data: CollaterizedDebtPositionData =
-                wrapped_delegator_cdp_data.get_data();
-
-            delegator_cdp_data
-                .collaterals
-                .iter()
-                .try_for_each(|(pool_res_address, units)| {
-                    load_data(
-                        pool_res_address,
-                        *units,
-                        LoadPositionType::DelegatorCollateral,
-                    )
-                })?;
-
-            delegator_cdp_data
-                .loans
-                .iter()
-                .try_for_each(|(pool_res_address, units)| {
-                    load_data(pool_res_address, *units, LoadPositionType::DelegatorLoan)
-                })?;
-
-            delegator_cdp_data.delegatee_loans.iter().try_for_each(
-                |(pool_res_address, delegatee_loan_units)| {
-                    let self_loan_unit = wrapped_cdp_data.get_loan_unit(*pool_res_address);
-
-                    load_data(
-                        pool_res_address,
-                        *delegatee_loan_units - self_loan_unit,
-                        LoadPositionType::DelegatorLoan,
-                    )
-                },
-            )?;
-        }
-
         // Return the extended CDP
         Ok(extended_cdp)
     }
@@ -393,26 +285,6 @@ impl CDPHealthChecker {
         }
 
         //
-
-        if let CDPType::Delegatee(delagator_info) = &self.cdp_type {
-            let loan_value_check = match delagator_info.max_loan_value {
-                Some(max_loan_value) => self.self_loan_value <= max_loan_value,
-                _ => true,
-            };
-
-            if !loan_value_check {
-                return Err("Loan value need to be lower than set limit".into());
-            }
-
-            let loan_value_ratio_check = match delagator_info.max_loan_value_ratio {
-                Some(max_loan_value_ratio) => self.self_loan_to_value_ratio <= max_loan_value_ratio,
-                _ => true,
-            };
-
-            if !loan_value_ratio_check {
-                return Err("Loan value ratio need to be lower than defined limit".into());
-            }
-        };
 
         Ok(())
     }
@@ -463,9 +335,6 @@ impl CDPHealthChecker {
                         units: dec!(0),
                         amount: dec!(0),
                         value: dec!(0),
-                        delegator_units: dec!(0),
-                        delegator_amount: dec!(0),
-                        delegator_value: dec!(0),
                         unit_ratio: pdec!(0),
                     },
                 },
@@ -502,9 +371,6 @@ impl CDPHealthChecker {
                         units: dec!(0),
                         amount: dec!(0),
                         value: dec!(0),
-                        delegator_units: dec!(0),
-                        delegator_amount: dec!(0),
-                        delegator_value: dec!(0),
                         unit_ratio: pdec!(0),
                     },
 
@@ -531,27 +397,23 @@ impl CDPHealthChecker {
         let (
             total_weighted_discounted_collateral_value,
             total_loan_value,
-            self_loan_value,
             self_closable_loan_value,
         ) = self.loan_positions.iter_mut().fold(
-            Ok((Decimal::ZERO, Decimal::ZERO, Decimal::ZERO, Decimal::ZERO)),
-            |result: Result<(Decimal, Decimal, Decimal, Decimal), String>, (_, extended_loan)| {
+            Ok((Decimal::ZERO, Decimal::ZERO, Decimal::ZERO)),
+            |result: Result<(Decimal, Decimal, Decimal), String>, (_, extended_loan)| {
                 result.and_then(
                     |(
                         mut total_weighted_discounted_collateral_value,
                         mut total_loan_value,
-                        mut self_loan_value,
                         mut self_closable_loan_value,
                     )| {
                         extended_loan.update_data(&self.collateral_positions)?;
                         //
 
-                        self_loan_value += extended_loan.data.value;
-
                         //
 
                         let position_total_loan_value =
-                            extended_loan.data.value + extended_loan.data.delegator_value;
+                            extended_loan.data.value;
 
                         total_loan_value += position_total_loan_value;
 
@@ -566,8 +428,7 @@ impl CDPHealthChecker {
                         Ok((
                             total_weighted_discounted_collateral_value,
                             total_loan_value,
-                            self_loan_value,
-                            self_closable_loan_value,
+                            self_closable_loan_value
                         ))
                     },
                 )
@@ -582,21 +443,17 @@ impl CDPHealthChecker {
         };
 
         let total_loan_to_value_ratio: Decimal;
-        let self_loan_to_value_ratio: Decimal;
 
         if total_discounted_collateral_value == Decimal::ZERO {
             // In case the total discounted collateral value is zero,
             // we set the LTV to zero if the total loan value is also zero and to max if the total loan value is not zero
             if total_loan_value < ZERO_EPSILON {
-                self_loan_to_value_ratio = Decimal::ZERO;
                 total_loan_to_value_ratio = Decimal::ZERO;
             } else {
                 // This happens when there is no collateral at all, or by mistake you are trying to borrow the same currency as the collateral
-                self_loan_to_value_ratio = Decimal::MAX;
                 total_loan_to_value_ratio = Decimal::MAX;
             };
         } else {
-            self_loan_to_value_ratio = self_loan_value / total_discounted_collateral_value;
             total_loan_to_value_ratio = total_loan_value / total_discounted_collateral_value;
         }
 
@@ -604,9 +461,6 @@ impl CDPHealthChecker {
 
         self.total_loan_value = total_loan_value;
         self.total_loan_to_value_ratio = total_loan_to_value_ratio;
-
-        self.self_loan_value = self_loan_value;
-        self.self_loan_to_value_ratio = self_loan_to_value_ratio;
 
         Ok(())
     }

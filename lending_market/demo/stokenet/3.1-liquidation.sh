@@ -8,6 +8,11 @@ export CDP_ID="#3#";
 
 echo "CALL_METHOD
     Address(\"$LENDING_MARKET_COMPONENT_ADDRESS\")
+    \"check_cdp_for_liquidation\"
+    NonFungibleLocalId(\"$CDP_ID\");" >> tx.rtm
+
+echo "CALL_METHOD
+    Address(\"$LENDING_MARKET_COMPONENT_ADDRESS\")
     \"start_liquidation\"
     NonFungibleLocalId(\"$CDP_ID\")
     Array<Address>(

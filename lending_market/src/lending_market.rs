@@ -12,13 +12,8 @@ pub enum UpdateCDPInput {
     Description(String),
 }
 
-#[derive(ScryptoSbor)]
-pub enum UpdateDelegateeCDPnput {
-    MaxLoanValue(Decimal),
-    MaxToLoanValue(Decimal),
-}
-
 #[blueprint]
+#[types(ResourceAddress, LendingPoolState)]
 #[events(CDPUpdatedEvent, LendingPoolUpdatedEvent, CDPLiquidableEvent)]
 mod lending_market {
 
@@ -92,13 +87,8 @@ mod lending_market {
             // CDP Management methods
 
             create_cdp => PUBLIC;
-            create_delegatee_cdp => PUBLIC;
-
-            link_cdp => PUBLIC;
-            unlink_cdp => PUBLIC;
 
             update_cdp => PUBLIC;
-            update_delegatee_cdp => PUBLIC;
 
             // Flashloan methods
 
@@ -118,6 +108,7 @@ mod lending_market {
             // Liquidation methods
             list_liquidable_cdps => PUBLIC;
             refinance => PUBLIC;
+            check_cdp_for_liquidation => PUBLIC;
             start_liquidation => PUBLIC;
             end_liquidation => PUBLIC;
             fast_liquidation => PUBLIC;
@@ -128,25 +119,10 @@ mod lending_market {
 
     }
 
-    macro_rules! single_save_cdp_macro {
+    macro_rules! save_cdp_macro {
         ($self:expr,$cdp:expr) => {
             $cdp.save_cdp(&$self.cdp_res_manager, $self.market_config.max_cdp_position)
                 .expect("Error saving CDP");
-        };
-    }
-
-    macro_rules! save_cdp_macro {
-        ($self:expr,$cdp:expr,$delegator_cdp:expr) => {
-            $cdp.save_cdp(&$self.cdp_res_manager, $self.market_config.max_cdp_position)
-                .expect("Error saving CDP");
-
-            if $delegator_cdp.is_some() {
-                $delegator_cdp
-                    .as_mut()
-                    .unwrap()
-                    .save_cdp(&$self.cdp_res_manager, $self.market_config.max_cdp_position)
-                    .expect("Error saving CDP");
-            }
         };
     }
 
@@ -192,9 +168,6 @@ mod lending_market {
 
         ///
         market_config: MarketConfig,
-
-        ///
-        delegatee_cdp_ids: KeyValueStore<(NonFungibleLocalId, u64), NonFungibleLocalId>,
     }
 
     impl LendingMarket {
@@ -244,11 +217,10 @@ mod lending_market {
                 transient_res_manager,
                 pool_unit_refs: IndexMap::new(),
                 reverse_pool_unit_refs: IndexMap::new(),
-                pool_states: KeyValueStore::new(),
+                pool_states: KeyValueStore::<ResourceAddress, LendingPoolState>::new_with_registered_type(),
                 listed_assets: IndexSet::new(),
                 operating_status: OperatingStatus::new(),
                 market_config,
-                delegatee_cdp_ids: KeyValueStore::new(),
             }
             .instantiate()
             .prepare_to_globalize(OwnerRole::None)
@@ -517,16 +489,15 @@ mod lending_market {
 
         pub fn list_liquidable_cdps(&self) -> Vec<CDPLiquidable> {
             let mut results = vec![];
-            Logger::debug(format!("self.cdp_counter  {}", self.cdp_counter ));
+            // Logger::debug(format!("self.cdp_counter  {}", self.cdp_counter ));
             for cdp_id in 0..(self.cdp_counter + 1) {
                 let cdp_id = &NonFungibleLocalId::Integer(cdp_id.into());
-                Logger::debug(format!("Search cdp {} exists= {}", cdp_id, self.cdp_res_manager.non_fungible_exists(cdp_id)));
+                // Logger::debug(format!("Search cdp {} exists= {}", cdp_id, self.cdp_res_manager.non_fungible_exists(cdp_id)));
                 if self.cdp_res_manager.non_fungible_exists(cdp_id) {
-                    let (cdp_data, delegator_cdp_data) = self._get_cdp_data(&cdp_id, true);
-                    if !cdp_data.cdp_data.collaterals.is_empty() {
+                    let cdp_data = WrappedCDPData::new(&self.cdp_res_manager, cdp_id);
+                    if !cdp_data.cdp_data.collaterals.is_empty() && !cdp_data.cdp_data.loans.is_empty() {
                         let mut cdp_health_checker = CDPHealthChecker::new_without_update(
                             &cdp_data,
-                            delegator_cdp_data.as_ref(),
                             &self.pool_states,
                         );
 
@@ -561,9 +532,9 @@ mod lending_market {
                 cdp_type: CDPType::Standard,
                 collaterals: IndexMap::new(),
                 loans: IndexMap::new(),
-                delegatee_loans: IndexMap::new(),
                 minted_at: now,
                 updated_at: now,
+                liquidable: None,
             };
 
             let cdp = self.cdp_res_manager.mint_non_fungible(&cdp_id, data);
@@ -573,185 +544,6 @@ mod lending_market {
             }
 
             cdp
-        }
-
-        // Create a new CDP with borrowing power delegated from a Delegator CDP
-        pub fn create_delegatee_cdp(
-            &mut self,
-            delegator_cdp_proof: Proof,
-            max_loan_value: Option<Decimal>,
-            max_loan_value_ratio: Option<Decimal>,
-            name: Option<String>,
-            description: Option<String>,
-            key_image_url: Option<String>,
-        ) -> Bucket {
-            //
-
-            assert!(
-                is_valid_rate(max_loan_value_ratio.unwrap_or(0.into())),
-                "INVALID_INPUT: Max loan to value ratio must be in the range [0, 1]"
-            );
-
-            assert!(
-                max_loan_value.unwrap_or(0.into()) >= 0.into(),
-                "INVALID_INPUT: Max loan to value must be non-negative"
-            );
-
-            //
-
-            let delegator_cdp_id = self._validate_cdp_proof(delegator_cdp_proof);
-
-            let mut delegator_cdp_data =
-                WrappedCDPData::new(&self.cdp_res_manager, &delegator_cdp_id);
-
-            assert!(
-                !delegator_cdp_data.is_delegatee(),
-                "Delegatee CDP can not create delegatee CDP",
-            );
-
-            let (_, linked_count) = delegator_cdp_data
-                .increase_delegatee_count()
-                .expect("Error increasing delegatee count");
-
-            single_save_cdp_macro!(self, delegator_cdp_data);
-
-            let now = Clock::current_time(TimePrecision::Minute).seconds_since_unix_epoch;
-
-            let new_cdp_id = self._get_new_cdp_id();
-
-            let delegatee_cdp_id = NonFungibleLocalId::Integer(new_cdp_id.into());
-
-            self.delegatee_cdp_ids.insert(
-                (delegator_cdp_id.clone(), linked_count),
-                delegatee_cdp_id.clone(),
-            );
-
-            let delegatee_cdp_data = CollaterizedDebtPositionData {
-                name: name.unwrap_or("".into()),
-                description: description.unwrap_or("".into()),
-                key_image_url: key_image_url.unwrap_or("".into()),
-                cdp_type: CDPType::Delegatee(DelegatorInfo {
-                    cdp_id: delegator_cdp_id,
-                    delegatee_index: linked_count,
-                    max_loan_value_ratio,
-                    max_loan_value,
-                }),
-                collaterals: IndexMap::new(),
-                loans: IndexMap::new(),
-                delegatee_loans: IndexMap::new(),
-                minted_at: now,
-                updated_at: now,
-            };
-
-            self.cdp_res_manager
-                .mint_non_fungible(&delegatee_cdp_id, delegatee_cdp_data)
-        }
-
-        pub fn link_cdp(
-            &mut self,
-            delegator_cdp_proof: Proof,
-            delegatee_cdp_proof: Proof,
-            max_loan_value: Option<Decimal>,
-            max_loan_value_ratio: Option<Decimal>,
-        ) {
-            assert!(
-                is_valid_rate(max_loan_value_ratio.unwrap_or(0.into())),
-                "INVALID_INPUT: Max loan to value ratio must be in the range [0, 1]"
-            );
-
-            assert!(
-                max_loan_value.unwrap_or(0.into()) >= 0.into(),
-                "INVALID_INPUT: Max loan to value must be non-negative"
-            );
-
-            let delegator_cdp_id = self._validate_cdp_proof(delegator_cdp_proof);
-
-            let delegatee_cdp_id = self._validate_cdp_proof(delegatee_cdp_proof);
-
-            let mut delegatee_cdp_data =
-                WrappedCDPData::new(&self.cdp_res_manager, &delegatee_cdp_id);
-
-            assert!(
-                delegatee_cdp_data.get_type() == CDPType::Standard,
-                "Delegatee CDP already linked",
-            );
-
-            // CDP with collateral can not be convert to Delagatee CDP for consistency reason.
-            // Delagator and delegatee CDPs should have consistent health status
-            assert!(
-                delegatee_cdp_data.get_data().collaterals.is_empty(),
-                "Delegatee CDP already has collateral",
-            );
-
-            let mut delegator_cdp_data =
-                WrappedCDPData::new(&self.cdp_res_manager, &delegator_cdp_id);
-
-            let (_, linked_count) = delegator_cdp_data
-                .increase_delegatee_count()
-                .expect("Error increasing delegatee count");
-
-            delegatee_cdp_data.update_cdp_type(CDPType::Delegatee(DelegatorInfo {
-                cdp_id: delegator_cdp_id.clone(),
-                delegatee_index: linked_count,
-                max_loan_value_ratio,
-                max_loan_value,
-            }));
-
-            CDPHealthChecker::new(
-                &delegatee_cdp_data,
-                Some(&delegator_cdp_data),
-                &mut self.pool_states,
-            )
-            .check_cdp()
-            .expect("Error checking CDP");
-
-            self.delegatee_cdp_ids
-                .insert((delegator_cdp_id, linked_count), delegatee_cdp_id);
-
-            single_save_cdp_macro!(self, delegatee_cdp_data);
-
-            single_save_cdp_macro!(self, delegator_cdp_data);
-        }
-
-        pub fn unlink_cdp(
-            &mut self,
-            delegator_cdp_proof: Proof,
-            delegatee_cdp_id: NonFungibleLocalId,
-        ) {
-            let delegator_cdp_id = self._validate_cdp_proof(delegator_cdp_proof);
-
-            let mut delegator_cdp_data =
-                WrappedCDPData::new(&self.cdp_res_manager, &delegator_cdp_id);
-
-            let mut delegatee_cdp_data =
-                WrappedCDPData::new(&self.cdp_res_manager, &delegatee_cdp_id);
-
-            assert!(
-                delegatee_cdp_data
-                    .get_delegator_id()
-                    .expect("Error getting delegator_id")
-                    == delegator_cdp_id,
-                "Delegatee CDP not linked to provided delegator CDP",
-            );
-
-            if let CDPType::Delegatee(delegatee_cdp_data) = delegatee_cdp_data.get_type() {
-                self.delegatee_cdp_ids
-                    .remove(&(delegator_cdp_id, delegatee_cdp_data.delegatee_index));
-            }
-
-            delegatee_cdp_data.update_cdp_type(CDPType::Standard);
-
-            CDPHealthChecker::new(&delegatee_cdp_data, None, &mut self.pool_states)
-                .check_cdp()
-                .expect("Error checking CDP");
-
-            delegator_cdp_data
-                .decrease_delegatee_count()
-                .expect("Error decreasing delegatee count");
-
-            single_save_cdp_macro!(self, delegatee_cdp_data);
-
-            single_save_cdp_macro!(self, delegator_cdp_data);
         }
 
         pub fn update_cdp(&mut self, cdp_proof: Proof, value: UpdateCDPInput) {
@@ -783,43 +575,6 @@ mod lending_market {
                 "updated_at",
                 Clock::current_time(TimePrecision::Minute).seconds_since_unix_epoch,
             );
-        }
-
-        pub fn update_delegatee_cdp(
-            &mut self,
-            delegator_cdp_proof: Proof,
-            delegatee_cdp_id: NonFungibleLocalId,
-            max_loan_value: Option<Decimal>,
-            max_loan_value_ratio: Option<Decimal>,
-        ) {
-            assert!(
-                is_valid_rate(max_loan_value_ratio.unwrap_or(0.into())),
-                "INVALID_INPUT: Max loan to value ratio must be in the range [0, 1]"
-            );
-
-            assert!(
-                max_loan_value.unwrap_or(0.into()) >= 0.into(),
-                "INVALID_INPUT: Max loan to value must be non-negative"
-            );
-
-            let delegator_cdp_id = self._validate_cdp_proof(delegator_cdp_proof);
-
-            let mut delegatee_cdp_data =
-                WrappedCDPData::new(&self.cdp_res_manager, &delegatee_cdp_id);
-
-            assert!(
-                delegatee_cdp_data
-                    .get_delegator_id()
-                    .expect("Error getting delegator_id")
-                    == delegator_cdp_id,
-                "Delegatee CDP not linked to provided delegator CDP",
-            );
-
-            delegatee_cdp_data
-                .update_delegatee_info(max_loan_value, max_loan_value_ratio)
-                .expect("Error updating delegatee info");
-
-            single_save_cdp_macro!(self, delegatee_cdp_data);
         }
 
         // / * Flashloan methods * ///
@@ -1003,7 +758,7 @@ mod lending_market {
 
             let cdp_id = self._validate_cdp_proof(cdp_proof);
 
-            let (mut cdp_data, _) = self._get_cdp_data(&cdp_id, false);
+            let mut cdp_data = WrappedCDPData::new(&self.cdp_res_manager, &cdp_id);
 
             let withdrawals = withdraw_details.into_iter().fold(
                 Vec::new(),
@@ -1038,23 +793,14 @@ mod lending_market {
                 },
             );
 
-            let delegator_cdp_data = match cdp_data.get_type() {
-                CDPType::Delegatee(delegator_data) => Some(WrappedCDPData::new(
-                    &self.cdp_res_manager,
-                    &delegator_data.cdp_id,
-                )),
-                _ => None,
-            };
-
             CDPHealthChecker::new(
                 &cdp_data,
-                delegator_cdp_data.as_ref(),
                 &mut self.pool_states,
             )
             .check_cdp()
             .expect("Error checking CDP");
 
-            single_save_cdp_macro!(self, cdp_data);
+            save_cdp_macro!(self, cdp_data);
 
             emit_cdp_event!(cdp_id, CDPUpdatedEvenType::RemoveCollateral);
 
@@ -1070,7 +816,7 @@ mod lending_market {
 
             let cdp_id = self._validate_cdp_proof(cdp_proof);
 
-            let (mut cdp_data, mut delegator_cdp_data) = self._get_cdp_data(&cdp_id, true);
+            let mut cdp_data = WrappedCDPData::new(&self.cdp_res_manager, &cdp_id);
 
             let loans =
                 borrows
@@ -1090,14 +836,6 @@ mod lending_market {
                             .update_loan(pool_res_address, delta_loan_units)
                             .expect("Error updating loan");
 
-                        if cdp_data.is_delegatee() {
-                            delegator_cdp_data
-                                .as_mut()
-                                .unwrap()
-                                .update_delegatee_loan(pool_res_address, delta_loan_units)
-                                .expect("Error updating delegatee loan");
-                        }
-
                         loans.push(borrowed_assets);
 
                         loans
@@ -1105,13 +843,12 @@ mod lending_market {
 
             CDPHealthChecker::new(
                 &cdp_data,
-                delegator_cdp_data.as_ref(),
                 &mut self.pool_states,
             )
             .check_cdp()
             .expect("Error checking CDP");
 
-            save_cdp_macro!(self, cdp_data, delegator_cdp_data);
+            save_cdp_macro!(self, cdp_data);
 
             emit_cdp_event!(cdp_id, CDPUpdatedEvenType::Borrow);
 
@@ -1121,34 +858,14 @@ mod lending_market {
         pub fn repay(
             &mut self,
             cdp_proof: Proof,
-            delegatee_cdp_id: Option<NonFungibleLocalId>,
+            _delegatee_cdp_id: Option<NonFungibleLocalId>,
             payments: Vec<Bucket>,
         ) -> (Vec<Bucket>, Decimal) {
             self._check_operating_status(OperatingService::Repay);
 
-            // Loan of delegatee CDP can be directly repaid by the delegator CDP
-            // If the delegatee CDP is provided, we check if the delegator CDP is linked to the delegatee CDP
-            let cdp_id = if let Some(delegatee_cdp_id) = delegatee_cdp_id {
-                let delegator_cdp_id = self._validate_cdp_proof(cdp_proof);
+            let cdp_id = self._validate_cdp_proof(cdp_proof);
 
-                let delegatee_cdp_data: CollaterizedDebtPositionData = self
-                    .cdp_res_manager
-                    .get_non_fungible_data(&delegatee_cdp_id);
-
-                match delegatee_cdp_data.cdp_type {
-                    CDPType::Delegatee(delegator_info) => assert!(
-                        delegator_info.cdp_id == delegator_cdp_id,
-                        "Delegatee CDP not linked to provided delegator CDP"
-                    ),
-                    _ => panic!("Invalid delegatee CDP"),
-                };
-
-                delegatee_cdp_id
-            } else {
-                self._validate_cdp_proof(cdp_proof)
-            };
-
-            let (mut cdp_data, mut delegator_cdp_data) = self._get_cdp_data(&cdp_id, true);
+            let mut cdp_data = WrappedCDPData::new(&self.cdp_res_manager, &cdp_id);
 
             if cdp_data.cdp_data.collaterals.is_empty() {
                 panic!("Position was liquidated");
@@ -1156,7 +873,6 @@ mod lending_market {
 
             let (remainders, payment_value) = self._repay_internal(
                 &mut cdp_data,
-                &mut delegator_cdp_data,
                 payments,
                 None,
                 false,
@@ -1172,11 +888,10 @@ mod lending_market {
             cdp_id: NonFungibleLocalId,
             payments: Vec<Bucket>,
         ) -> (Vec<Bucket>, Decimal) {
-            let (mut cdp_data, mut delegator_cdp_data) = self._get_cdp_data(&cdp_id, true);
+            let mut cdp_data = WrappedCDPData::new(&self.cdp_res_manager, &cdp_id);
 
             CDPHealthChecker::new(
                 &cdp_data,
-                delegator_cdp_data.as_ref(),
                 &mut self.pool_states,
             )
             .can_refinance()
@@ -1184,7 +899,6 @@ mod lending_market {
 
             let (remainders, payment_value) = self._repay_internal(
                 &mut cdp_data,
-                &mut delegator_cdp_data,
                 payments,
                 None,
                 false,
@@ -1210,25 +924,24 @@ mod lending_market {
                 );
             }
 
-            let (mut cdp_data, mut delegator_cdp_data) = self._get_cdp_data(&cdp_id, true);
+            let mut cdp_data = WrappedCDPData::new(&self.cdp_res_manager, &cdp_id);
 
-            let mut cdp_health_checker = CDPHealthChecker::new(
-                &cdp_data,
-                delegator_cdp_data.as_ref(),
-                &mut self.pool_states,
-            );
-
-            cdp_health_checker
-                .can_liquidate()
-                .expect("Error checking CDP");
+            let now: i64 = Clock::current_time(TimePrecision::Minute).seconds_since_unix_epoch;
+            if now - cdp_data.cdp_data.updated_at > 60 {
+                panic!("cdp info is too old.")
+            }
+            let self_closable_loan_value = match cdp_data.cdp_data.liquidable {
+                Some(self_closable_loan_value) => self_closable_loan_value,
+                None => panic!("The cdp is not liquidable.")
+            };
 
             let temp_total_payment_value = total_payment_value
-                .unwrap_or(cdp_health_checker.self_closable_loan_value)
-                .min(cdp_health_checker.self_closable_loan_value);
+                .unwrap_or(self_closable_loan_value)
+                .min(self_closable_loan_value);
 
             let (returned_collaterals, total_payement_value) = self
                 ._remove_collateral_for_liquidation(
-                    delegator_cdp_data.as_mut().unwrap_or(&mut cdp_data),
+                    &mut cdp_data,
                     requested_collaterals,
                     temp_total_payment_value,
                     false,
@@ -1263,11 +976,10 @@ mod lending_market {
 
             let cdp_id = liquidation_term_data.cdp_id;
 
-            let (mut cdp_data, mut delegator_cdp_data) = self._get_cdp_data(&cdp_id, true);
+            let mut cdp_data = WrappedCDPData::new(&self.cdp_res_manager, &cdp_id);
 
             let (remainders, total_payment_value) = self._repay_internal(
                 &mut cdp_data,
-                &mut delegator_cdp_data,
                 payments,
                 Some(liquidation_term_data.payement_value),
                 true,
@@ -1280,9 +992,40 @@ mod lending_market {
 
             self.transient_res_manager.burn(liquidation_term);
 
+            save_cdp_macro!(self, cdp_data);
+
             emit_cdp_event!(cdp_id, CDPUpdatedEvenType::Liquidate);
 
             (remainders, total_payment_value)
+        }
+
+        pub fn check_cdp_for_liquidation(&mut self, cdp_id: NonFungibleLocalId) -> bool {
+            let mut cdp_data: WrappedCDPData = WrappedCDPData::new(&self.cdp_res_manager, &cdp_id);
+
+            let mut cdp_health_checker = CDPHealthChecker::new(
+                &cdp_data,
+                &mut self.pool_states,
+            );
+
+            let can_liquidate = cdp_health_checker.can_liquidate().is_ok();
+            match cdp_data.cdp_data.liquidable {
+                Some(_) => {
+                    if can_liquidate {
+                        cdp_data.cdp_data.liquidable = Some(cdp_health_checker.self_closable_loan_value);
+                        save_cdp_macro!(self, cdp_data);    
+                    } else {
+                        cdp_data.cdp_data.liquidable = None;
+                        save_cdp_macro!(self, cdp_data);    
+                    }
+                }, 
+                None => {
+                    if can_liquidate {
+                        cdp_data.cdp_data.liquidable = Some(cdp_health_checker.self_closable_loan_value);
+                        save_cdp_macro!(self, cdp_data);    
+                    }
+                }
+            }
+            can_liquidate
         }
 
         pub fn fast_liquidation(
@@ -1293,26 +1036,28 @@ mod lending_market {
         ) -> (Vec<Bucket>, Vec<Bucket>, Decimal) {
             self._check_operating_status(OperatingService::Liquidation);
 
-            let (mut cdp_data, mut delegator_cdp_data) = self._get_cdp_data(&cdp_id, true);
+            let mut cdp_data = WrappedCDPData::new(&self.cdp_res_manager, &cdp_id);
 
-            CDPHealthChecker::new(
-                &cdp_data,
-                delegator_cdp_data.as_ref(),
-                &mut self.pool_states,
-            )
-            .can_liquidate()
-            .expect("Error checking CDP");
+            let now: i64 = Clock::current_time(TimePrecision::Minute).seconds_since_unix_epoch;
+            if now - cdp_data.cdp_data.updated_at > 60 {
+                panic!("cdp info is too old.")
+            }
+            if cdp_data.cdp_data.liquidable.is_none() {
+                panic!("The cdp is not liquidable.")
+            }
 
             let (remainders, total_payment_value) =
-                self._repay_internal(&mut cdp_data, &mut delegator_cdp_data, payments, None, true);
+                self._repay_internal(&mut cdp_data, payments, None, true);
 
             let (returned_collaterals, _total_payement_value) = self
                 ._remove_collateral_for_liquidation(
-                    delegator_cdp_data.as_mut().unwrap_or(&mut cdp_data),
+                    &mut cdp_data,
                     requested_collaterals,
                     total_payment_value,
-                    true,
+                    true
                 );
+
+            save_cdp_macro!(self, cdp_data);
 
             emit_cdp_event!(cdp_id, CDPUpdatedEvenType::Liquidate);
 
@@ -1389,14 +1134,7 @@ mod lending_market {
         fn _add_collateral_internal(&mut self, cdp_id: NonFungibleLocalId, deposits: Vec<Bucket>) {
             self._check_operating_status(OperatingService::AddCollateral);
 
-            let (mut cdp_data, _) = self._get_cdp_data(&cdp_id, false);
-
-            // AddCollateral to delegatee CDP is not allowed for consistency reason.
-            // Delagator and delegatee CDPs should have consistent health status
-            assert!(
-                !cdp_data.is_delegatee(),
-                "Delegatee CDP can not add collateral"
-            );
+            let mut cdp_data = WrappedCDPData::new(&self.cdp_res_manager, &cdp_id);
 
             deposits.into_iter().fold((), |_, assets| {
                 let res_address = assets.resource_address();
@@ -1435,7 +1173,7 @@ mod lending_market {
                     .expect("Error adding pool units as collateral");
             });
 
-            single_save_cdp_macro!(self, cdp_data);
+            save_cdp_macro!(self, cdp_data);
         }
 
         fn _remove_collateral_for_liquidation(
@@ -1443,7 +1181,7 @@ mod lending_market {
             cdp_data: &mut WrappedCDPData,
             requested_collaterals: Vec<ResourceAddress>,
             requested_collaterals_value: Decimal,
-            check_requested_collaterals: bool,
+            check_requested_collaterals: bool
         ) -> (Vec<Bucket>, Decimal) {
             let mut returned_collaterals: Vec<Bucket> = Vec::new();
             let mut returned_collaterals_value = dec!(0);
@@ -1457,10 +1195,9 @@ mod lending_market {
                     break;
                 }
 
-                let mut pool_state = self._get_pool_state(
+                let mut pool_state =  self._get_pool_state_without_update(
                     &pool_res_address,
-                    Some(OperatingService::Liquidation),
-                    None,
+                    Some(OperatingService::Liquidation)
                 );
 
                 let bonus_rate = dec!(1) + pool_state.pool_config.liquidation_bonus_rate;
@@ -1514,18 +1251,15 @@ mod lending_market {
                 );
             }
 
-            single_save_cdp_macro!(self, cdp_data);
-
             (returned_collaterals, returned_collaterals_value)
         }
 
         fn _repay_internal(
             &mut self,
             cdp_data: &mut WrappedCDPData,
-            delegator_cdp_data: &mut Option<WrappedCDPData>,
             payments: Vec<Bucket>,
             payment_value: Option<Decimal>,
-            for_liquidation: bool,
+            for_liquidation: bool
         ) -> (Vec<Bucket>, Decimal) {
             let mut expected_payment_value = payment_value.unwrap_or(dec!(0));
 
@@ -1534,7 +1268,11 @@ mod lending_market {
                 |(mut remainders, mut total_payment_value), mut payment| {
                     let pool_res_address = payment.resource_address();
 
-                    let mut pool_state = self._get_pool_state(&pool_res_address, None, None);
+                    let mut pool_state = if for_liquidation {
+                        self._get_pool_state_without_update(&pool_res_address, None)
+                    } else {
+                        self._get_pool_state(&pool_res_address, None, None)
+                    };
 
                     // ! Liquidation
                     if for_liquidation {
@@ -1595,14 +1333,6 @@ mod lending_market {
                         .update_loan(pool_res_address, -delta_loan_unit)
                         .expect("Error updating loan");
 
-                    if cdp_data.is_delegatee() {
-                        delegator_cdp_data
-                            .as_mut()
-                            .unwrap()
-                            .update_delegatee_loan(pool_res_address, -delta_loan_unit)
-                            .expect("Error updating delegatee loan");
-                    }
-
                     remainders.push(payment);
 
                     total_payment_value += max_loan_value;
@@ -1620,9 +1350,27 @@ mod lending_market {
                 );
             }
 
-            save_cdp_macro!(self, cdp_data, delegator_cdp_data);
+            if !for_liquidation {
+                save_cdp_macro!(self, cdp_data);
+            }
 
             (remainders, total_payment_value)
+        }
+
+        fn _get_pool_state_without_update(
+            &mut self,
+            pool_res_address: &ResourceAddress,
+            operating_service: Option<OperatingService>
+        ) -> KeyValueEntryRefMut<'_, LendingPoolState> {
+            let pool_state = self.pool_states.get_mut(pool_res_address).unwrap();
+
+            if let Some(operating_status) = operating_service {
+                pool_state
+                    .check_operating_status(operating_status)
+                    .expect("Invalid operating status");
+            }
+
+            pool_state
         }
 
         fn _get_pool_state(
@@ -1644,27 +1392,6 @@ mod lending_market {
                 .expect("Error updating pool state");
 
             pool_state
-        }
-
-        fn _get_cdp_data(
-            &self,
-            cdp_id: &NonFungibleLocalId,
-            get_delegator_cdp_data: bool,
-        ) -> (WrappedCDPData, Option<WrappedCDPData>) {
-            let cdp_data = WrappedCDPData::new(&self.cdp_res_manager, cdp_id);
-
-            let delegator_cdp_data = if get_delegator_cdp_data && cdp_data.is_delegatee() {
-                Some(WrappedCDPData::new(
-                    &self.cdp_res_manager,
-                    &cdp_data
-                        .get_delegator_id()
-                        .expect("Error getting delegator_id"),
-                ))
-            } else {
-                None
-            };
-
-            (cdp_data, delegator_cdp_data)
         }
 
         fn _get_new_cdp_id(&mut self) -> u64 {
