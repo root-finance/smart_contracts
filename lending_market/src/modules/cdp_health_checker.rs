@@ -2,7 +2,7 @@ use super::{cdp_data::*, liquidation_threshold::*, pool_state::*};
 use scrypto::prelude::*;
 
 // Amount at which a position is considered zeroed
-const ZERO_EPSILON: Decimal = dec!(0.0000000000001);
+pub const ZERO_EPSILON: Decimal = dec!(0.0000000000001);
 
 pub enum LoadPositionType {
     Collateral,

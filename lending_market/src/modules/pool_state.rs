@@ -178,7 +178,7 @@ impl LendingPoolState {
         Ok(contributed)
     }
 
-    pub fn redeem_proxy(&mut self, pool_units: Bucket) -> Bucket {
+    pub fn redeem_proxy(&mut self, pool_units: Bucket, bypass_state_update: bool) -> Bucket {
         Runtime::emit_event(LendingPoolUpdatedEvent {
             pool_res_address: self.pool_res_address,
             event_type: LendingPoolUpdatedEventType::DepositState,
@@ -202,8 +202,10 @@ impl LendingPoolState {
 
         self._update_deposit_unit(-redeemed.amount())
             .expect("update deposit unit for redeem");
-        self.update_interest_and_price(Some((true, true)))
-            .expect("update interest and price for redeem");
+        if !bypass_state_update {
+            self.update_interest_and_price(Some((true, true)))
+                .expect("update interest and price for redeem");
+        }
         redeemed
     }
 

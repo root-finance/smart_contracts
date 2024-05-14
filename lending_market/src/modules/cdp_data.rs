@@ -1,5 +1,7 @@
 use scrypto::prelude::*;
 
+use super::cdp_health_checker::ZERO_EPSILON;
+
 #[derive(ScryptoSbor)]
 pub enum CDPUpdatedEvenType {
     AddCollateral,
@@ -209,7 +211,7 @@ impl WrappedCDPData {
                 );
             }
 
-            if *entry == Decimal::ZERO {
+            if *entry < ZERO_EPSILON {
                 map.remove(&key);
             }
         } else {

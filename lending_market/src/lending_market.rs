@@ -738,7 +738,7 @@ mod lending_market {
                 .expect("Pool unit not found");
 
             self._get_pool_state(&pool_res_address, Some(OperatingService::Redeem), None)
-                .redeem_proxy(pool_units)
+                .redeem_proxy(pool_units, false)
         }
 
         pub fn add_collateral(&mut self, cdp_proof: Proof, deposits: Vec<Bucket>) {
@@ -782,7 +782,7 @@ mod lending_market {
                         .expect("Error redeeming pool units from collateral");
 
                     let returned_assets = if !keep_deposit_unit {
-                        pool_state.redeem_proxy(deposit_units)
+                        pool_state.redeem_proxy(deposit_units, false)
                     } else {
                         deposit_units
                     };
@@ -1230,7 +1230,7 @@ mod lending_market {
                     .remove_pool_units_from_collateral(collateral_units)
                     .expect("Error redeeming pool units from collateral");
 
-                let mut collaterals = pool_state.redeem_proxy(pool_unit);
+                let mut collaterals = pool_state.redeem_proxy(pool_unit, true);
                 let protocol_fee_amount = collaterals.amount()
                     * pool_state.pool_config.protocol_liquidation_fee_rate
                     * pool_state.pool_config.liquidation_bonus_rate;
@@ -1263,83 +1263,79 @@ mod lending_market {
         ) -> (Vec<Bucket>, Decimal) {
             let mut expected_payment_value = payment_value.unwrap_or(dec!(0));
 
-            let (remainders, total_payment_value) = payments.into_iter().fold(
-                (Vec::new(), Decimal::zero()),
-                |(mut remainders, mut total_payment_value), mut payment| {
-                    let pool_res_address = payment.resource_address();
+            let (mut remainders, mut total_payment_value) = (Vec::new(), Decimal::zero());
+            for mut payment in payments {
+                let pool_res_address = payment.resource_address();
 
-                    let mut pool_state = if for_liquidation {
-                        self._get_pool_state_without_update(&pool_res_address, None)
-                    } else {
-                        self._get_pool_state(&pool_res_address, None, None)
-                    };
+                let mut pool_state = if for_liquidation {
+                    self._get_pool_state_without_update(&pool_res_address, None)
+                } else {
+                    self._get_pool_state(&pool_res_address, None, None)
+                };
 
-                    // ! Liquidation
-                    if for_liquidation {
-                        pool_state
-                            .check_operating_status(OperatingService::Liquidation)
-                            .expect("Liquidation is not enabled for the pool");
+                // ! Liquidation
+                if for_liquidation {
+                    pool_state
+                        .check_operating_status(OperatingService::Liquidation)
+                        .expect("Liquidation is not enabled for the pool");
 
-                    // ! Repay
-                    } else {
-                        pool_state
-                            .check_operating_status(OperatingService::Repay)
-                            .expect("Borrow is not enabled for the pool");
-                    }
+                // ! Repay
+                } else {
+                    pool_state
+                        .check_operating_status(OperatingService::Repay)
+                        .expect("Borrow is not enabled for the pool");
+                }
 
-                    let unit_ratio = pool_state
-                        .get_loan_unit_ratio()
-                        .expect("Error getting loan unit ratio for provided resource");
+                let unit_ratio = pool_state
+                    .get_loan_unit_ratio()
+                    .expect("Error getting loan unit ratio for provided resource");
 
-                    let (_, pool_borrowed_amount) = pool_state.pool.get_pooled_amount();
+                let (_, pool_borrowed_amount) = pool_state.pool.get_pooled_amount();
 
-                    let position_loan_units = cdp_data.get_loan_unit(pool_res_address);
+                let position_loan_units = cdp_data.get_loan_unit(pool_res_address);
 
-                    let mut max_loan_amount = (position_loan_units / unit_ratio)
-                        .checked_truncate(RoundingMode::ToNearestMidpointToEven)
-                        .unwrap();
+                let mut max_loan_amount = (position_loan_units / unit_ratio)
+                    .checked_truncate(RoundingMode::ToNearestMidpointToEven)
+                    .unwrap();
 
-                    // ! Liquidation
-                    if for_liquidation {
-                        max_loan_amount *= pool_state.pool_config.loan_close_factor;
-                    }
+                // ! Liquidation
+                if for_liquidation {
+                    max_loan_amount *= pool_state.pool_config.loan_close_factor;
+                }
 
-                    max_loan_amount = max_loan_amount.min(payment.amount());
+                max_loan_amount = max_loan_amount.min(payment.amount());
 
-                    let mut max_loan_value = (max_loan_amount * pool_state.price)
-                        .min(pool_borrowed_amount * pool_state.price);
+                let mut max_loan_value = (max_loan_amount * pool_state.price)
+                    .min(pool_borrowed_amount * pool_state.price);
 
-                    // ! Liquidation
-                    if payment_value.is_some() {
-                        max_loan_value = max_loan_value.min(expected_payment_value);
-                        expected_payment_value -= max_loan_value;
+                // ! Liquidation
+                if payment_value.is_some() {
+                    max_loan_value = max_loan_value.min(expected_payment_value);
+                    expected_payment_value -= max_loan_value;
 
-                        assert!(
-                            expected_payment_value >= dec!(0),
-                            "expected_payment_value should not be negative"
-                        );
-                    };
+                    assert!(
+                        expected_payment_value >= dec!(0),
+                        "expected_payment_value should not be negative"
+                    );
+                };
 
-                    max_loan_amount = max_loan_value / pool_state.price;
+                max_loan_amount = max_loan_value / pool_state.price;
 
-                    let delta_loan_unit = pool_state
-                        .deposit_for_repay(payment.take_advanced(
-                            max_loan_amount,
-                            WithdrawStrategy::Rounded(RoundingMode::ToNearestMidpointToEven),
-                        ))
-                        .expect("Error in deposit_from_repay");
+                let delta_loan_unit = pool_state
+                    .deposit_for_repay(payment.take_advanced(
+                        max_loan_amount,
+                        WithdrawStrategy::Rounded(RoundingMode::ToNearestMidpointToEven),
+                    ))
+                    .expect("Error in deposit_from_repay");
 
-                    cdp_data
-                        .update_loan(pool_res_address, -delta_loan_unit)
-                        .expect("Error updating loan");
+                cdp_data
+                    .update_loan(pool_res_address, -delta_loan_unit)
+                    .expect("Error updating loan");
 
-                    remainders.push(payment);
+                remainders.push(payment);
 
-                    total_payment_value += max_loan_value;
-
-                    (remainders, total_payment_value)
-                },
-            );
+                total_payment_value += max_loan_value;
+            };
 
             if payment_value.is_some() {
                 assert!(
