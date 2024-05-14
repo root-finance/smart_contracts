@@ -43,6 +43,7 @@ pub fn assert_non_fungible_res_address(address: ResourceAddress, message: Option
 }
 
 #[blueprint]
+#[types(FlashloanTerm, WithdrawType, DepositType)]
 pub mod single_resource_pool {
 
     enable_method_auth! {

@@ -293,7 +293,7 @@ impl CDPHealthChecker {
         self._update_health_check_data()?;
 
         for (res, position) in &self.loan_positions {
-            if self.total_loan_to_value_ratio <= position.ltv_limit * dec!(1.05) {
+            if self.total_loan_to_value_ratio <= position.ltv_limit + dec!(0.05) {
                 return Err(format!(
                     "Loan of resource {:?} can not be liquidated: LTV ratio of {} is lower than {} + 5%",
                     res, self.total_loan_to_value_ratio, position.ltv_limit

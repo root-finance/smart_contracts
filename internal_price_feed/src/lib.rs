@@ -49,6 +49,7 @@ pub struct UpdaterBadgeData {
 }
 
 #[blueprint]
+#[types(PriceData, DerivedData, PriceInfo, PriceFeedStrategy, AuthBadgeData, UpdaterBadgeData)]
 mod price_feed {
 
     enable_method_auth! {
