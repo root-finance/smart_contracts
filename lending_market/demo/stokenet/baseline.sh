@@ -3,20 +3,20 @@
 echo "" > tx.rtm;
 
 # ------------------------------------------------------------------------------------ Reinitialize
-OWNER_ADDRESS=account_tdx_2_1290qzud9wh40gp6ckcmcgu60hj7g08v2ftw7hk5crm59p6tua93jdk
+OWNER_ADDRESS=account_tdx_2_12ymq466ag96y7ksx2ypuj9perjxdts2g43kxfuywu0tq27zzw6hsah
 XRD=resource_tdx_2_1tknxxxxxxxxxradxrdxxxxxxxxx009923554798xxxxxxxxxtfd2jc
 SUPRA_PROOF=5c2101202101040a000000000000000020072097005e53b1a210741ce728e51ee02345267f7c429086d199b67f870b3f1799ee2007608ae6587fbd751aced028d0e5314e6a5dd606b760aea03a077e0b6f4ac2efdd42c3f559284e305dade21569980761f8a9138edd0a2423fc07348457f3564350795b0e00ee8ec713d818099e57b6907e3a4c673fe076bc7931169225314b839c2420210102210509140100000b0080a4a61971d60000000000000000000a9016e8e08e0100000812000a5015e8e08e0100002020090720dd5490e8c99e44e441c86b514cf4f7c1d3b0b1e82d6a2efcefbc3c3c236b6a520720d9503c6895245d1c69b261d083687abb08a4a21ffe33f0405b8ea16c42f9647e07208fb25af57390a0555ed7d04b1ece82c00df85fd5b5cf4985bcbb160cc8fa318807205ff7d20a6d4b8e63d9feeae85564195f40e70cac0a10a39ed286451efa0fd96007205ca0c5d8981c5bebf80eb759450add92176e6b04a8c1e8062be3a31a790a17dd0720daff9a68fbb4762377d825c2ab4c84fee793a818d82fe7e49fd77dd852547fc7072063ec35bd32b820452f8e5dd329484d6189daca59f38bd318f717fda4677cccd307200a6eaeb7e0927c73e734d29363f833b6d39dcaec225fabb11e0aa28dc16a919107200b6e5c5d2ad0b3e32eb90343b3a71e1aeeeeb25d2a4540d9fb1627e830bee6b0
 
 
 # ------------------------------------------------------------------------------------ Instantiate packages
 
-POOL_PACKAGE=package_tdx_2_1pkrz0tfj6nps5cl8tmrxt7ynlmhkdmjnhujp4z0whnn9wxu2m69ph2
+PRICE_FEED_PACKAGE=package_tdx_2_1p5psu0kzcu7jrm7pavq85q2qn34s26mx6pxwedkramd7f5qa7ed4v6
 
-PRICE_FEED_PACKAGE=package_tdx_2_1pkfj7uu9229ws7pzkcfw6gqujw8zuf26slrudwg5eh5zg823nrueu0
+POOL_PACKAGE=package_tdx_2_1phpu7g3hh7n0ffv2rwmngk5r725a0k767m0adg82z29rn83y5n9p3d
 
-LENDING_MARKET_PACKAGE=package_tdx_2_1p48w4dkzxf2cgh0y0h50ncrd3e852a0whgxwlu6uhfq8u85s65axj4
+LENDING_MARKET_PACKAGE=package_tdx_2_1p4glualhs5twrmg74utqsy9e9dsdr2jrh22xrpkg6w85nr6zhg4a2j
 
-FAUCET_PACKAGE=package_tdx_2_1p57eldur7nakguzepj2yhn0hz6rquxf6xaqfwqtmvz8sek0kvv2rmq
+FAUCET_PACKAGE=package_tdx_2_1pkwgr3xz6a52uda3hl3j83ug29255s5a3r29k43ml92x2298r3pyeu
 
 # ------------------------------------------------------------------------------------ Mint badges
 
@@ -29,8 +29,9 @@ echo "CALL_METHOD
     Address(\"$OWNER_ADDRESS\")
     \"deposit_batch\"
     Expression(\"ENTIRE_WORKTOP\");" >> tx.rtm
-PRICE_FEED_COMPONENT_ADDRESS=component_tdx_2_1cpzas48thjfqjdqgvk9lk87werqeyj9zj9xvgsmgd6fylakrlzvj3t
-PRICE_FEED_ADMIN_BADGE=resource_tdx_2_1nf8qj6nn4m92g4j9v74jg957agtdzcl6sp6ypmax57zcyn65kqxnxs
+PRICE_FEED_COMPONENT_ADDRESS=component_tdx_2_1crsme2ssqcy4guecmv69dgkanlr4fkg0u6w5p3rk8pw4u9rmayz0jv
+PRICE_FEED_ADMIN_BADGE=resource_tdx_2_1nt5edh8g96cnrf4wcwer3kks5vytvtce7hdqmkt79ftyjf0t95mclp
+PRICE_FEED_UPDATER_BADGE=resource_tdx_2_1nt37ht06cdcyw0rd830eknw4s7azwk4750mu38ud9nu2e55ka576f2
 
 echo "CALL_FUNCTION
     Address(\"$FAUCET_PACKAGE\")
@@ -42,13 +43,12 @@ echo "CALL_METHOD
     Address(\"$OWNER_ADDRESS\")
     \"deposit_batch\"
     Expression(\"ENTIRE_WORKTOP\");" >> tx.rtm
-FAUCET_COMPONENT_ADDRESS=component_tdx_2_1crchxcqvas2tjzesqp8rrw8lvdtlhw4k5pcaeqjzqvvr08vwm8z3ms
-FAUCET_ADMIN_BADGE=resource_tdx_2_1nfh62hky7df7kwlwkq4pr3uxkjetrth6nq37szmqwvyy2y8dcg0cgf
+FAUCET_COMPONENT_ADDRESS=component_tdx_2_1cpze7z68uq5k84gj8jkyue3xesceq0mhtzpwwxpf7hjs6ht4swrhzp
+FAUCET_ADMIN_BADGE=resource_tdx_2_1nfmt2qf6ggu5d8p6lr2269qdmv43r086kz3gull3fc7zc8clrhpy6p
 
 # ------------------------------------------------------------------------------------ Instantiate resources
 echo "CALL_METHOD Address(\"$OWNER_ADDRESS\") \"create_proof_of_non_fungibles\"  Address(\"$FAUCET_ADMIN_BADGE\")  Array<NonFungibleLocalId>(NonFungibleLocalId(\"#1#\"));" >> tx.rtm
 echo "CALL_METHOD Address(\"$FAUCET_COMPONENT_ADDRESS\") \"create_resource\" \"xUSDT\" \"xUSDT\" \"https://res.cloudinary.com/daisvxhyu/image/upload/v1679440531/825_lkjddk.png\"  Decimal(\"1000000\");" >> tx.rtm
-
 echo "CALL_METHOD Address(\"$OWNER_ADDRESS\") \"create_proof_of_non_fungibles\"  Address(\"$FAUCET_ADMIN_BADGE\")  Array<NonFungibleLocalId>(NonFungibleLocalId(\"#1#\"));" >> tx.rtm
 echo "CALL_METHOD Address(\"$FAUCET_COMPONENT_ADDRESS\") \"create_resource\" \"xWBTC\" \"xWBTC\" \"https://res.cloudinary.com/daisvxhyu/image/upload/v1679440531/825_lkjddk.png\"  Decimal(\"1000000\");" >> tx.rtm
 echo "CALL_METHOD Address(\"$OWNER_ADDRESS\") \"create_proof_of_non_fungibles\"  Address(\"$FAUCET_ADMIN_BADGE\")  Array<NonFungibleLocalId>(NonFungibleLocalId(\"#1#\"));" >> tx.rtm
@@ -61,26 +61,28 @@ echo "CALL_METHOD Address(\"$OWNER_ADDRESS\") \"create_proof_of_non_fungibles\" 
 echo "CALL_METHOD Address(\"$FAUCET_COMPONENT_ADDRESS\") \"create_resource\" \"xUSDC\" \"xUSDC\" \"https://res.cloudinary.com/daisvxhyu/image/upload/v1679440531/825_lkjddk.png\"  Decimal(\"1000000\");" >> tx.rtm
 echo "CALL_METHOD Address(\"$OWNER_ADDRESS\") \"deposit_batch\" Expression(\"ENTIRE_WORKTOP\");" >> tx.rtm
 
-export USDT_RESOURCE_ADDRESS=resource_tdx_2_1tkak2k6lycwcakgqdgkqe7whja3rr24j25j6ncdef0lcp3yut6lv4p
-export XWBTC_RESOURCE_ADDRESS=resource_tdx_2_1tkatgs43legl0rjetydl3a96593rzgvwpxzt6uyg8hc4sztpkss752
-export XETH_RESOURCE_ADDRESS=resource_tdx_2_1t59ttjcqftthpy59qug635fw2qrv4nq02ht4ywp0sdtqzelerx6dwq
-export LSU_RESOURCE_ADDRESS=resource_tdx_2_1thset9xxx5lt00g2xf5fw3jqeh98ptn7750295zufk83qlvxnmn76j
-export HUG_RESOURCE_ADDRESS=resource_tdx_2_1t4u3tqp5hl4y22urfh2yjr44v85wq2sp27p5y7sjaearkg2qljpdmz
-export XUSDC_RESOURCE_ADDRESS=resource_tdx_2_1t5ahd2zd55u775l8fnf7at32sj9wunvrgjp267qdzst8mgul90kalm
+USDT_RESOURCE_ADDRESS=resource_tdx_2_1t4nwv6aw2n6zt2nx80vxa2h6ynssz75xtjeac4f0hktmapdvh5ve3z
+XWBTC_RESOURCE_ADDRESS=resource_tdx_2_1t48fsfmh9kdfhdvge8x5dxee7u38wqcrjwesghjlks8lzmst725ccg
+XETH_RESOURCE_ADDRESS=resource_tdx_2_1tkjmydgvva5rl8x0lt9vn5lzpz2xh2d23klzjhv884hm9gg770l720
+LSU_RESOURCE_ADDRESS=resource_tdx_2_1t48r0hhzy6nv9kmga7u2fdmexy0j08lxhx9jewdap7uv4j5r64jpgw
+HUG_RESOURCE_ADDRESS=resource_tdx_2_1tkna28k99gnj24ngqxvrcl7dh7lrqyr85496guk2zgprjhg8nkvs5h
+XUSDC_RESOURCE_ADDRESS=resource_tdx_2_1t5e5q2jsn9eqe5ma0gqtpfjzqcmchjze28rfyttzunu3pr6y6t06t7
 
 # ------------------------------------------------------------------------------------ Set prices
 echo "CALL_METHOD Address(\"$OWNER_ADDRESS\") \"create_proof_of_non_fungibles\"  Address(\"$PRICE_FEED_ADMIN_BADGE\")  Array<NonFungibleLocalId>(NonFungibleLocalId(\"#1#\"));" >> tx.rtm
-echo "CALL_METHOD Address(\"$PRICE_FEED_COMPONENT_ADDRESS\") \"admin_update_feed\" Address(\"$USDT_RESOURCE_ADDRESS\") Bytes(\"$SUPRA_PROOF\") Enum<1u8>(276u32, 1u32);" >> tx.rtm
-echo "CALL_METHOD Address(\"$OWNER_ADDRESS\") \"create_proof_of_non_fungibles\"  Address(\"$PRICE_FEED_ADMIN_BADGE\")  Array<NonFungibleLocalId>(NonFungibleLocalId(\"#1#\"));" >> tx.rtm
 echo "CALL_METHOD Address(\"$PRICE_FEED_COMPONENT_ADDRESS\") \"admin_update_price\" Address(\"$XRD\") Decimal(\"1\");" >> tx.rtm
+echo "CALL_METHOD Address(\"$PRICE_FEED_COMPONENT_ADDRESS\") \"admin_update_price\" Address(\"$USDT_RESOURCE_ADDRESS\") Decimal(\"25\");" >> tx.rtm
+echo "CALL_METHOD Address(\"$PRICE_FEED_COMPONENT_ADDRESS\") \"admin_update_price\" Address(\"$XWBTC_RESOURCE_ADDRESS\") Decimal(\"1300000\");" >> tx.rtm
+echo "CALL_METHOD Address(\"$PRICE_FEED_COMPONENT_ADDRESS\") \"admin_update_price\" Address(\"$XETH_RESOURCE_ADDRESS\") Decimal(\"72500\");" >> tx.rtm
+echo "CALL_METHOD Address(\"$PRICE_FEED_COMPONENT_ADDRESS\") \"admin_update_price\" Address(\"$LSU_RESOURCE_ADDRESS\") Decimal(\"1\");" >> tx.rtm
+echo "CALL_METHOD Address(\"$PRICE_FEED_COMPONENT_ADDRESS\") \"admin_update_price\" Address(\"$HUG_RESOURCE_ADDRESS\") Decimal(\"0.001\");" >> tx.rtm
+echo "CALL_METHOD Address(\"$PRICE_FEED_COMPONENT_ADDRESS\") \"admin_update_price\" Address(\"$XUSDC_RESOURCE_ADDRESS\") Decimal(\"25\");" >> tx.rtm
+
+
 
 echo "CALL_METHOD Address(\"$OWNER_ADDRESS\") \"create_proof_of_non_fungibles\"  Address(\"$PRICE_FEED_ADMIN_BADGE\")  Array<NonFungibleLocalId>(NonFungibleLocalId(\"#1#\"));" >> tx.rtm
+echo "CALL_METHOD Address(\"$PRICE_FEED_COMPONENT_ADDRESS\") \"admin_update_feed\" Address(\"$USDT_RESOURCE_ADDRESS\") Bytes(\"$SUPRA_PROOF\") Enum<1u8>(276u32, 1u32);" >> tx.rtm
 
-echo "CALL_METHOD Address(\"$PRICE_FEED_COMPONENT_ADDRESS\") \"admin_update_price\" Address(\"$XWBTC_RESOURCE_ADDRESS\") Decimal(\"1\");" >> tx.rtm
-echo "CALL_METHOD Address(\"$PRICE_FEED_COMPONENT_ADDRESS\") \"admin_update_price\" Address(\"$XETH_RESOURCE_ADDRESS\") Decimal(\"1\");" >> tx.rtm
-echo "CALL_METHOD Address(\"$PRICE_FEED_COMPONENT_ADDRESS\") \"admin_update_price\" Address(\"$LSU_RESOURCE_ADDRESS\") Decimal(\"1\");" >> tx.rtm
-echo "CALL_METHOD Address(\"$PRICE_FEED_COMPONENT_ADDRESS\") \"admin_update_price\" Address(\"$HUG_RESOURCE_ADDRESS\") Decimal(\"1\");" >> tx.rtm
-echo "CALL_METHOD Address(\"$PRICE_FEED_COMPONENT_ADDRESS\") \"admin_update_price\" Address(\"$XUSDC_RESOURCE_ADDRESS\") Decimal(\"1\");" >> tx.rtm
 
 echo "CALL_METHOD Address(\"$OWNER_ADDRESS\") \"deposit_batch\" Expression(\"ENTIRE_WORKTOP\");" >> tx.rtm
 
@@ -97,12 +99,12 @@ echo "CALL_METHOD
     Expression(\"ENTIRE_WORKTOP\");" >> tx.rtm
 
 
-export LENDING_MARKET_COMPONENT_ADDRESS=component_tdx_2_1cqnlugl88tnn02v08rafcc70phv5q6mpkdtu80aa2deggn83d0zpyh
-export LENDING_MARKET_ADMIN_ADDRESS=resource_tdx_2_1n2vxr6kfy2cw0hd0ctjprn49p6sgfnwz9f2zhtxachj83jddpt72qt
-export LENDING_MARKET_RESERVE_COLLECTOR_BADGE=resource_tdx_2_1nt6fxwll7h4csc87ug5sfh6pg9ylwdhxegyzwyw88yz9kradh6xm43
-export LENDING_MARKET_CDP_RESOURCE_ADDRESS=resource_tdx_2_1ntucgley3xuv7rsr89euvremlqyq3d0rwvedszkjj6dm0zf20j64zs
-export LENDING_BATCH_FLASH_LOAN_RESOURCE_ADDRESS=resource_tdx_2_1n2pq5stckj8c54lpnvw0vjwuua0jf3gavykj0n4wclyqgkdyld64f0
-export LENDING_LIQUIDATION_TERM_RESOURCE_ADDRESS=resource_tdx_2_1n2pq5stckj8c54lpnvw0vjwuua0jf3gavykj0n4wclyqgkdyld64f0
+LENDING_MARKET_COMPONENT_ADDRESS=component_tdx_2_1crdm3u3xhsatvpftm9xwf8nwzty65kxj6wryjs8m9rrt527ahl087c
+LENDING_MARKET_ADMIN_ADDRESS=resource_tdx_2_1ntjw0j86z23uhqke68j5rjk9e9ny90ks6v9wlrzvfccjrdkzwu3t96
+LENDING_MARKET_RESERVE_COLLECTOR_BADGE=resource_tdx_2_1n2tzfw86l7xksr33m2r8vtlacxnfhql982x7rmv5k92cgapvqvf585
+LENDING_MARKET_CDP_RESOURCE_ADDRESS=resource_tdx_2_1n28waz5k6kqs06r0ay8cqph22xtxj9sj8cwp5kqk7k0enk6s08gj03
+LENDING_BATCH_FLASH_LOAN_RESOURCE_ADDRESS=resource_tdx_2_1nt0rsect89tz26kqcqec86y2yv02p2lgv3rm8tdrjaassrtam0jny0
+LENDING_LIQUIDATION_TERM_RESOURCE_ADDRESS=resource_tdx_2_1nt0rsect89tz26kqcqec86y2yv02p2lgv3rm8tdrjaassrtam0jny0
 
 # ------------------------------------------------------------------------------------ Create liquidity pools
 echo "CALL_METHOD Address(\"$OWNER_ADDRESS\") \"create_proof_of_non_fungibles\" Address(\"$LENDING_MARKET_ADMIN_ADDRESS\") Array<NonFungibleLocalId>(NonFungibleLocalId(\"#1#\"),NonFungibleLocalId(\"#2#\"),NonFungibleLocalId(\"#3#\"),NonFungibleLocalId(\"#4#\"));" >> tx.rtm

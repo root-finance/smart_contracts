@@ -51,7 +51,7 @@ echo "CALL_METHOD Address(\"$OWNER_ADDRESS\") \"deposit_batch\" Expression(\"ENT
 
 RESULT=$(resim run "tx.rtm")
 
-export USDT_RESOURCE_ADDRESS=$(echo "$RESULT" | sed -nr "s/.*Resource: ([[:alnum:]_]+)/\1/p" | sed '1!d')
+USDT_RESOURCE_ADDRESS=$(echo "$RESULT" | sed -nr "s/.*Resource: ([[:alnum:]_]+)/\1/p" | sed '1!d')
 
 # ------------------------------------------------------------------------------------ Set prices
 echo "CALL_METHOD Address(\"$OWNER_ADDRESS\") \"lock_fee\" Decimal(\"10\");" > tx.rtm
@@ -84,12 +84,12 @@ echo "CALL_METHOD
 
 RESULT=$(resim run "tx.rtm")
 
-export LENDING_MARKET_COMPONENT_ADDRESS=$(echo "$RESULT" | sed -nr "s/.*Component: ([[:alnum:]_]+)/\1/p" | sed '1!d')
-export LENDING_MARKET_ADMIN_ADDRESS=$(echo "$RESULT" | sed -nr "s/.*Resource: ([[:alnum:]_]+)/\1/p" | sed '1!d')
-export LENDING_MARKET_RESERVE_COLLECTOR_BADGE=$(echo "$RESULT" | sed -nr "s/.*Resource: ([[:alnum:]_]+)/\1/p" | sed '2!d')
-export LENDING_MARKET_CDP_RESOURCE_ADDRESS=$(echo "$RESULT" | sed -nr "s/.*Resource: ([[:alnum:]_]+)/\1/p" | sed '3!d')
-export LENDING_BATCH_FLASH_LOAN_RESOURCE_ADDRESS=$(echo "$RESULT" | sed -nr "s/.*Resource: ([[:alnum:]_]+)/\1/p" | sed '4!d')
-export LENDING_LIQUIDATION_TERM_RESOURCE_ADDRESS=$(echo "$RESULT" | sed -nr "s/.*Resource: ([[:alnum:]_]+)/\1/p" | sed '4!d')
+LENDING_MARKET_COMPONENT_ADDRESS=$(echo "$RESULT" | sed -nr "s/.*Component: ([[:alnum:]_]+)/\1/p" | sed '1!d')
+LENDING_MARKET_ADMIN_ADDRESS=$(echo "$RESULT" | sed -nr "s/.*Resource: ([[:alnum:]_]+)/\1/p" | sed '1!d')
+LENDING_MARKET_RESERVE_COLLECTOR_BADGE=$(echo "$RESULT" | sed -nr "s/.*Resource: ([[:alnum:]_]+)/\1/p" | sed '2!d')
+LENDING_MARKET_CDP_RESOURCE_ADDRESS=$(echo "$RESULT" | sed -nr "s/.*Resource: ([[:alnum:]_]+)/\1/p" | sed '3!d')
+LENDING_BATCH_FLASH_LOAN_RESOURCE_ADDRESS=$(echo "$RESULT" | sed -nr "s/.*Resource: ([[:alnum:]_]+)/\1/p" | sed '4!d')
+LENDING_LIQUIDATION_TERM_RESOURCE_ADDRESS=$(echo "$RESULT" | sed -nr "s/.*Resource: ([[:alnum:]_]+)/\1/p" | sed '4!d')
 
 echo  "LENDING_MARKET_COMPONENT_ADDRESS $LENDING_MARKET_COMPONENT_ADDRESS"
 echo  "LENDING_MARKET_ADMIN_ADDRESS $LENDING_MARKET_ADMIN_ADDRESS"
