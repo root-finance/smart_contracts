@@ -1093,9 +1093,9 @@ mod lending_market {
                     let borrow_apy =
                         borrow_apy_term.checked_powi(second_per_year).unwrap() - dec!(1);
 
-                    let total_liquidity =
-                        pool_state.pool.get_pooled_amount().0 +
-                        pool_state.pool.get_pooled_amount().1;
+                    let pooled_amount = pool_state.pool.get_pooled_amount();
+                    let available_liquidity = pooled_amount.0;
+                    let total_liquidity = pooled_amount.0 + pooled_amount.1;
 
                     let total_borrow = pool_state.total_loan;
 
@@ -1107,6 +1107,7 @@ mod lending_market {
 
                     MarketStatsPool {
                         asset_address: pool_state.pool_res_address,
+                        available_liquidity,
                         total_liquidity,
                         total_supply,
                         total_borrow,

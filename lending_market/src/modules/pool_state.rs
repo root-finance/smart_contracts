@@ -23,6 +23,7 @@ pub struct LendingPoolUpdatedEvent {
 #[derive(ScryptoSbor)]
 pub struct MarketStatsPool {
     pub asset_address: ResourceAddress,
+    pub available_liquidity: Decimal,
     pub total_liquidity: Decimal,
     pub total_supply: Decimal,
     pub total_borrow: Decimal,
