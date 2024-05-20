@@ -41,7 +41,7 @@ impl PriceFeedTestHelper {
         let component_addresses_created = result.new_component_addresses();
         let supra_oracle_component_address = component_addresses_created[0];
 
-        println!("{:?}\n", AddressBech32Encoder::new(&NetworkDefinition::simulator()).encode(&supra_oracle_component_address.to_vec()));
+        println!("{:?}\n", AddressBech32Encoder::for_simulator().encode(&supra_oracle_component_address.to_vec()));
 
         let oracle_package_address =
             test_runner.compile_and_publish(Path::new("../internal_price_feed"));

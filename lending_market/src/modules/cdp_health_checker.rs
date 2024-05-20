@@ -2,7 +2,7 @@ use super::{cdp_data::*, liquidation_threshold::*, pool_state::*};
 use scrypto::prelude::*;
 
 // Amount at which a position is considered zeroed
-pub const ZERO_EPSILON: Decimal = dec!(0.0000000000001);
+pub const ZERO_EPSILON: Decimal = dec!(0.000000001);
 
 pub enum LoadPositionType {
     Collateral,
@@ -278,8 +278,8 @@ impl CDPHealthChecker {
         for (res, position) in &self.loan_positions {
             if self.total_loan_to_value_ratio > position.ltv_limit {
                 return Err(format!(
-                    "Loan of resource {:?}: total_loan_to_value_ratio need to be lower than {}. CDP={:?}",
-                    res, position.ltv_limit, self
+                    "Loan of resource {:?}: total_loan_to_value_ratio need to be lower than {}, but is {}.",
+                    Runtime::bech32_encode_address(res.clone()), position.ltv_limit, self.total_loan_to_value_ratio
                 ));
             }
         }
@@ -296,7 +296,7 @@ impl CDPHealthChecker {
             if self.total_loan_to_value_ratio <= position.ltv_limit + dec!(0.05) {
                 return Err(format!(
                     "Loan of resource {:?} can not be liquidated: LTV ratio of {} is lower than {} + 5%",
-                    res, self.total_loan_to_value_ratio, position.ltv_limit
+                    Runtime::bech32_encode_address(res.clone()), self.total_loan_to_value_ratio, position.ltv_limit
                 ));
             }
         }
@@ -450,7 +450,7 @@ impl CDPHealthChecker {
             if total_loan_value < ZERO_EPSILON {
                 total_loan_to_value_ratio = Decimal::ZERO;
             } else {
-                // This happens when there is no collateral at all, or by mistake you are trying to borrow the same currency as the collateral
+                // This happens when there is no collateral at all
                 total_loan_to_value_ratio = Decimal::MAX;
             };
         } else {

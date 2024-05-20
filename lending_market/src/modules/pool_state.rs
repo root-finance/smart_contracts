@@ -235,10 +235,6 @@ impl LendingPoolState {
         &mut self,
         pool_unit_amount: Decimal,
     ) -> Result<Bucket, String> {
-        if pool_unit_amount == 0.into() {
-            return Err("Pool unit amount must be positive".into());
-        }
-
         if pool_unit_amount > self.collaterals.amount() {
             return Err("Not enough pool units to remove from collateral".into());
         }
@@ -249,10 +245,14 @@ impl LendingPoolState {
             amount: -pool_unit_amount
         });
 
-        Ok(self.collaterals.take_advanced(
-            pool_unit_amount,
-            WithdrawStrategy::Rounded(RoundingMode::ToNearestMidpointToEven),
-        ))
+        if pool_unit_amount == 0.into() {
+            Ok(Bucket::new(self.pool_res_address))
+        } else {
+            Ok(self.collaterals.take_advanced(
+                pool_unit_amount,
+                WithdrawStrategy::Rounded(RoundingMode::ToNearestMidpointToEven),
+            ))
+        }
     }
 
     /// Handle request to increase borrowed amount.

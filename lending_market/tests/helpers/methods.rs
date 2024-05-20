@@ -470,16 +470,17 @@ pub fn market_liquidation(
         );
 
     let mut payment_buckets = Vec::<ManifestBucket>::new();
+    let encoder = AddressBech32Encoder::for_simulator();
     for (res_address, amount) in payments {
         manifest_builder = manifest_builder
             .withdraw_from_account(user_account_address, res_address, amount)
             .take_all_from_worktop(
                 res_address,
-                format!("payment_bucket_{:?}", res_address.as_node_id()),
+                format!("payment_bucket_{:?}", encoder.encode(&res_address.to_vec())),
             )
             .with_name_lookup(|builder, lookup| {
                 payment_buckets
-                    .push(lookup.bucket(format!("payment_bucket_{:?}", res_address.as_node_id())));
+                    .push(lookup.bucket(format!("payment_bucket_{:?}", encoder.encode(&res_address.to_vec()))));
                 builder
             });
     }
