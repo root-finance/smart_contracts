@@ -14,7 +14,7 @@ PRICE_FEED_PACKAGE=package_tdx_2_1p5psu0kzcu7jrm7pavq85q2qn34s26mx6pxwedkramd7f5
 
 POOL_PACKAGE=package_tdx_2_1phpu7g3hh7n0ffv2rwmngk5r725a0k767m0adg82z29rn83y5n9p3d
 
-LENDING_MARKET_PACKAGE=package_tdx_2_1p4glualhs5twrmg74utqsy9e9dsdr2jrh22xrpkg6w85nr6zhg4a2j
+LENDING_MARKET_PACKAGE=package_tdx_2_1p5elx6d9vcetkug6apfd8qdwu9kghw4xlutl6dapy29302l4nmxkec
 
 FAUCET_PACKAGE=package_tdx_2_1pkwgr3xz6a52uda3hl3j83ug29255s5a3r29k43ml92x2298r3pyeu
 
@@ -99,12 +99,12 @@ echo "CALL_METHOD
     Expression(\"ENTIRE_WORKTOP\");" >> tx.rtm
 
 
-LENDING_MARKET_COMPONENT_ADDRESS=component_tdx_2_1crdm3u3xhsatvpftm9xwf8nwzty65kxj6wryjs8m9rrt527ahl087c
-LENDING_MARKET_ADMIN_ADDRESS=resource_tdx_2_1ntjw0j86z23uhqke68j5rjk9e9ny90ks6v9wlrzvfccjrdkzwu3t96
-LENDING_MARKET_RESERVE_COLLECTOR_BADGE=resource_tdx_2_1n2tzfw86l7xksr33m2r8vtlacxnfhql982x7rmv5k92cgapvqvf585
-LENDING_MARKET_CDP_RESOURCE_ADDRESS=resource_tdx_2_1n28waz5k6kqs06r0ay8cqph22xtxj9sj8cwp5kqk7k0enk6s08gj03
-LENDING_BATCH_FLASH_LOAN_RESOURCE_ADDRESS=resource_tdx_2_1nt0rsect89tz26kqcqec86y2yv02p2lgv3rm8tdrjaassrtam0jny0
-LENDING_LIQUIDATION_TERM_RESOURCE_ADDRESS=resource_tdx_2_1nt0rsect89tz26kqcqec86y2yv02p2lgv3rm8tdrjaassrtam0jny0
+LENDING_MARKET_COMPONENT_ADDRESS=component_tdx_2_1cq7whzh5x8hpf7zcut4rjx9hcfen0p2zp9zm790mca39gcxguwnzlj
+LENDING_MARKET_ADMIN_ADDRESS=resource_tdx_2_1nteyzsk96m2jdh5q7l6ta2h3srsq36t7utydygldhk0y26r2wtrrpd
+LENDING_MARKET_RESERVE_COLLECTOR_BADGE=resource_tdx_2_1nge06xjvu9yd08xf999hsg3vkp9g4jut9r2s4laf7l7dhagzm4y0cm
+LENDING_MARKET_CDP_RESOURCE_ADDRESS=resource_tdx_2_1nfjuv0839g0mrqlpyd4ntmuufff37czj4en0evxksu98telwvdysnw
+LENDING_BATCH_FLASH_LOAN_RESOURCE_ADDRESS=resource_tdx_2_1n2f7mq0ks6u3d9c5ta3saj675ut597c843fqya0vgx4v7hensge0wt
+LENDING_LIQUIDATION_TERM_RESOURCE_ADDRESS=resource_tdx_2_1n2f7mq0ks6u3d9c5ta3saj675ut597c843fqya0vgx4v7hensge0wt
 
 # ------------------------------------------------------------------------------------ Create liquidity pools
 echo "CALL_METHOD Address(\"$OWNER_ADDRESS\") \"create_proof_of_non_fungibles\" Address(\"$LENDING_MARKET_ADMIN_ADDRESS\") Array<NonFungibleLocalId>(NonFungibleLocalId(\"#1#\"),NonFungibleLocalId(\"#2#\"),NonFungibleLocalId(\"#3#\"),NonFungibleLocalId(\"#4#\"));" >> tx.rtm
@@ -115,7 +115,7 @@ echo "CALL_METHOD Address(\"$LENDING_MARKET_COMPONENT_ADDRESS\") \"create_lendin
         Decimal(\"0.4\"),
         Decimal(\"0.001\"),
         0u8,
-        Decimal(\"0.08\"),
+        Decimal(\"0.05\"),
         Decimal(\"1\"),
         Enum<0u8>(),
         Enum<0u8>(),
@@ -123,8 +123,7 @@ echo "CALL_METHOD Address(\"$LENDING_MARKET_COMPONENT_ADDRESS\") \"create_lendin
         5i64,
         15i64,
         240i64,
-        Decimal(\"0.45\"),
-        Decimal(\"0.7\")
+        Decimal(\"0.45\")
     )
     Tuple(
         Decimal(\"0\"), Decimal(\"0.04\"), Decimal(\"3.00\")
@@ -148,7 +147,7 @@ echo "CALL_METHOD Address(\"$LENDING_MARKET_COMPONENT_ADDRESS\") \"create_lendin
         Decimal(\"0.4\"),
         Decimal(\"0.001\"),
         1u8,
-        Decimal(\"0.08\"),
+        Decimal(\"0.05\"),
         Decimal(\"1\"),
         Enum<0u8>(),
         Enum<0u8>(),
@@ -156,8 +155,7 @@ echo "CALL_METHOD Address(\"$LENDING_MARKET_COMPONENT_ADDRESS\") \"create_lendin
         5i64,
         15i64,
         240i64,
-        Decimal(\"0.8\"),
-        Decimal(\"0.75\")
+        Decimal(\"0.8\")
     )
     Tuple(
         Decimal(\"0\"), Decimal(\"0.04\"), Decimal(\"0.75\")
@@ -187,7 +185,7 @@ echo "CALL_METHOD Address(\"$LENDING_MARKET_COMPONENT_ADDRESS\") \"create_lendin
         Decimal(\"0.4\"),
         Decimal(\"0.001\"),
         0u8,
-        Decimal(\"0.08\"),
+        Decimal(\"0.05\"),
         Decimal(\"1\"),
         Enum<0u8>(),
         Enum<0u8>(),
@@ -195,8 +193,7 @@ echo "CALL_METHOD Address(\"$LENDING_MARKET_COMPONENT_ADDRESS\") \"create_lendin
         5i64,
         15i64,
         240i64,
-        Decimal(\"0.45\"),
-        Decimal(\"0.7\")
+        Decimal(\"0.45\")
     )
     Tuple(
         Decimal(\"0\"), Decimal(\"0.04\"), Decimal(\"3.00\")
@@ -220,7 +217,7 @@ echo "CALL_METHOD Address(\"$LENDING_MARKET_COMPONENT_ADDRESS\") \"create_lendin
         Decimal(\"0.4\"),
         Decimal(\"0.001\"),
         0u8,
-        Decimal(\"0.08\"),
+        Decimal(\"0.05\"),
         Decimal(\"1\"),
         Enum<0u8>(),
         Enum<0u8>(),
@@ -228,8 +225,7 @@ echo "CALL_METHOD Address(\"$LENDING_MARKET_COMPONENT_ADDRESS\") \"create_lendin
         5i64,
         15i64,
         240i64,
-        Decimal(\"0.45\"),
-        Decimal(\"0.7\")
+        Decimal(\"0.45\")
     )
     Tuple(
         Decimal(\"0\"), Decimal(\"0.04\"), Decimal(\"3.00\")
@@ -253,7 +249,7 @@ echo "CALL_METHOD Address(\"$LENDING_MARKET_COMPONENT_ADDRESS\") \"create_lendin
         Decimal(\"0.4\"),
         Decimal(\"0.001\"),
         0u8,
-        Decimal(\"0.08\"),
+        Decimal(\"0.05\"),
         Decimal(\"1\"),
         Enum<0u8>(),
         Enum<0u8>(),
@@ -261,8 +257,7 @@ echo "CALL_METHOD Address(\"$LENDING_MARKET_COMPONENT_ADDRESS\") \"create_lendin
         5i64,
         15i64,
         240i64,
-        Decimal(\"0.45\"),
-        Decimal(\"0.7\")
+        Decimal(\"0.45\")
     )
     Tuple(
         Decimal(\"0\"), Decimal(\"0.04\"), Decimal(\"3.00\")
@@ -286,7 +281,7 @@ echo "CALL_METHOD Address(\"$LENDING_MARKET_COMPONENT_ADDRESS\") \"create_lendin
         Decimal(\"0.4\"),
         Decimal(\"0.001\"),
         0u8,
-        Decimal(\"0.08\"),
+        Decimal(\"0.05\"),
         Decimal(\"1\"),
         Enum<0u8>(),
         Enum<0u8>(),
@@ -294,8 +289,7 @@ echo "CALL_METHOD Address(\"$LENDING_MARKET_COMPONENT_ADDRESS\") \"create_lendin
         5i64,
         15i64,
         240i64,
-        Decimal(\"0.45\"),
-        Decimal(\"0.25\")
+        Decimal(\"0.45\")
     )
     Tuple(
         Decimal(\"0\"), Decimal(\"0.04\"), Decimal(\"3.00\")
@@ -318,7 +312,7 @@ echo "CALL_METHOD Address(\"$LENDING_MARKET_COMPONENT_ADDRESS\") \"create_lendin
         Decimal(\"0.4\"),
         Decimal(\"0.001\"),
         1u8,
-        Decimal(\"0.08\"),
+        Decimal(\"0.05\"),
         Decimal(\"1\"),
         Enum<0u8>(),
         Enum<0u8>(),
@@ -326,7 +320,6 @@ echo "CALL_METHOD Address(\"$LENDING_MARKET_COMPONENT_ADDRESS\") \"create_lendin
         5i64,
         15i64,
         240i64,
-        Decimal(\"0.8\"),
         Decimal(\"0.8\")
     )
     Tuple(

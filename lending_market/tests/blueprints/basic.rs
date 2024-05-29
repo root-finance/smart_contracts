@@ -308,12 +308,12 @@ fn test_liquidation() {
     helper.test_runner.load_account_from_faucet(borrower_account);
     helper.test_runner.load_account_from_faucet(borrower_account);
 
-    //Create CDP WITH 21900 XRD AS Collateral
+    //Create CDP WITH XRD AS Collateral
     market_create_cdp(
         &mut helper,
         borrower_key,
         borrower_account,
-        vec![(XRD, dec!(32_000))],
+        vec![(XRD, dec!(20_000))],
     ) //
     .expect_commit_success();
 
@@ -358,7 +358,7 @@ fn test_liquidation() {
         .test_runner
         .advance_to_round_at_timestamp(Round::of(1), T2024 + T6_MONTHS);
     admin_update_price(&mut helper, 1u64, usd, dec!(25)).expect_commit_success();
-    admin_update_price(&mut helper, 1u64, btc, dec!(2_800_000)).expect_commit_success();
+    admin_update_price(&mut helper, 1u64, btc, dec!(1500000)).expect_commit_success();
     admin_update_price(&mut helper, 1u64, eth, dec!(72500)).expect_commit_success();
     admin_update_price(&mut helper, 1u64, lsu, dec!(1)).expect_commit_success();
     admin_update_price(&mut helper, 1u64, hug, dec!(0.001)).expect_commit_success();
@@ -371,7 +371,7 @@ fn test_liquidation() {
     let event: CDPLiquidableEvent = find_event_in_result(receipt.expect_commit_success(), "CDPLiquidableEvent").expect("CDPLiquidableEvent not found");
     
     assert!(!event.cdps.is_empty());
-    assert_eq!(dec!(32000), *event.cdps[0].cdp_data.collaterals.get(&XRD).unwrap());
+    assert_eq!(dec!(20000), *event.cdps[0].cdp_data.collaterals.get(&XRD).unwrap());
     assert_eq!(dec!(200), *event.cdps[0].cdp_data.loans.get(&usd).unwrap());
     assert_eq!(dec!(0.005), *event.cdps[0].cdp_data.loans.get(&btc).unwrap());
     assert_eq!(dec!(0.05), *event.cdps[0].cdp_data.loans.get(&eth).unwrap());
@@ -464,7 +464,7 @@ fn test_liquidation() {
         requested_collaterals,
     ).expect_commit_success();
 
-    assert_eq!(dec!(24570.179257551489767817), helper
+    assert_eq!(dec!(17495.30247170615527537), helper
         .test_runner
         .get_component_balance(liquidator_user_account, XRD) - xrd_balance);
 
@@ -476,7 +476,7 @@ fn test_liquidation() {
         .test_runner
         .get_component_balance(liquidator_user_account, btc) - btc_balance);
 
-        assert_eq!(dec!(-0.061666640048126321), helper
+        assert_eq!(dec!(-0.06166664004812632), helper
         .test_runner
         .get_component_balance(liquidator_user_account, eth) - eth_balance);
  

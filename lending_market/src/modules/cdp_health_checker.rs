@@ -87,7 +87,6 @@ pub struct ExtendedLoanPositionData {
     pub loan_close_factor: Decimal,
     pub data: PositionData,
     pub discounted_collateral_value: Decimal,
-    pub ltv_limit: Decimal,
 }
 impl ExtendedLoanPositionData {
     pub fn load_onledger_data(
@@ -275,13 +274,11 @@ impl CDPHealthChecker {
     pub fn check_cdp(&mut self) -> Result<(), String> {
         self._update_health_check_data()?;
 
-        for (res, position) in &self.loan_positions {
-            if self.total_loan_to_value_ratio > position.ltv_limit {
-                return Err(format!(
-                    "Loan of resource {:?}: total_loan_to_value_ratio need to be lower than {}, but is {}.",
-                    Runtime::bech32_encode_address(res.clone()), position.ltv_limit, self.total_loan_to_value_ratio
-                ));
-            }
+        if self.total_loan_to_value_ratio > Decimal::ONE {
+            return Err(format!(
+                "total_loan_to_value_ratio need to be lower than 1, but is {}.",
+                self.total_loan_to_value_ratio
+            ));
         }
 
         //
@@ -292,13 +289,11 @@ impl CDPHealthChecker {
     pub fn can_liquidate(&mut self) -> Result<(), String> {
         self._update_health_check_data()?;
 
-        for (res, position) in &self.loan_positions {
-            if self.total_loan_to_value_ratio <= position.ltv_limit + dec!(0.05) {
-                return Err(format!(
-                    "Loan of resource {:?} can not be liquidated: LTV ratio of {} is lower than {} + 5%",
-                    Runtime::bech32_encode_address(res.clone()), self.total_loan_to_value_ratio, position.ltv_limit
-                ));
-            }
+        if self.total_loan_to_value_ratio <= Decimal::ONE {
+            return Err(format!(
+                "CDP can not be liquidated: LTV ratio of {} is lower than 1",
+                self.total_loan_to_value_ratio
+            ));
         }
 
         Ok(())
@@ -366,7 +361,6 @@ impl CDPHealthChecker {
                     asset_type: pool_state.pool_config.asset_type,
 
                     loan_close_factor: pool_state.pool_config.loan_close_factor,
-                    ltv_limit: pool_state.pool_config.ltv_limit,
                     data: PositionData {
                         units: dec!(0),
                         amount: dec!(0),

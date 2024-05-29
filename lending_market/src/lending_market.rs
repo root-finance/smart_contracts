@@ -20,7 +20,7 @@ mod lending_market {
     extern_blueprint!(
         // "package_sim1p4nk9h5kw2mcmwn5u2xcmlmwap8j6dzet7w7zztzz55p70rgqs4vag", // resim sdk
         "package_sim1pkc0e8f9yhlvpv38s2ymrplu7q366y3k8zc53zf2srlm7qm64fk043", // testing
-        // "package_tdx_2_1phpu7g3hh7n0ffv2rwmngk5r725a0k767m0adg82z29rn83y5n9p3d",  // stokenet
+        //"package_tdx_2_1phpu7g3hh7n0ffv2rwmngk5r725a0k767m0adg82z29rn83y5n9p3d",  // stokenet
         SingleResourcePool {
 
             fn instantiate(
@@ -1012,19 +1012,17 @@ mod lending_market {
                 Some(_) => {
                     if can_liquidate {
                         cdp_data.cdp_data.liquidable = Some(cdp_health_checker.self_closable_loan_value);
-                        save_cdp_macro!(self, cdp_data);    
                     } else {
                         cdp_data.cdp_data.liquidable = None;
-                        save_cdp_macro!(self, cdp_data);    
                     }
                 }, 
                 None => {
                     if can_liquidate {
                         cdp_data.cdp_data.liquidable = Some(cdp_health_checker.self_closable_loan_value);
-                        save_cdp_macro!(self, cdp_data);    
                     }
                 }
             }
+            save_cdp_macro!(self, cdp_data);    
             can_liquidate
         }
 
@@ -1039,10 +1037,11 @@ mod lending_market {
             let mut cdp_data = WrappedCDPData::new(&self.cdp_res_manager, &cdp_id);
 
             let now: i64 = Clock::current_time(TimePrecision::Minute).seconds_since_unix_epoch;
-            if now - cdp_data.cdp_data.updated_at > 60 {
+            if cdp_data.cdp_data.liquidable.is_some() && now - cdp_data.cdp_data.updated_at > 60 {
                 panic!("cdp info is too old.")
-            }
-            if cdp_data.cdp_data.liquidable.is_none() {
+            } else if cdp_data.cdp_data.liquidable.is_none() && now - cdp_data.cdp_data.updated_at > 60 {
+                panic!("The cdp is not liquidable and cdp info is too old.")
+            } else if cdp_data.cdp_data.liquidable.is_none() {
                 panic!("The cdp is not liquidable.")
             }
 
@@ -1117,7 +1116,7 @@ mod lending_market {
                         borrow_limit: pool_state.pool_config.borrow_limit,
                         utilization_limit: pool_state.pool_config.utilization_limit,
                         optimal_usage: pool_state.pool_config.optimal_usage,
-                        ltv_limit: pool_state.pool_config.ltv_limit,
+                        ltv_limit: pool_state.liquidation_threshold.default_value,
                     }
                 })
                 .collect::<Vec<MarketStatsPool>>();

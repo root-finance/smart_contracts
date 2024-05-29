@@ -47,12 +47,12 @@ fn test_fast_liquidation() {
         .test_runner
         .load_account_from_faucet(borrower_account);
 
-    //Create CDP WITH 20000 XRD AS Collateral
+    //Create CDP WITH XRD AS Collateral
     market_create_cdp(
         &mut helper,
         borrower_key,
         borrower_account,
-        vec![(XRD, dec!(20_000))],
+        vec![(XRD, dec!(15_000))],
     ) //
     .expect_commit_success();
 
@@ -73,7 +73,7 @@ fn test_fast_liquidation() {
         .advance_to_round_at_timestamp(Round::of(1), T2024 + T6_MONTHS);
 
     // Change USD (in XRD) PRICE
-    admin_update_price(&mut helper, 1u64, usd, dec!(28)).expect_commit_success();
+    admin_update_price(&mut helper, 1u64, usd, dec!(30)).expect_commit_success();
     admin_update_price(&mut helper, 1u64, btc, dec!(1300000)).expect_commit_success();
 
     market_update_pool_state(&mut helper, usd).expect_commit_success();

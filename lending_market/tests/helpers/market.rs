@@ -110,7 +110,7 @@ impl MarketTestHelper {
                         dec!("0.4"),
                         dec!("0.001"),
                         0u8,
-                        dec!("0.08"),
+                        dec!("0.05"),
                         dec!("1"),
                         None::<Decimal>,
                         None::<Decimal>,
@@ -119,7 +119,6 @@ impl MarketTestHelper {
                         15i64,
                         240i64,
                         dec!("0.45"),
-                        dec!("0.7"),
                     ),
                     (
                         dec!(0), dec!(0.04), dec!(3.00)
@@ -186,7 +185,6 @@ impl MarketTestHelper {
                         15i64,
                         240i64,
                         dec!("0.8"),
-                        dec!("0.8"),
                     ),
                     (
                         dec!(0), dec!(0.04), dec!(0.75)
@@ -244,7 +242,7 @@ impl MarketTestHelper {
                         dec!("0.4"),
                         dec!("0.001"),
                         0u8,
-                        dec!("0.08"),
+                        dec!("0.05"),
                         dec!("1"),
                         None::<Decimal>,
                         None::<Decimal>,
@@ -252,8 +250,7 @@ impl MarketTestHelper {
                         5i64,
                         15i64,
                         240i64,
-                        dec!("0.45"),
-                        dec!("0.7"),
+                        dec!("0.45")
                     ),
                     (
                         dec!(0), dec!(0.04), dec!(3.00)
@@ -312,7 +309,7 @@ impl MarketTestHelper {
                         dec!("0.4"),
                         dec!("0.001"),
                         0u8,
-                        dec!("0.08"),
+                        dec!("0.05"),
                         dec!("1"),
                         None::<Decimal>,
                         None::<Decimal>,
@@ -321,7 +318,6 @@ impl MarketTestHelper {
                         15i64,
                         240i64,
                         dec!("0.45"),
-                        dec!("0.7"),
                     ),
                     (
                         dec!(0), dec!(0.04), dec!(3.00)
