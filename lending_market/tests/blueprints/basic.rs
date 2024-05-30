@@ -173,7 +173,7 @@ fn test_deposit_withdraw_borrow_repay() {
         helper
             .test_runner
             .get_component_balance(borrower_account, usd),
-        dec!(1.99974747561171307)
+        dec!(1.999747475611713071)
     );
 
     // REDEEM
@@ -202,7 +202,7 @@ fn test_deposit_withdraw_borrow_repay() {
         helper
             .test_runner
             .get_component_balance(lp_user_account, usd),
-        dec!(2000.000200119327113722)
+        dec!(2000.000200119327113721)
     );
 }
 
@@ -371,10 +371,10 @@ fn test_liquidation() {
     let event: CDPLiquidableEvent = find_event_in_result(receipt.expect_commit_success(), "CDPLiquidableEvent").expect("CDPLiquidableEvent not found");
     
     assert!(!event.cdps.is_empty());
-    assert_eq!(dec!(20000), *event.cdps[0].cdp_data.collaterals.get(&XRD).unwrap());
-    assert_eq!(dec!(200), *event.cdps[0].cdp_data.loans.get(&usd).unwrap());
-    assert_eq!(dec!(0.005), *event.cdps[0].cdp_data.loans.get(&btc).unwrap());
-    assert_eq!(dec!(0.05), *event.cdps[0].cdp_data.loans.get(&eth).unwrap());
+    assert_eq!(pdec!(20000), *event.cdps[0].cdp_data.collaterals.get(&XRD).unwrap());
+    assert_eq!(pdec!(200), *event.cdps[0].cdp_data.loans.get(&usd).unwrap());
+    assert_eq!(pdec!(0.005), *event.cdps[0].cdp_data.loans.get(&btc).unwrap());
+    assert_eq!(pdec!(0.05), *event.cdps[0].cdp_data.loans.get(&eth).unwrap());
 
 
     // SET UP LIQUIDATOR
@@ -454,7 +454,7 @@ fn test_liquidation() {
         requested_collaterals.clone(),
     ).expect_commit_failure();
 
-    let payments: Vec<(ResourceAddress, Decimal)> = vec![(usd, dec!(201.256247133753602059)),(btc, dec!(0.005)), (eth, dec!(0.061666640048126321))];
+    let payments: Vec<(ResourceAddress, Decimal)> = vec![(usd, dec!(202)),(btc, dec!(0.005)), (eth, dec!(0.062))];
     market_liquidation(
         &mut helper,
         liquidator_user_key,
@@ -468,7 +468,7 @@ fn test_liquidation() {
         .test_runner
         .get_component_balance(liquidator_user_account, XRD) - xrd_balance);
 
-    assert_eq!(dec!(-201.256247133753602059), helper
+    assert_eq!(dec!(-201.256247133753602058), helper
         .test_runner
         .get_component_balance(liquidator_user_account, usd) - usd_balance);
 

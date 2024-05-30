@@ -169,8 +169,8 @@ pub mod single_resource_pool {
             );
 
             let unit_amount =
-                (assets.amount() * self.unit_to_asset_ratio)
-                    .checked_truncate(RoundingMode::ToNearestMidpointToEven)
+                assets.amount() * self.unit_to_asset_ratio
+                    .checked_truncate(RoundingMode::AwayFromZero)
                     .expect("Error while calculating unit amount to mint");
 
             let mut contributed = self.pool.contribute(assets);
@@ -194,8 +194,8 @@ pub mod single_resource_pool {
                 "Pool unit resource address mismatch"
             );
 
-            let amount = (pool_units.amount() / self.unit_to_asset_ratio)
-                .checked_truncate(RoundingMode::ToNearestMidpointToEven)
+            let amount = pool_units.amount() / self.unit_to_asset_ratio
+                .checked_truncate(RoundingMode::AwayFromZero)
                 .expect("Error while calculating amount to withdraw");
 
             assert!(

@@ -15,7 +15,7 @@ pub enum LoadDataType {
 
 #[derive(ScryptoSbor, Debug, Clone)]
 pub struct PositionData {
-    pub units: Decimal,
+    pub units: PreciseDecimal,
     pub amount: Decimal,
     pub value: Decimal,
 
@@ -24,7 +24,7 @@ pub struct PositionData {
 impl PositionData {
     pub fn load_onledger_data(
         &mut self,
-        units: Decimal,
+        units: PreciseDecimal,
         load_type: LoadDataType,
     ) -> Result<(), String> {
         match load_type {
@@ -35,13 +35,9 @@ impl PositionData {
     }
 
     pub fn update_data(&mut self, price: Decimal) -> Result<(), String> {
-        self.amount = match (self.units / self.unit_ratio)
+        self.amount = (self.units / self.unit_ratio)
             .checked_truncate(RoundingMode::ToNearestMidpointToEven)
-        {
-            Some(amount) => amount,
-            None => return Err("Error calculating position amount".to_string()),
-        };
-
+            .unwrap();
         self.value = self.amount * price;
         Ok(())
     }
@@ -60,7 +56,7 @@ pub struct ExtendedCollateralPositionData {
 impl ExtendedCollateralPositionData {
     pub fn load_onledger_data(
         &mut self,
-        units: Decimal,
+        units: PreciseDecimal,
         load_type: LoadDataType,
         pool_state: &KeyValueEntryRef<'_, LendingPoolState>,
     ) -> Result<(), String> {
@@ -91,7 +87,7 @@ pub struct ExtendedLoanPositionData {
 impl ExtendedLoanPositionData {
     pub fn load_onledger_data(
         &mut self,
-        units: Decimal,
+        units: PreciseDecimal,
         load_type: LoadDataType,
         pool_state: &KeyValueEntryRef<'_, LendingPoolState>,
     ) -> Result<(), String> {
@@ -222,7 +218,7 @@ impl CDPHealthChecker {
 
         // Function to load collateral or loan positions
         let mut load_data = |pool_res_address: &ResourceAddress,
-                             units: Decimal,
+                             units: PreciseDecimal,
 
                              position_type: LoadPositionType| {
             let wrapped_pool_state = pool_states.get(pool_res_address);
@@ -327,7 +323,7 @@ impl CDPHealthChecker {
                     liquidation_threshold: pool_state.liquidation_threshold.clone(),
                     price: pool_state.price,
                     data: PositionData {
-                        units: dec!(0),
+                        units: pdec!(0),
                         amount: dec!(0),
                         value: dec!(0),
                         unit_ratio: pdec!(0),
@@ -362,7 +358,7 @@ impl CDPHealthChecker {
 
                     loan_close_factor: pool_state.pool_config.loan_close_factor,
                     data: PositionData {
-                        units: dec!(0),
+                        units: pdec!(0),
                         amount: dec!(0),
                         value: dec!(0),
                         unit_ratio: pdec!(0),

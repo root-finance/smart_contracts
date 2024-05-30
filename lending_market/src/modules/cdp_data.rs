@@ -55,10 +55,10 @@ pub struct CollaterizedDebtPositionData {
     pub cdp_type: CDPType,
 
     #[mutable]
-    pub collaterals: IndexMap<ResourceAddress, Decimal>,
+    pub collaterals: IndexMap<ResourceAddress, PreciseDecimal>,
 
     #[mutable]
-    pub loans: IndexMap<ResourceAddress, Decimal>,
+    pub loans: IndexMap<ResourceAddress, PreciseDecimal>,
 
     #[mutable]
     pub liquidable: Option<Decimal>
@@ -93,15 +93,15 @@ impl WrappedCDPData {
         self.cdp_data.clone()
     }
 
-    fn get_units(map: &IndexMap<ResourceAddress, Decimal>, key: ResourceAddress) -> Decimal {
-        map.get(&key).copied().unwrap_or(Decimal::ZERO)
+    fn get_units(map: &IndexMap<ResourceAddress, PreciseDecimal>, key: ResourceAddress) -> PreciseDecimal {
+        map.get(&key).copied().unwrap_or(PreciseDecimal::ZERO)
     }
 
-    pub fn get_collateral_units(&self, collateral: ResourceAddress) -> Decimal {
+    pub fn get_collateral_units(&self, collateral: ResourceAddress) -> PreciseDecimal {
         Self::get_units(&self.cdp_data.collaterals, collateral)
     }
 
-    pub fn get_loan_unit(&self, loan: ResourceAddress) -> Decimal {
+    pub fn get_loan_unit(&self, loan: ResourceAddress) -> PreciseDecimal {
         Self::get_units(&self.cdp_data.loans, loan)
     }
 
@@ -115,7 +115,7 @@ impl WrappedCDPData {
     pub fn update_collateral(
         &mut self,
         res_address: ResourceAddress,
-        units: Decimal,
+        units: PreciseDecimal,
     ) -> Result<(), String> {
         let result = Self::update_map(&mut self.cdp_data.collaterals, res_address, units);
         self.collateral_updated = true;
@@ -125,7 +125,7 @@ impl WrappedCDPData {
     pub fn update_loan(
         &mut self,
         res_address: ResourceAddress,
-        units: Decimal,
+        units: PreciseDecimal,
     ) -> Result<(), String> {
         let result = Self::update_map(&mut self.cdp_data.loans, res_address, units);
         self.loan_updated = true;
@@ -194,24 +194,24 @@ impl WrappedCDPData {
     // local methods
 
     fn update_map(
-        map: &mut IndexMap<ResourceAddress, Decimal>,
+        map: &mut IndexMap<ResourceAddress, PreciseDecimal>,
         key: ResourceAddress,
-        units: Decimal,
+        units: PreciseDecimal,
     ) -> Result<(), String> {
-        if units == Decimal::ZERO {
+        if units == PreciseDecimal::ZERO {
             return Ok(());
         }
 
         if let Some(entry) = map.get_mut(&key) {
             *entry += units;
 
-            if *entry < Decimal::ZERO {
+            if *entry < PreciseDecimal::ZERO {
                 return Err(
                     "WrappedCDPData/update_map: entry must be greater than or equal to 0".into(),
                 );
             }
 
-            if *entry < ZERO_EPSILON {
+            if *entry < ZERO_EPSILON.into() {
                 map.remove(&key);
             }
         } else {

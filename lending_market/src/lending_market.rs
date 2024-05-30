@@ -20,7 +20,7 @@ mod lending_market {
     extern_blueprint!(
         // "package_sim1p4nk9h5kw2mcmwn5u2xcmlmwap8j6dzet7w7zztzz55p70rgqs4vag", // resim sdk
         // "package_sim1pkc0e8f9yhlvpv38s2ymrplu7q366y3k8zc53zf2srlm7qm64fk043", // testing
-        "package_tdx_2_1phpu7g3hh7n0ffv2rwmngk5r725a0k767m0adg82z29rn83y5n9p3d",  // stokenet
+        "package_tdx_2_1p4p4wqvt58vz525uj444mgpfacx5cwzj20zqkmqt04f75qmx5mtc6r",  // stokenet
         SingleResourcePool {
 
             fn instantiate(
@@ -771,7 +771,7 @@ mod lending_market {
 
                     let current_deposit_units = cdp_data.get_collateral_units(pool_res_address);
 
-                    let withdraw_collateral_units = current_deposit_units.min(unit_amount);
+                    let withdraw_collateral_units = current_deposit_units.min(unit_amount.into());
 
                     cdp_data
                         .update_collateral(pool_res_address, -withdraw_collateral_units)
@@ -833,7 +833,7 @@ mod lending_market {
                             .expect("Error in withdraw_for_borrow");
 
                         cdp_data
-                            .update_loan(pool_res_address, delta_loan_units)
+                            .update_loan(pool_res_address, delta_loan_units.into())
                             .expect("Error updating loan");
 
                         loans.push(borrowed_assets);
@@ -986,8 +986,9 @@ mod lending_market {
             );
 
             assert!(
-                total_payment_value == liquidation_term_data.payement_value,
-                "Total payment value does not match with the liquidation term"
+                (total_payment_value - liquidation_term_data.payement_value).checked_abs().unwrap() < ZERO_EPSILON,
+                "Total payment value {} does not match with the liquidation term {}",
+                total_payment_value, liquidation_term_data.payement_value
             );
 
             self.transient_res_manager.burn(liquidation_term);
@@ -1096,10 +1097,13 @@ mod lending_market {
                     let available_liquidity = pooled_amount.0;
                     let total_liquidity = pooled_amount.0 + pooled_amount.1;
 
-                    let total_borrow = pool_state.total_loan;
+                    let total_borrow = pool_state.total_loan
+                        .checked_truncate(RoundingMode::ToNearestMidpointToEven)
+                        .unwrap();
 
-                    let total_supply =
-                        pool_state.total_deposit;
+                    let total_supply = pool_state.total_deposit
+                        .checked_truncate(RoundingMode::ToNearestMidpointToEven)
+                        .unwrap();
 
                     total_supply_all_pools += total_supply;
                     total_borrow_all_pools += total_borrow;
@@ -1165,7 +1169,7 @@ mod lending_market {
                 };
 
                 cdp_data
-                    .update_collateral(pool_res_address, deposit_units.amount())
+                    .update_collateral(pool_res_address, deposit_units.amount().into())
                     .expect("Error updating collateral for CDP");
 
                 pool_state
@@ -1218,9 +1222,7 @@ mod lending_market {
 
                 returned_collaterals_value += max_collateral_value / bonus_rate;
 
-                let collateral_units = ((max_collateral_value / pool_state.price) * unit_ratio)
-                    .checked_truncate(RoundingMode::ToNearestMidpointToEven)
-                    .unwrap();
+                let collateral_units = (max_collateral_value / pool_state.price) * unit_ratio;
 
                 cdp_data
                     .update_collateral(pool_res_address, -collateral_units)
@@ -1263,7 +1265,7 @@ mod lending_market {
         ) -> (Vec<Bucket>, Decimal) {
             let mut expected_payment_value = payment_value.unwrap_or(dec!(0));
 
-            let (mut remainders, mut total_payment_value) = (Vec::new(), Decimal::zero());
+            let (mut remainders, mut total_payment_value) = (Vec::new(), PreciseDecimal::zero());
             for mut payment in payments {
                 let pool_res_address = payment.resource_address();
 
@@ -1286,7 +1288,7 @@ mod lending_market {
                         .expect("Borrow is not enabled for the pool");
                 }
 
-                let unit_ratio = pool_state
+                let loan_unit_ratio = pool_state
                     .get_loan_unit_ratio()
                     .expect("Error getting loan unit ratio for provided resource");
 
@@ -1294,23 +1296,23 @@ mod lending_market {
 
                 let position_loan_units = cdp_data.get_loan_unit(pool_res_address);
 
-                let mut max_loan_amount = (position_loan_units / unit_ratio)
-                    .checked_truncate(RoundingMode::ToNearestMidpointToEven)
-                    .unwrap();
+                let mut max_loan_amount = position_loan_units / loan_unit_ratio;
 
                 // ! Liquidation
                 if for_liquidation {
                     max_loan_amount *= pool_state.pool_config.loan_close_factor;
                 }
 
-                max_loan_amount = max_loan_amount.min(payment.amount());
+                max_loan_amount = max_loan_amount.min(payment.amount().into());
 
                 let mut max_loan_value = (max_loan_amount * pool_state.price)
-                    .min(pool_borrowed_amount * pool_state.price);
+                    .min((pool_borrowed_amount * pool_state.price).into())
+                    .checked_truncate(RoundingMode::ToNearestMidpointToEven)
+                    .unwrap();
 
                 // ! Liquidation
                 if payment_value.is_some() {
-                    max_loan_value = max_loan_value.min(expected_payment_value);
+                    max_loan_value = max_loan_value.min(expected_payment_value.into());
                     expected_payment_value -= max_loan_value;
 
                     assert!(
@@ -1319,13 +1321,13 @@ mod lending_market {
                     );
                 };
 
-                max_loan_amount = max_loan_value / pool_state.price;
+                let repay_amount = max_loan_value / pool_state.price;
 
                 let delta_loan_unit = pool_state
                     .deposit_for_repay(payment.take_advanced(
-                        max_loan_amount,
+                        repay_amount,
                         WithdrawStrategy::Rounded(RoundingMode::ToNearestMidpointToEven),
-                    ))
+                    ), !for_liquidation)
                     .expect("Error in deposit_from_repay");
 
                 cdp_data
@@ -1339,7 +1341,7 @@ mod lending_market {
 
             if payment_value.is_some() {
                 assert!(
-                    expected_payment_value == dec!(0),
+                    expected_payment_value < ZERO_EPSILON,
                     "Insufficient payment value {:?}, {} remaining to pay",
                     payment_value,
                     expected_payment_value
@@ -1350,7 +1352,8 @@ mod lending_market {
                 save_cdp_macro!(self, cdp_data);
             }
 
-            (remainders, total_payment_value)
+            (remainders, total_payment_value.checked_truncate(RoundingMode::ToNearestMidpointToEven)
+            .unwrap())
         }
 
         fn _get_pool_state_without_update(

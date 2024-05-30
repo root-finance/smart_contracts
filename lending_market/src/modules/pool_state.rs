@@ -74,10 +74,10 @@ pub struct LendingPoolState {
     ///* Loan State *///
 
     ///
-    pub total_loan: Decimal,
+    pub total_loan: PreciseDecimal,
 
     ///
-    pub total_deposit: Decimal,
+    pub total_deposit: PreciseDecimal,
 
     ///
     pub total_loan_unit: PreciseDecimal,
@@ -106,7 +106,7 @@ pub struct LendingPoolState {
     pub pool_utilization: Decimal,
 
     ///
-    pub total_reserved_amount: PreciseDecimal,
+    pub total_reserved_amount: Decimal,
 }
 
 impl LendingPoolState {
@@ -123,9 +123,8 @@ impl LendingPoolState {
     /// Get the current loan unit ratio ///
 
     pub fn get_loan_unit_ratio(&self) -> Result<PreciseDecimal, String> {
-        // convert total_loan_unit and total_loan to PreciseDecimal to improve precision and reduce rounding errors
         let ratio = if self.total_loan != 0.into() {
-            PreciseDecimal::from(self.total_loan_unit) / PreciseDecimal::from(self.total_loan)
+            self.total_loan_unit / self.total_loan
         } else {
             1.into()
         };
@@ -140,9 +139,8 @@ impl LendingPoolState {
         /// Get the current deposit unit ratio ///
 
     pub fn get_deposit_unit_ratio(&self) -> Result<PreciseDecimal, String> {
-        // convert total_deposit_unit and total_deposit to PreciseDecimal to improve precision and reduce rounding errors
         let ratio = if self.total_deposit != 0.into() {
-            PreciseDecimal::from(self.total_deposit_unit) / PreciseDecimal::from(self.total_deposit)
+            self.total_deposit_unit / self.total_deposit
         } else {
             1.into()
         };
@@ -187,12 +185,12 @@ impl LendingPoolState {
         });
 
         let unit_ratio = pool_units.amount() / self.total_deposit_unit;
+        
         // Reseved amount has already been deducted from the pool. Remove it from the redeemed amount
         let reserved_amount_for_position = (unit_ratio * self.total_reserved_amount)
             .checked_truncate(RoundingMode::ToNearestMidpointToEven)
             .unwrap();
         // Logger::debug(format!("REDEEM unit_ratio * total_reserved_amount {:?} = reserved_amount_for_position {:?}", self.total_reserved_amount, reserved_amount_for_position));
-        
 
         let mut redeemed = self.pool.redeem(pool_units);
         let reserve_amount = redeemed.take(reserved_amount_for_position);
@@ -233,8 +231,11 @@ impl LendingPoolState {
 
     pub fn remove_pool_units_from_collateral(
         &mut self,
-        pool_unit_amount: Decimal,
+        pool_unit_amount: PreciseDecimal,
     ) -> Result<Bucket, String> {
+        let pool_unit_amount = pool_unit_amount
+            .checked_truncate(RoundingMode::ToNearestMidpointToEven)
+            .unwrap();
         if pool_unit_amount > self.collaterals.amount() {
             return Err("Not enough pool units to remove from collateral".into());
         }
@@ -286,7 +287,9 @@ impl LendingPoolState {
                 WithdrawType::TemporaryUse,
                 WithdrawStrategy::Rounded(RoundingMode::ToNearestMidpointToEven),
             ),
-            loan_unit,
+            loan_unit
+                .checked_truncate(RoundingMode::ToNearestMidpointToEven)
+                .unwrap(),
         );
 
         self.update_interest_and_price(Some((true, true)))?;
@@ -302,7 +305,7 @@ impl LendingPoolState {
 
     /// Handle request to decrease borrowed amount.
     /// it add back liquidity and updated the pool loan state based on input interest strategy
-    pub fn deposit_for_repay(&mut self, payment: Bucket) -> Result<Decimal, String> {
+    pub fn deposit_for_repay(&mut self, payment: Bucket, update_state: bool) -> Result<PreciseDecimal, String> {
         let payment_amount = payment.amount();
         if payment.resource_address() != self.pool_res_address {
             return Err("Payment resource address mismatch".into());
@@ -319,7 +322,9 @@ impl LendingPoolState {
             amount: payment_amount
         });
 
-        self.update_interest_and_price(Some((true, true)))?;
+        if update_state {
+            self.update_interest_and_price(Some((true, true)))?;
+        }
 
         // returned unit should be negative or 0
         // Send back positive loan_unit to evoid confusion at higher level in the stack
@@ -352,7 +357,7 @@ impl LendingPoolState {
             }
 
             self.price_updated_at = now;
-            self.price = price_feed_result.price;
+            self.price = price_feed_result.price.into();
 
             Runtime::emit_event(LendingPoolUpdatedEvent {
                 pool_res_address: self.pool_res_address,
@@ -378,7 +383,9 @@ impl LendingPoolState {
             let new_total_loan_amount = self.interest_rate * (PreciseDecimal::ONE + self.total_loan) * period_in_seconds / one_year_in_seconds;
             let new_total_deposit_amount = active_interest_rate * (PreciseDecimal::ONE + self.total_deposit) * period_in_seconds / one_year_in_seconds;
 
-            let reserve_delta = new_total_loan_amount - new_total_deposit_amount;
+            let reserve_delta: Decimal = (new_total_loan_amount - new_total_deposit_amount)
+                .checked_truncate(RoundingMode::ToNearestMidpointToEven)
+                .unwrap();
             self.total_reserved_amount += reserve_delta;
 
             let accrued_interest_amount = if new_total_loan_amount - self.total_loan < PreciseDecimal::ZERO { new_total_loan_amount } else { new_total_loan_amount - self.total_loan };
@@ -386,12 +393,8 @@ impl LendingPoolState {
             // Logger::debug(format!("INTEREST new_total_loan_amount {:?} ; new_total_deposit_amount {:?}; reserve_delta {:?}; accrued_interest_amount {:?}", new_total_loan_amount, new_total_deposit_amount, reserve_delta, accrued_interest_amount));
 
 
-            self.total_loan += new_total_loan_amount
-                .checked_truncate(RoundingMode::ToNearestMidpointToEven)
-                .unwrap();
-            self.total_deposit += new_total_deposit_amount
-                .checked_truncate(RoundingMode::ToNearestMidpointToEven)
-                .unwrap();
+            self.total_loan += new_total_loan_amount;
+            self.total_deposit += new_total_deposit_amount;
 
             // Logger::debug(format!("INTEREST updated totals: total_loan {:?} - total_deposit {:?}", self.total_loan, self.total_deposit));
 
@@ -423,19 +426,18 @@ impl LendingPoolState {
         if available_amount == 0.into() {
             Decimal::ZERO
         } else {
-            // passive_interest_amount / (passive_interest_amount + available_amount)
-            self.total_loan / self.total_deposit
+            (self.total_loan / self.total_deposit)
+                .checked_truncate(RoundingMode::ToNearestMidpointToEven)
+                .unwrap()
         }
     }
 
     ///* PRIVATE UTILITY METHODS *///
 
-    fn _update_loan_unit(&mut self, amount: Decimal) -> Result<Decimal, String> {
+    fn _update_loan_unit(&mut self, amount: Decimal) -> Result<PreciseDecimal, String> {
         let unit_ratio = self.get_loan_unit_ratio()?;
 
-        let units = (amount * unit_ratio) //
-            .checked_truncate(RoundingMode::ToNearestMidpointToEven)
-            .unwrap();
+        let units = amount * unit_ratio;
 
         self.total_loan += amount;
 
@@ -452,12 +454,10 @@ impl LendingPoolState {
         Ok(units)
     }
 
-    fn _update_deposit_unit(&mut self, amount: Decimal) -> Result<Decimal, String> {
+    fn _update_deposit_unit(&mut self, amount: Decimal) -> Result<PreciseDecimal, String> {
         let unit_ratio = self.get_deposit_unit_ratio()?;
 
-        let units = (amount * unit_ratio) //
-            .checked_truncate(RoundingMode::ToNearestMidpointToEven)
-            .unwrap();
+        let units = amount * unit_ratio;
 
         self.total_deposit += amount;
 
