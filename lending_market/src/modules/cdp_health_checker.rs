@@ -268,7 +268,7 @@ impl CDPHealthChecker {
     }
 
     pub fn check_cdp(&mut self) -> Result<(), String> {
-        self._update_health_check_data()?;
+        self.update_health_check_data()?;
 
         if self.total_loan_to_value_ratio > Decimal::ONE {
             return Err(format!(
@@ -283,7 +283,7 @@ impl CDPHealthChecker {
     }
 
     pub fn can_liquidate(&mut self) -> Result<(), String> {
-        self._update_health_check_data()?;
+        self.update_health_check_data()?;
 
         if self.total_loan_to_value_ratio <= Decimal::ONE {
             return Err(format!(
@@ -296,7 +296,7 @@ impl CDPHealthChecker {
     }
 
     pub fn can_refinance(&mut self) -> Result<(), String> {
-        self._update_health_check_data()?;
+        self.update_health_check_data()?;
 
         if self.total_loan_to_value_ratio != Decimal::MAX {
             return Err("This CDP can not be refinanced: LTV ratio greater than 1".into());
@@ -374,7 +374,7 @@ impl CDPHealthChecker {
             .unwrap())
     }
 
-    fn _update_health_check_data(&mut self) -> Result<(), String> {
+    pub fn update_health_check_data(&mut self) -> Result<(), String> {
         // Update the collateral positions data and calculate the total solvency value
         self.collateral_positions
             .iter_mut()

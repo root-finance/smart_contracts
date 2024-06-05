@@ -18,9 +18,9 @@ pub enum UpdateCDPInput {
 mod lending_market {
 
     extern_blueprint!(
-        // "package_sim1p4nk9h5kw2mcmwn5u2xcmlmwap8j6dzet7w7zztzz55p70rgqs4vag", // resim sdk
+        "package_sim1p4nk9h5kw2mcmwn5u2xcmlmwap8j6dzet7w7zztzz55p70rgqs4vag", // resim sdk
         // "package_sim1pkc0e8f9yhlvpv38s2ymrplu7q366y3k8zc53zf2srlm7qm64fk043", // testing
-        "package_tdx_2_1p4p4wqvt58vz525uj444mgpfacx5cwzj20zqkmqt04f75qmx5mtc6r",  // stokenet
+        // "package_tdx_2_1p4p4wqvt58vz525uj444mgpfacx5cwzj20zqkmqt04f75qmx5mtc6r",  // stokenet
         SingleResourcePool {
 
             fn instantiate(
@@ -320,7 +320,7 @@ mod lending_market {
 
                 price: last_price_info.price,
 
-                price_updated_at: Clock::current_time(TimePrecision::Minute)
+                price_updated_at: Clock::current_time(TimePrecision::Second)
                     .seconds_since_unix_epoch,
 
                 total_loan: 0.into(),
@@ -329,7 +329,7 @@ mod lending_market {
                 total_deposit_unit: 0.into(),
                 total_reserved_amount: 0.into(),
                 interest_rate: 0.into(),
-                interest_updated_at: Clock::current_time(TimePrecision::Minute)
+                interest_updated_at: Clock::current_time(TimePrecision::Second)
                     .seconds_since_unix_epoch,
 
                 price_feed_comp: price_feed_component,
@@ -487,10 +487,10 @@ mod lending_market {
 
         ///*  CDP CREATION AND MANAGEMENT METHODS * ///
 
-        pub fn list_liquidable_cdps(&self) -> Vec<CDPLiquidable> {
+        pub fn list_liquidable_cdps(&self, skip: u64, limit: u64) -> Vec<CDPLiquidable> {
             let mut results = vec![];
             // Logger::debug(format!("self.cdp_counter  {}", self.cdp_counter ));
-            for cdp_id in 0..(self.cdp_counter + 1) {
+            for cdp_id in skip..limit.max(self.cdp_counter + 1) {
                 let cdp_id = &NonFungibleLocalId::Integer(cdp_id.into());
                 // Logger::debug(format!("Search cdp {} exists= {}", cdp_id, self.cdp_res_manager.non_fungible_exists(cdp_id)));
                 if self.cdp_res_manager.non_fungible_exists(cdp_id) {
@@ -500,6 +500,8 @@ mod lending_market {
                             &cdp_data,
                             &self.pool_states,
                         );
+
+                        cdp_health_checker.update_health_check_data().expect(&format!("Error updating health check data for cdp {}", &cdp_data.cdp_id));
 
                         if cdp_health_checker.can_liquidate().is_ok() {
                             results.push(CDPLiquidable {
@@ -523,7 +525,7 @@ mod lending_market {
         ) -> Bucket {
             let cdp_id = NonFungibleLocalId::Integer(self._get_new_cdp_id().into());
 
-            let now = Clock::current_time(TimePrecision::Minute).seconds_since_unix_epoch;
+            let now = Clock::current_time(TimePrecision::Second).seconds_since_unix_epoch;
 
             let data = CollaterizedDebtPositionData {
                 name: name.unwrap_or("".into()),
@@ -573,7 +575,7 @@ mod lending_market {
             self.cdp_res_manager.update_non_fungible_data(
                 &cdp_id,
                 "updated_at",
-                Clock::current_time(TimePrecision::Minute).seconds_since_unix_epoch,
+                Clock::current_time(TimePrecision::Second).seconds_since_unix_epoch,
             );
         }
 
@@ -926,9 +928,9 @@ mod lending_market {
 
             let mut cdp_data = WrappedCDPData::new(&self.cdp_res_manager, &cdp_id);
 
-            let now: i64 = Clock::current_time(TimePrecision::Minute).seconds_since_unix_epoch;
-            if now - cdp_data.cdp_data.updated_at > 60 {
-                panic!("cdp info is too old.")
+            let is_within_minute = Clock::current_time_is_strictly_before(Instant::new(cdp_data.cdp_data.updated_at).add_minutes(1).unwrap(), TimePrecision::Second);
+            if !is_within_minute {
+                panic!("cdp info is too old.");
             }
             let self_closable_loan_value = match cdp_data.cdp_data.liquidable {
                 Some(self_closable_loan_value) => self_closable_loan_value,
@@ -1037,10 +1039,10 @@ mod lending_market {
 
             let mut cdp_data = WrappedCDPData::new(&self.cdp_res_manager, &cdp_id);
 
-            let now: i64 = Clock::current_time(TimePrecision::Minute).seconds_since_unix_epoch;
-            if cdp_data.cdp_data.liquidable.is_some() && now - cdp_data.cdp_data.updated_at > 60 {
-                panic!("cdp info is too old.")
-            } else if cdp_data.cdp_data.liquidable.is_none() && now - cdp_data.cdp_data.updated_at > 60 {
+            let is_within_minute = Clock::current_time_is_strictly_before(Instant::new(cdp_data.cdp_data.updated_at).add_minutes(1).unwrap(), TimePrecision::Second);
+            if cdp_data.cdp_data.liquidable.is_some() && !is_within_minute {
+                panic!("cdp info is too old");
+            } else if cdp_data.cdp_data.liquidable.is_none() && !is_within_minute {
                 panic!("The cdp is not liquidable and cdp info is too old.")
             } else if cdp_data.cdp_data.liquidable.is_none() {
                 panic!("The cdp is not liquidable.")
@@ -1252,6 +1254,7 @@ mod lending_market {
                     temp_requested_value
                 );
             }
+            save_cdp_macro!(self, cdp_data);
 
             (returned_collaterals, returned_collaterals_value)
         }

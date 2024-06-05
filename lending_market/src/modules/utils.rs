@@ -35,7 +35,7 @@ pub fn get_price(
     // Bypass price feed for XRD, return 1 as XRD is the base currency
     if res_address == XRD {
         return Ok(PriceInfo {
-            timestamp: Clock::current_time(TimePrecision::Minute).seconds_since_unix_epoch,
+            timestamp: Clock::current_time(TimePrecision::Second).seconds_since_unix_epoch,
             price: dec!(1),
         });
     }

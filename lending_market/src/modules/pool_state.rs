@@ -422,13 +422,12 @@ impl LendingPoolState {
     }
 
     pub fn get_pool_utilization(&self) -> Decimal {
-        let (available_amount, _) = self.pool.get_pooled_amount();
-        if available_amount == 0.into() {
+        let (available_amount, borrowed_amount) = self.pool.get_pooled_amount();
+        let pool_total_liquidity = available_amount + borrowed_amount;
+        if pool_total_liquidity == 0.into() {
             Decimal::ZERO
         } else {
-            (self.total_loan / self.total_deposit)
-                .checked_truncate(RoundingMode::ToNearestMidpointToEven)
-                .unwrap()
+            borrowed_amount / pool_total_liquidity
         }
     }
 

@@ -163,7 +163,7 @@ mod price_feed {
         }
 
         pub fn admin_update_price(&mut self, resource: ResourceAddress, price: Decimal) {
-            let now = Clock::current_time(TimePrecision::Minute).seconds_since_unix_epoch;
+            let now = Clock::current_time(TimePrecision::Second).seconds_since_unix_epoch;
             self.prices.insert(
                 resource,
                 PriceInfo {
@@ -204,7 +204,7 @@ mod price_feed {
                 self.updater_badge_manager.get_non_fungible_data(&local_id);
 
             assert!(badge_data.active, "Updater badge is not active.");
-            let now = Clock::current_time(TimePrecision::Minute).seconds_since_unix_epoch;
+            let now = Clock::current_time(TimePrecision::Second).seconds_since_unix_epoch;
             self.prices.insert(
                 resource,
                 PriceInfo {
@@ -221,7 +221,7 @@ mod price_feed {
                 Some(price_info) => Some(price_info.clone()),
                 None => /* SUPRA ---------------------> self.feed.get(&quote).and_then(|(proofs, strategy)| {
                     
-                    let now = Clock::current_time(TimePrecision::Minute).seconds_since_unix_epoch;
+                    let now = Clock::current_time(TimePrecision::Second).seconds_since_unix_epoch;
                     match strategy {
                         PriceFeedStrategy::DataPairs(data_pairs) => {
                             let price: Decimal = data_pairs.iter().map(|(pair_id_1, pair_id_2, operation)| {

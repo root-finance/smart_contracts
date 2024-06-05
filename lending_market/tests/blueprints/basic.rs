@@ -396,7 +396,7 @@ fn test_liquidation() {
         .test_runner
         .load_account_from_faucet(liquidator_user_account);
 
-    // SWAP XRD TO Cover debt
+    // SWAP TO Cover debt
     swap(
         &mut helper,
         liquidator_user_account,
@@ -454,7 +454,7 @@ fn test_liquidation() {
         requested_collaterals.clone(),
     ).expect_commit_failure();
 
-    let payments: Vec<(ResourceAddress, Decimal)> = vec![(usd, dec!(202)),(btc, dec!(0.005)), (eth, dec!(0.062))];
+    let payments: Vec<(ResourceAddress, Decimal)> = vec![(usd, dec!(202)),(btc, dec!(0.0099)), (eth, dec!(0.062))];
     market_liquidation(
         &mut helper,
         liquidator_user_key,
@@ -464,7 +464,7 @@ fn test_liquidation() {
         requested_collaterals,
     ).expect_commit_success();
 
-    assert_eq!(dec!(17495.30247170615527537), helper
+    assert_eq!(dec!(19600), helper
         .test_runner
         .get_component_balance(liquidator_user_account, XRD) - xrd_balance);
 
@@ -472,14 +472,18 @@ fn test_liquidation() {
         .test_runner
         .get_component_balance(liquidator_user_account, usd) - usd_balance);
 
-    assert_eq!(dec!(-0.005), helper
+    assert_eq!(dec!(-0.009344141912850138), helper
         .test_runner
         .get_component_balance(liquidator_user_account, btc) - btc_balance);
 
-        assert_eq!(dec!(-0.06166664004812632), helper
+        assert_eq!(dec!(0), helper
         .test_runner
         .get_component_balance(liquidator_user_account, eth) - eth_balance);
  
+    market_update_pool_state(&mut helper, btc).expect_commit_success();
+    market_update_pool_state(&mut helper, usd).expect_commit_success();
+    market_update_pool_state(&mut helper, eth).expect_commit_success();
+    market_update_pool_state(&mut helper, XRD).expect_commit_success();
  
 
     let receipt = market_list_liquidable_cdps(&mut helper);

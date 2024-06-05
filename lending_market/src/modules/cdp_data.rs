@@ -184,9 +184,11 @@ impl WrappedCDPData {
             res_manager.update_non_fungible_data(
                 &self.cdp_id,
                 "updated_at",
-                Clock::current_time(TimePrecision::Minute).seconds_since_unix_epoch,
+                Clock::current_time(TimePrecision::Second).seconds_since_unix_epoch,
             );
         }
+
+        // Logger::debug(format!("Save CDP: {:#?}", self)); 
 
         Ok(())
     }
