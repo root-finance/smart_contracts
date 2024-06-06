@@ -166,7 +166,7 @@ pub fn market_list_liquidable_cdps(
     let manifest = ManifestBuilder::new().lock_fee_from_faucet().call_method(
         helper.market.market_component_address,
         "list_liquidable_cdps",
-        manifest_args!()
+        manifest_args!(0u64, 10u64)
     );
 
     let receipt = helper.test_runner.execute_manifest(

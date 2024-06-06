@@ -4,7 +4,7 @@ source ./baseline.sh
 
 echo "" > tx.rtm;
 
-CDP_ID="#3#";
+CDP_ID="#1#";
 
 echo "CALL_METHOD
     Address(\"$LENDING_MARKET_COMPONENT_ADDRESS\")
