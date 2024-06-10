@@ -19,8 +19,8 @@ mod lending_market {
 
     extern_blueprint!(
         // "package_sim1p4nk9h5kw2mcmwn5u2xcmlmwap8j6dzet7w7zztzz55p70rgqs4vag", // resim sdk
-        "package_sim1pkc0e8f9yhlvpv38s2ymrplu7q366y3k8zc53zf2srlm7qm64fk043", // testing
-        // "package_tdx_2_1p4p4wqvt58vz525uj444mgpfacx5cwzj20zqkmqt04f75qmx5mtc6r",  // stokenet
+        // "package_sim1pkc0e8f9yhlvpv38s2ymrplu7q366y3k8zc53zf2srlm7qm64fk043", // testing
+        "package_tdx_2_1p4p4wqvt58vz525uj444mgpfacx5cwzj20zqkmqt04f75qmx5mtc6r",  // stokenet
         SingleResourcePool {
 
             fn instantiate(
@@ -490,7 +490,7 @@ mod lending_market {
         pub fn list_liquidable_cdps(&self, skip: u64, limit: u64) -> Vec<CDPLiquidable> {
             let mut results = vec![];
             // Logger::debug(format!("self.cdp_counter  {}", self.cdp_counter ));
-            for cdp_id in skip..limit.max(self.cdp_counter + 1) {
+            for cdp_id in skip..limit.min(self.cdp_counter + 1) {
                 let cdp_id = &NonFungibleLocalId::Integer(cdp_id.into());
                 // Logger::debug(format!("Search cdp {} exists= {}", cdp_id, self.cdp_res_manager.non_fungible_exists(cdp_id)));
                 if self.cdp_res_manager.non_fungible_exists(cdp_id) {
