@@ -14,7 +14,7 @@ PRICE_FEED_PACKAGE=package_tdx_2_1p5psu0kzcu7jrm7pavq85q2qn34s26mx6pxwedkramd7f5
 
 POOL_PACKAGE=package_tdx_2_1p4p4wqvt58vz525uj444mgpfacx5cwzj20zqkmqt04f75qmx5mtc6r
 
-LENDING_MARKET_PACKAGE=package_tdx_2_1phhj4r57c6ck7chcja7nsefzdp96cmc047skv7pqg8v3l5ugcsjyku
+LENDING_MARKET_PACKAGE=package_tdx_2_1ph06wmp7kfurdnyyalh06v3ra0m0dl9m5fd060pa5tp799rkm57d7f
 
 FAUCET_PACKAGE=package_tdx_2_1pkwgr3xz6a52uda3hl3j83ug29255s5a3r29k43ml92x2298r3pyeu
 
@@ -99,12 +99,12 @@ echo "CALL_METHOD
     Expression(\"ENTIRE_WORKTOP\");" >> tx.rtm
 
 
-LENDING_MARKET_COMPONENT_ADDRESS=component_tdx_2_1czv2qjf39s2ev8dsf30j5e3ru3ksnrk8trkzq7ryawdpz8w4x5ssxp
-LENDING_MARKET_ADMIN_ADDRESS=resource_tdx_2_1ngw72lsnwncf7xzsazt548qczgg520pgq5avyy7a8fq5m2dur47ftr
-LENDING_MARKET_RESERVE_COLLECTOR_BADGE=resource_tdx_2_1nfru8dqa8pgxel5a6ly776urca73crzutu9yqmjpj37yqjcv4z7xff
-LENDING_MARKET_CDP_RESOURCE_ADDRESS=resource_tdx_2_1ngxqpzp058kqcfcp6krmu6ys7twtxqtgsp52yz0eckyj490a8rkf65
-LENDING_BATCH_FLASH_LOAN_RESOURCE_ADDRESS=resource_tdx_2_1nflst22rv4mnv4qyysnn9uscq72t9zxwe7w4zkstyzwppctcmmc66w
-LENDING_LIQUIDATION_TERM_RESOURCE_ADDRESS=resource_tdx_2_1nflst22rv4mnv4qyysnn9uscq72t9zxwe7w4zkstyzwppctcmmc66w
+LENDING_MARKET_COMPONENT_ADDRESS=component_tdx_2_1cqzr7mvv00amvcdp6fejnff3r3chpm9paeflc27pl45zpqp4vd453y
+LENDING_MARKET_ADMIN_ADDRESS=resource_tdx_2_1nfp08ltv56xrqjdaes3g632vce6twy0rgg3hyqf607k5d9cdkqhcc4
+LENDING_MARKET_RESERVE_COLLECTOR_BADGE=resource_tdx_2_1nthcw4cz9sfm0t7swa5fyyn8cm6at78f0wga3a6g68qmvtp9h58u78
+LENDING_MARKET_CDP_RESOURCE_ADDRESS=resource_tdx_2_1nt5lgp4w0eqferppg96xzldd2hhlyeqwjm5hggu2nqjl70s0m46pay
+LENDING_BATCH_FLASH_LOAN_RESOURCE_ADDRESS=resource_tdx_2_1nt4mn29aye5tvn4cvlf05r30ylv0krg4f390zqel6n55xuh83h6kfy
+LENDING_LIQUIDATION_TERM_RESOURCE_ADDRESS=resource_tdx_2_1nt4mn29aye5tvn4cvlf05r30ylv0krg4f390zqel6n55xuh83h6kfy
 
 # ------------------------------------------------------------------------------------ Create liquidity pools
 echo "CALL_METHOD Address(\"$OWNER_ADDRESS\") \"create_proof_of_non_fungibles\" Address(\"$LENDING_MARKET_ADMIN_ADDRESS\") Array<NonFungibleLocalId>(NonFungibleLocalId(\"#1#\"),NonFungibleLocalId(\"#2#\"),NonFungibleLocalId(\"#3#\"),NonFungibleLocalId(\"#4#\"));" >> tx.rtm

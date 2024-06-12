@@ -233,12 +233,6 @@ impl WrappedCDPData {
         if let Some(entry) = map.get_mut(&key) {
             *entry += units;
 
-            if *entry < PreciseDecimal::ZERO {
-                return Err(
-                    "WrappedCDPData/update_map: entry must be greater than or equal to 0".into(),
-                );
-            }
-
             if *entry < ZERO_EPSILON.into() {
                 map.remove(&key);
             }
