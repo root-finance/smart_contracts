@@ -19,8 +19,8 @@ mod lending_market {
 
     extern_blueprint!(
         // "package_sim1p4nk9h5kw2mcmwn5u2xcmlmwap8j6dzet7w7zztzz55p70rgqs4vag", // resim sdk
-        // "package_sim1pkc0e8f9yhlvpv38s2ymrplu7q366y3k8zc53zf2srlm7qm64fk043", // testing
-        "package_tdx_2_1p4p4wqvt58vz525uj444mgpfacx5cwzj20zqkmqt04f75qmx5mtc6r",  // stokenet
+        "package_sim1pkc0e8f9yhlvpv38s2ymrplu7q366y3k8zc53zf2srlm7qm64fk043", // testing
+        // "package_tdx_2_1p4p4wqvt58vz525uj444mgpfacx5cwzj20zqkmqt04f75qmx5mtc6r",  // stokenet
         SingleResourcePool {
 
             fn instantiate(
@@ -534,6 +534,7 @@ mod lending_market {
                 cdp_type: CDPType::Standard,
                 collaterals: IndexMap::new(),
                 loans: IndexMap::new(),
+                liquidated: IndexMap::new(),
                 minted_at: now,
                 updated_at: now,
                 liquidable: None,
@@ -995,6 +996,8 @@ mod lending_market {
 
             self.transient_res_manager.burn(liquidation_term);
 
+            cdp_data.on_liquidation().expect("perform cdp liquidation tasks");
+
             save_cdp_macro!(self, cdp_data);
 
             emit_cdp_event!(cdp_id, CDPUpdatedEvenType::Liquidate);
@@ -1058,6 +1061,8 @@ mod lending_market {
                     total_payment_value,
                     true
                 );
+
+            cdp_data.on_liquidation().expect("perform cdp liquidation tasks");
 
             save_cdp_macro!(self, cdp_data);
 

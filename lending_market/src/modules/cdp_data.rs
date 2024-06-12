@@ -61,6 +61,9 @@ pub struct CollaterizedDebtPositionData {
     pub loans: IndexMap<ResourceAddress, PreciseDecimal>,
 
     #[mutable]
+    pub liquidated: IndexMap<ResourceAddress, PreciseDecimal>,
+
+    #[mutable]
     pub liquidable: Option<Decimal>
 }
 
@@ -71,6 +74,7 @@ pub struct WrappedCDPData {
     pub cdp_type_updated: bool,
     pub collateral_updated: bool,
     pub loan_updated: bool,
+    pub liquidated_updated: bool,
 }
 
 impl WrappedCDPData {
@@ -81,7 +85,8 @@ impl WrappedCDPData {
             cdp_data,
             cdp_type_updated: false,
             collateral_updated: false,
-            loan_updated: false
+            loan_updated: false,
+            liquidated_updated: false
         }
     }
 
@@ -132,6 +137,18 @@ impl WrappedCDPData {
         result
     }
 
+    pub fn on_liquidation(
+        &mut self,
+    ) -> Result<(), String> {
+        for (res_address, units) in &self.cdp_data.loans {
+            Self::update_map(&mut self.cdp_data.liquidated, *res_address, *units).map_err(|err| format!("Error updating cdp loan to liquidated: {err}"))?;
+        }
+        self.cdp_data.loans.clear();
+        self.liquidated_updated = true;
+        self.loan_updated = true;
+        Ok(())
+    }
+
     pub fn save_cdp(
         &self,
         res_manager: &ResourceManager,
@@ -162,6 +179,15 @@ impl WrappedCDPData {
                 &self.cdp_id,
                 "loans",
                 self.cdp_data.loans.clone(),
+            );
+            updated = true;
+        }
+
+        if self.liquidated_updated {
+            res_manager.update_non_fungible_data(
+                &self.cdp_id,
+                "liquidated",
+                self.cdp_data.liquidated.clone(),
             );
             updated = true;
         }
