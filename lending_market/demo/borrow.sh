@@ -19,7 +19,7 @@ echo "CALL_METHOD
     Address(\"$BORROWER_ADDRESS\")
     \"withdraw\"
     Address(\"$XRD\")
-    Decimal(\"9500\");"  >> tx.rtm 
+    Decimal(\"3000\");"  >> tx.rtm 
 
 echo "TAKE_ALL_FROM_WORKTOP
     Address(\"$XRD\")
@@ -75,7 +75,7 @@ echo "CALL_METHOD
     Array<Tuple>(
         Tuple(
             Address(\"$USDT_RESOURCE_ADDRESS\"),
-            Decimal(\"100\")
+            Decimal(\"76\")
         )
     )
 ;" >> tx.rtm

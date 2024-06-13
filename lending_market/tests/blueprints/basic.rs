@@ -451,6 +451,7 @@ fn test_liquidation() {
         liquidator_user_account,
         cdp_id,
         payments,
+        None,
         requested_collaterals.clone(),
     ).expect_commit_failure();
 
@@ -461,10 +462,11 @@ fn test_liquidation() {
         liquidator_user_account,
         cdp_id,
         payments,
+        None,
         requested_collaterals,
     ).expect_commit_success();
 
-    assert_eq!(dec!(19600), helper
+    assert_eq!(dec!(18400), helper
         .test_runner
         .get_component_balance(liquidator_user_account, XRD) - xrd_balance);
 
@@ -472,7 +474,7 @@ fn test_liquidation() {
         .test_runner
         .get_component_balance(liquidator_user_account, usd) - usd_balance);
 
-    assert_eq!(dec!(-0.009344141912850138), helper
+    assert_eq!(dec!(-0.008878145116578112), helper
         .test_runner
         .get_component_balance(liquidator_user_account, btc) - btc_balance);
 
@@ -522,7 +524,7 @@ fn test_liquidation() {
 }
 
 #[test]
-fn test_simple_liquidation() {
+fn test_partial_liquidation() {
     let mut helper = TestHelper::new();
     let usd = helper.faucet.usdc_resource_address;
 
@@ -608,7 +610,7 @@ fn test_simple_liquidation() {
     ).expect_commit_success();
 
     // PREPARE LIQUIDATION
-    admin_update_price(&mut helper, 1u64, usd, dec!(120)).expect_commit_success();    
+    admin_update_price(&mut helper, 1u64, usd, dec!(28)).expect_commit_success();    
     market_update_pool_state(&mut helper, usd).expect_commit_success();
 
     let receipt = market_list_liquidable_cdps(&mut helper);
@@ -632,7 +634,6 @@ fn test_simple_liquidation() {
         .test_runner
         .get_component_balance(liquidator_user_account, usd);
 
-
     let payments: Vec<(ResourceAddress, Decimal)> = vec![(usd, dec!(76))];
     market_liquidation(
         &mut helper,
@@ -640,14 +641,15 @@ fn test_simple_liquidation() {
         liquidator_user_account,
         cdp_id,
         payments,
+        Some(dec!(0.4) * dec!(3000)),
         requested_collaterals.clone(),
     ).expect_commit_success();
 
-    assert_eq!(dec!(2940), helper
+    assert_eq!(dec!(1203.36), helper
         .test_runner
         .get_component_balance(liquidator_user_account, XRD) - xrd_balance);
 
-    assert_eq!(dec!(-23.809523809523809523), helper
+    assert_eq!(dec!(-42.857142857142857142), helper
         .test_runner
         .get_component_balance(liquidator_user_account, usd) - usd_balance);
 

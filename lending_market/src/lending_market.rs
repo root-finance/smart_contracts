@@ -18,9 +18,9 @@ pub enum UpdateCDPInput {
 mod lending_market {
 
     extern_blueprint!(
-        // "package_sim1p4nk9h5kw2mcmwn5u2xcmlmwap8j6dzet7w7zztzz55p70rgqs4vag", // resim sdk
+        "package_sim1p4nk9h5kw2mcmwn5u2xcmlmwap8j6dzet7w7zztzz55p70rgqs4vag", // resim sdk
         // "package_sim1pkc0e8f9yhlvpv38s2ymrplu7q366y3k8zc53zf2srlm7qm64fk043", // testing
-        "package_tdx_2_1p4p4wqvt58vz525uj444mgpfacx5cwzj20zqkmqt04f75qmx5mtc6r",  // stokenet
+        // "package_tdx_2_1p4p4wqvt58vz525uj444mgpfacx5cwzj20zqkmqt04f75qmx5mtc6r",  // stokenet
         SingleResourcePool {
 
             fn instantiate(
@@ -1211,7 +1211,7 @@ mod lending_market {
                     Some(OperatingService::Liquidation)
                 );
 
-                let bonus_rate = dec!(1) + pool_state.pool_config.liquidation_bonus_rate;
+                let bonus_rate = dec!(1) + pool_state.pool_config.protocol_liquidation_fee_rate + pool_state.pool_config.liquidation_bonus_rate;
 
                 let unit_ratio = pool_state.pool.get_pool_unit_ratio();
 
@@ -1241,8 +1241,7 @@ mod lending_market {
 
                 let mut collaterals = pool_state.redeem_proxy(pool_unit, true);
                 let protocol_fee_amount = collaterals.amount()
-                    * pool_state.pool_config.protocol_liquidation_fee_rate
-                    * pool_state.pool_config.liquidation_bonus_rate;
+                    * pool_state.pool_config.protocol_liquidation_fee_rate;
 
                 pool_state.reserve.put(collaterals.take_advanced(
                     protocol_fee_amount,
@@ -1347,11 +1346,11 @@ mod lending_market {
                 total_payment_value += max_loan_value;
             };
 
-            if payment_value.is_some() {
+            if let Some(value) = payment_value {
                 assert!(
                     expected_payment_value < ZERO_EPSILON,
-                    "Insufficient payment value {:?}, {} remaining to pay",
-                    payment_value,
+                    "Insufficient payment value, {} required, {} remaining to pay",
+                    value,
                     expected_payment_value
                 );
             }

@@ -140,12 +140,14 @@ impl WrappedCDPData {
     pub fn on_liquidation(
         &mut self,
     ) -> Result<(), String> {
-        for (res_address, units) in &self.cdp_data.loans {
-            Self::update_map(&mut self.cdp_data.liquidated, *res_address, *units).map_err(|err| format!("Error updating cdp loan to liquidated: {err}"))?;
+        if self.cdp_data.collaterals.len() == 0 && self.cdp_data.loans.len() > 0 {
+            for (res_address, units) in &self.cdp_data.loans {
+                Self::update_map(&mut self.cdp_data.liquidated, *res_address, *units).map_err(|err| format!("Error updating cdp loan to liquidated: {err}"))?;
+            }
+            self.cdp_data.loans.clear();
+            self.liquidated_updated = true;
+            self.loan_updated = true;
         }
-        self.cdp_data.loans.clear();
-        self.liquidated_updated = true;
-        self.loan_updated = true;
         Ok(())
     }
 

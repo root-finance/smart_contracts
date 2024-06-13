@@ -16,7 +16,7 @@ echo "CALL_METHOD
     Address(\"$BORROWER_ADDRESS\")
     \"withdraw\"
     Address(\"$USDT_RESOURCE_ADDRESS\")
-    Decimal(\"100\");"  >> tx.rtm 
+    Decimal(\"76\");"  >> tx.rtm 
 
 echo "TAKE_ALL_FROM_WORKTOP
     Address(\"$USDT_RESOURCE_ADDRESS\")

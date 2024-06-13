@@ -455,6 +455,7 @@ pub fn market_liquidation(
     user_account_address: ComponentAddress,
     cdp_id: u64,
     payments: Vec<(ResourceAddress, Decimal)>,
+    total_payment_value: Option<Decimal>,
     requested_collaterals: Vec<ResourceAddress>,
 ) -> TransactionReceipt {
     let mut manifest_builder = ManifestBuilder::new()
@@ -465,7 +466,7 @@ pub fn market_liquidation(
             manifest_args!(
                 NonFungibleLocalId::integer(cdp_id),
                 requested_collaterals.clone(),
-                None::<Decimal>
+                total_payment_value
             ),
         );
 
