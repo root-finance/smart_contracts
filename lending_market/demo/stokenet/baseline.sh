@@ -120,8 +120,8 @@ echo "CALL_METHOD Address(\"$LENDING_MARKET_COMPONENT_ADDRESS\") \"create_lendin
         Enum<0u8>(),
         Enum<0u8>(),
         Enum<0u8>(),
-        5i64,
-        15i64,
+        1i64,
+        4i64,
         240i64,
         Decimal(\"0.45\")
     )
@@ -152,8 +152,8 @@ echo "CALL_METHOD Address(\"$LENDING_MARKET_COMPONENT_ADDRESS\") \"create_lendin
         Enum<0u8>(),
         Enum<0u8>(),
         Enum<0u8>(),
-        5i64,
-        15i64,
+        1i64,
+        4i64,
         240i64,
         Decimal(\"0.8\")
     )
@@ -190,8 +190,8 @@ echo "CALL_METHOD Address(\"$LENDING_MARKET_COMPONENT_ADDRESS\") \"create_lendin
         Enum<0u8>(),
         Enum<0u8>(),
         Enum<0u8>(),
-        5i64,
-        15i64,
+        1i64,
+        4i64,
         240i64,
         Decimal(\"0.45\")
     )
@@ -222,8 +222,8 @@ echo "CALL_METHOD Address(\"$LENDING_MARKET_COMPONENT_ADDRESS\") \"create_lendin
         Enum<0u8>(),
         Enum<0u8>(),
         Enum<0u8>(),
-        5i64,
-        15i64,
+        1i64,
+        4i64,
         240i64,
         Decimal(\"0.45\")
     )
@@ -254,8 +254,8 @@ echo "CALL_METHOD Address(\"$LENDING_MARKET_COMPONENT_ADDRESS\") \"create_lendin
         Enum<0u8>(),
         Enum<0u8>(),
         Enum<0u8>(),
-        5i64,
-        15i64,
+        1i64,
+        4i64,
         240i64,
         Decimal(\"0.45\")
     )
@@ -286,8 +286,8 @@ echo "CALL_METHOD Address(\"$LENDING_MARKET_COMPONENT_ADDRESS\") \"create_lendin
         Enum<0u8>(),
         Enum<0u8>(),
         Enum<0u8>(),
-        5i64,
-        15i64,
+        1i64,
+        4i64,
         240i64,
         Decimal(\"0.45\")
     )
@@ -317,8 +317,8 @@ echo "CALL_METHOD Address(\"$LENDING_MARKET_COMPONENT_ADDRESS\") \"create_lendin
         Enum<0u8>(),
         Enum<0u8>(),
         Enum<0u8>(),
-        5i64,
-        15i64,
+        1i64,
+        4i64,
         240i64,
         Decimal(\"0.8\")
     )
