@@ -335,7 +335,7 @@ impl LendingPoolState {
         &mut self,
         bypass_debounce: Option<(bool, bool)>,
     ) -> Result<(), String> {
-        let now: i64 = Clock::current_time(TimePrecision::Minute).seconds_since_unix_epoch;
+        let now: i64 = Clock::current_time(TimePrecision::Second).seconds_since_unix_epoch;
 
         let (bypass_price_debounce, bypass_interest_debounce) =
             bypass_debounce.unwrap_or((false, false));
