@@ -1225,7 +1225,12 @@ mod lending_market {
 
                 max_collateral_value = max_collateral_value.min(bonus_rate * temp_requested_value);
 
-                temp_requested_value -= max_collateral_value / bonus_rate;
+                if max_collateral_value >= (bonus_rate * temp_requested_value) {
+                    temp_requested_value = dec!(0);
+                } else {
+                    temp_requested_value -= max_collateral_value / bonus_rate;
+                }
+
 
                 returned_collaterals_value += max_collateral_value / bonus_rate;
 
