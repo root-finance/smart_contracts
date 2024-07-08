@@ -19,8 +19,8 @@ mod lending_market {
 
     extern_blueprint!(
         // "package_sim1p4nk9h5kw2mcmwn5u2xcmlmwap8j6dzet7w7zztzz55p70rgqs4vag", // resim sdk
-        // "package_sim1pkc0e8f9yhlvpv38s2ymrplu7q366y3k8zc53zf2srlm7qm64fk043", // testing
-        "package_tdx_2_1p4p4wqvt58vz525uj444mgpfacx5cwzj20zqkmqt04f75qmx5mtc6r",  // stokenet
+        "package_sim1pkc0e8f9yhlvpv38s2ymrplu7q366y3k8zc53zf2srlm7qm64fk043", // testing
+        // "package_tdx_2_1p4p4wqvt58vz525uj444mgpfacx5cwzj20zqkmqt04f75qmx5mtc6r",  // stokenet
         SingleResourcePool {
 
             fn instantiate(
@@ -994,6 +994,12 @@ mod lending_market {
                 total_payment_value, liquidation_term_data.payement_value
             );
 
+            assert!(
+                total_payment_value > liquidation_term_data.payement_value * self.market_config.max_liquidable_value,
+                "Total payment value {} exceeds the max liquidable value {}",
+                total_payment_value, liquidation_term_data.payement_value * self.market_config.max_liquidable_value
+            );
+
             self.transient_res_manager.burn(liquidation_term);
 
             cdp_data.on_liquidation().expect("perform cdp liquidation tasks");
@@ -1231,8 +1237,7 @@ mod lending_market {
                     temp_requested_value -= max_collateral_value / bonus_rate;
                 }
 
-
-                returned_collaterals_value += max_collateral_value / bonus_rate;
+                returned_collaterals_value += max_collateral_value * (1 - pool_state.pool_config.protocol_liquidation_fee_rate + pool_state.pool_config.liquidation_bonus_rate);
 
                 let collateral_units = (max_collateral_value / pool_state.price) * unit_ratio;
 
@@ -1329,7 +1334,9 @@ mod lending_market {
 
                     assert!(
                         expected_payment_value >= dec!(0),
-                        "expected_payment_value should not be negative"
+                        "expected_payment_value should not be negative: max_loan_value={}, expected_payment_value={}",
+                        max_loan_value,
+                        expected_payment_value
                     );
                 };
 
@@ -1354,8 +1361,9 @@ mod lending_market {
             if let Some(value) = payment_value {
                 assert!(
                     expected_payment_value < ZERO_EPSILON,
-                    "Insufficient payment value, {} required, {} remaining to pay",
+                    "Insufficient payment value, {} required, {} total, {} remaining to pay",
                     value,
+                    total_payment_value,
                     expected_payment_value
                 );
             }

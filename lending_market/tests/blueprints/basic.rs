@@ -173,7 +173,7 @@ fn test_deposit_withdraw_borrow_repay() {
         helper
             .test_runner
             .get_component_balance(borrower_account, usd),
-        dec!(1.999747475611713071)
+        dec!(1.999747667645468422)
     );
 
     // REDEEM
@@ -202,7 +202,7 @@ fn test_deposit_withdraw_borrow_repay() {
         helper
             .test_runner
             .get_component_balance(lp_user_account, usd),
-        dec!(2000.000200119327113721)
+        dec!(2000.000199967145115916)
     );
 }
 
@@ -470,11 +470,11 @@ fn test_liquidation() {
         .test_runner
         .get_component_balance(liquidator_user_account, XRD) - xrd_balance);
 
-    assert_eq!(dec!(-201.256247133753602058), helper
+    assert_eq!(dec!(-201.25625), helper
         .test_runner
         .get_component_balance(liquidator_user_account, usd) - usd_balance);
 
-    assert_eq!(dec!(-0.008878145116578112), helper
+    assert_eq!(dec!(-0.008912395833333333), helper
         .test_runner
         .get_component_balance(liquidator_user_account, btc) - btc_balance);
 
@@ -645,11 +645,11 @@ fn test_partial_liquidation() {
         requested_collaterals.clone(),
     ).expect_commit_success();
 
-    assert_eq!(dec!(1203.36), helper
+    assert_eq!(dec!(1192.32), helper
         .test_runner
         .get_component_balance(liquidator_user_account, XRD) - xrd_balance);
 
-    assert_eq!(dec!(-42.857142857142857142), helper
+    assert_eq!(dec!(-42.582857142857142857), helper
         .test_runner
         .get_component_balance(liquidator_user_account, usd) - usd_balance);
 

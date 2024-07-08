@@ -4,7 +4,7 @@ source ./supply.sh
 source ./borrow.sh
 
 # ------------------------------------------------------------------------------------ Liquidation
-resim set-current-time 2024-04-01T12:07:00Z
+resim set-current-time 2024-03-01T12:07:00Z
 
 resim set-default-account $OWNER_ADDRESS  $OWNER_PVKEY $OWNER_NONFUNGIBLEGLOBALID
 
@@ -19,7 +19,7 @@ resim run tx.rtm
 
 resim set-default-account $LIQUIDATOR_ADDRESS  $LIQUIDATOR_PVKEY $LIQUIDATOR_NONFUNGIBLEGLOBALID
 
-resim set-current-time 2024-04-01T13:00:00Z
+resim set-current-time 2024-03-01T13:00:00Z
 
 echo "CALL_METHOD
     Address(\"$LIQUIDATOR_ADDRESS\")
@@ -52,7 +52,7 @@ echo "CALL_METHOD
 
 echo "TAKE_ALL_FROM_WORKTOP
     Address(\"$USDT_RESOURCE_ADDRESS\")
-    Bucket(\"udst_bucket\");" >> tx.rtm 
+    Bucket(\"usdt_bucket\");" >> tx.rtm 
 
 echo "TAKE_ALL_FROM_WORKTOP
     Address(\"$LENDING_LIQUIDATION_TERM_RESOURCE_ADDRESS\")
@@ -62,7 +62,7 @@ echo "CALL_METHOD
     Address(\"$LENDING_MARKET_COMPONENT_ADDRESS\")
     \"end_liquidation\"
     Array<Bucket>(
-        Bucket(\"udst_bucket\")
+        Bucket(\"usdt_bucket\")
     )
     Bucket(\"liquidation_term_bucket\");" >> tx.rtm
 

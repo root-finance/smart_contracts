@@ -32,25 +32,38 @@ pub enum CheckPoolConfigLimitInput {
 
 #[derive(ScryptoSbor, Clone)]
 pub struct PoolConfig {
+    /// Rate to store in reserve when distributing interests for a period
     pub protocol_interest_fee_rate: Decimal,
     pub protocol_flashloan_fee_rate: Decimal,
+    /// Rate to store in reserve when liquidating a position. Beware that the sum of this and `liquidation_bonus_rate` 
+    /// is reflected on how much collateral is removed and setting it too high may actually prevent reduction of LTV and
+    /// cause trigger of subsequent partial liquidations up to the complete liquidation of the liquidable CDP ()
     pub protocol_liquidation_fee_rate: Decimal,
 
     pub flashloan_fee_rate: Decimal,
 
+    /// Arbitrary flag for asset type, 0=crypto 1=stable
     pub asset_type: u8,
 
+    /// bonus amount to give to the liquidator
     pub liquidation_bonus_rate: Decimal,
     pub loan_close_factor: Decimal,
 
+    /// Limit on deposit amount
     pub deposit_limit: Option<Decimal>,
+    /// Limit on borrow amount
     pub borrow_limit: Option<Decimal>,
+    /// Limit on pool utilization after which borrowing is disallowed
     pub utilization_limit: Option<Decimal>,
 
+    /// Period in minutes after which interest is recomputed
     pub interest_update_period: i64,
+    /// Period in minutes after which price is updated
     pub price_update_period: i64,
+    /// Period in minutes after which all operations are disallowed since price information is not actual
     pub price_expiration_period: i64,
 
+    /// Desired pool utilization, used to compute interest rate in order to encourage borrowing or supplying so that pool is this much used
     pub optimal_usage: Decimal,
 }
 impl PoolConfig {

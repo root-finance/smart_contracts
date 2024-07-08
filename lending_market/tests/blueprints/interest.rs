@@ -103,7 +103,7 @@ fn test_interest() {
         helper
             .test_runner
             .get_component_balance(charles_account, usd_pu),
-        dec!(1987.552977875112812)
+        dec!(1987.552949652799346)
     );
   
     // 5) Six months pass
@@ -123,7 +123,7 @@ fn test_interest() {
         charles_key,
         charles_account,
         usd_pu,
-        dec!(1987.552977875112812),
+        dec!(1987.552949652799346),
     ) //
         .expect_commit_success();
 
@@ -132,7 +132,7 @@ fn test_interest() {
         helper
             .test_runner
             .get_component_balance(charles_account, usd) - charles_usd_balance,
-        dec!(2000.298631329145751913)
+        dec!(2000.298627754576409064)
     );
 
     // 7) Six months pass
@@ -197,7 +197,7 @@ fn test_interest() {
         helper
             .test_runner
             .get_component_balance(alice_account, usd) - alice_usd_balance,
-        dec!(1011.54863241134489264)
+        dec!(1011.548656776571732426)
     );
 
     // 10) Collect market reserve
@@ -211,6 +211,6 @@ fn test_interest() {
         helper
             .test_runner
             .get_component_balance(helper.owner_account_address, usd) - owner_usd_balance,
-        dec!(2.980383311958692419)
+        dec!(2.98038853845519103)
     );
 }
