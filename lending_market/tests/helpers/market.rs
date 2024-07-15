@@ -124,8 +124,8 @@ impl MarketTestHelper {
                         dec!(0), dec!(0.04), dec!(3.00)
                     ),
                     (
-                        None::<Decimal>,
-                        Some(dec!("0.8")),
+                        Some(dec!("0.7")),
+                        Some(dec!("0.7")),
                         IndexMap::<ResourceAddress, Decimal>::new(),
                         IndexMap::<u8, Decimal>::new(),
                         dec!("0.7")
@@ -190,11 +190,11 @@ impl MarketTestHelper {
                         dec!(0), dec!(0.04), dec!(0.75)
                     ),
                     (
-                        None::<Decimal>,
-                        Some(dec!("0.8")),
+                        Some(dec!("0.75")),
+                        Some(dec!("0.75")),
                         IndexMap::<ResourceAddress, Decimal>::new(),
                         IndexMap::<u8, Decimal>::new(),
-                        dec!("0.0")
+                        dec!("0.75")
                     )
                 ),
             )
@@ -256,8 +256,8 @@ impl MarketTestHelper {
                         dec!(0), dec!(0.04), dec!(3.00)
                     ),
                     (
-                        None::<Decimal>,
-                        Some(dec!("0.8")),
+                        Some(dec!("0.7")),
+                        Some(dec!("0.7")),
                         IndexMap::<ResourceAddress, Decimal>::new(),
                         IndexMap::<u8, Decimal>::new(),
                         dec!("0.7")
@@ -323,8 +323,8 @@ impl MarketTestHelper {
                         dec!(0), dec!(0.04), dec!(3.00)
                     ),
                     (
-                        None::<Decimal>,
-                        Some(dec!("0.8")),
+                        Some(dec!("0.7")),
+                        Some(dec!("0.7")),
                         IndexMap::<ResourceAddress, Decimal>::new(),
                         IndexMap::<u8, Decimal>::new(),
                         dec!("0.7")
@@ -346,6 +346,72 @@ impl MarketTestHelper {
             (
                 result5.new_component_addresses()[0],
                 result5.new_resource_addresses()[0],
+            ),
+        );
+
+        // Initialize HUG lending pool
+
+        let manifest6 = ManifestBuilder::new()
+            .lock_fee_from_faucet()
+            .create_proof_from_account_of_non_fungibles(
+                owner_account_address,
+                market_admin_badge,
+                vec![
+                    NonFungibleLocalId::integer(1),
+                    NonFungibleLocalId::integer(2),
+                    NonFungibleLocalId::integer(3),
+                    NonFungibleLocalId::integer(6),
+                ],
+            )
+            .call_method(
+                market_component_address,
+                "create_lending_pool",
+                manifest_args!(
+                    price_feed.price_feed_component_address,
+                    faucet.hug_resource_address,
+                    (
+                        dec!("0.2"),
+                        dec!("0.15"),
+                        dec!("0.08"),
+                        dec!("0.001"),
+                        0u8,
+                        dec!("0"),
+                        dec!("1"),
+                        None::<Decimal>,
+                        None::<Decimal>,
+                        Some(dec!("0.99")),
+                        5i64,
+                        15i64,
+                        240i64,
+                        dec!("0.45"),
+                    ),
+                    (
+                        dec!(0), dec!(0.04), dec!(3.00)
+                    ),
+                    (
+                        Some(dec!("0.25")),
+                        Some(dec!("0.25")),
+                        IndexMap::<ResourceAddress, Decimal>::new(),
+                        IndexMap::<u8, Decimal>::new(),
+                        dec!("0.25")
+                    )
+                ),
+            )
+            .deposit_batch(owner_account_address)
+            .build();
+
+        let receipt6 = test_runner.execute_manifest(
+            manifest6,
+            vec![NonFungibleGlobalId::from_public_key(&owner_public_key)],
+        );
+
+        let result6: &CommitResult = receipt6.expect_commit(true);
+
+        pools.insert(
+            faucet.hug_resource_address,
+            (
+                result6.new_component_addresses()[0],
+                result6.new_resource_addresses()[0],
             ),
         );
 

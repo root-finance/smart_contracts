@@ -183,6 +183,30 @@ pub fn market_list_liquidable_cdps(
     receipt
 }
 
+pub fn market_show_cdp(
+    helper: &mut TestHelper,
+    cdp_id: u64,
+) -> TransactionReceiptV1 {
+    let manifest = ManifestBuilder::new().lock_fee_from_faucet().call_method(
+        helper.market.market_component_address,
+        "show_cdp",
+        manifest_args!(cdp_id),
+    );
+
+    let receipt = helper.test_runner.execute_manifest(
+        build_and_dump_to_fs(manifest, "show_cdp".into()),
+        vec![NonFungibleGlobalId::from_public_key(
+            &helper.owner_public_key,
+        )],
+    );
+
+    receipt.expect_commit_success();
+
+    println!("{:?}\n", receipt);
+
+    receipt
+}
+
 
 pub fn market_contribute(
     helper: &mut TestHelper,
@@ -477,11 +501,11 @@ pub fn market_liquidation(
             .withdraw_from_account(user_account_address, res_address, amount)
             .take_all_from_worktop(
                 res_address,
-                format!("payment_bucket_{:?}", encoder.encode(&res_address.to_vec())),
+                format!("payment_bucket_{}", encoder.encode(&res_address.to_vec()).unwrap()),
             )
             .with_name_lookup(|builder, lookup| {
                 payment_buckets
-                    .push(lookup.bucket(format!("payment_bucket_{:?}", encoder.encode(&res_address.to_vec()))));
+                    .push(lookup.bucket(format!("payment_bucket_{}", encoder.encode(&res_address.to_vec()).unwrap())));
                 builder
             });
     }
@@ -493,8 +517,8 @@ pub fn market_liquidation(
         );
 
     manifest_builder = manifest_builder
-        .with_name_lookup(|builder, _lookup| {
-            let liquidation_term_bucket = _lookup.bucket("liquidation_term_bucket");
+        .with_name_lookup(|builder, lookup| {
+            let liquidation_term_bucket = lookup.bucket("liquidation_term_bucket");
             builder.call_method(
                 helper.market.market_component_address,
                 "end_liquidation",

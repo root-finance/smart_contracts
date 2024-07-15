@@ -90,6 +90,8 @@ mod lending_market {
 
             update_cdp => PUBLIC;
 
+            show_cdp => PUBLIC;
+
             // Flashloan methods
 
             take_batch_flashloan => PUBLIC;
@@ -578,6 +580,16 @@ mod lending_market {
                 "updated_at",
                 Clock::current_time(TimePrecision::Second).seconds_since_unix_epoch,
             );
+        }
+
+        pub fn show_cdp(&self, cdp_id: u64) -> Option<WrappedCDPData> {
+            let cdp_id = &NonFungibleLocalId::Integer(cdp_id.into());
+            if self.cdp_res_manager.non_fungible_exists(cdp_id) {
+                let cdp_data = WrappedCDPData::new(&self.cdp_res_manager, cdp_id);
+                Some(cdp_data)
+            } else {
+                None
+            }
         }
 
         // / * Flashloan methods * ///
@@ -1217,7 +1229,7 @@ mod lending_market {
                     Some(OperatingService::Liquidation)
                 );
 
-                let bonus_rate = dec!(1) + pool_state.pool_config.protocol_liquidation_fee_rate + pool_state.pool_config.liquidation_bonus_rate;
+                let bonus_rate = dec!(1) + pool_state.pool_config.liquidation_bonus_rate;
 
                 let unit_ratio = pool_state.pool.get_pool_unit_ratio();
 
