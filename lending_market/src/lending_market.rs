@@ -5,6 +5,8 @@ use crate::modules::{
 use crate::resources::*;
 use scrypto::prelude::*;
 
+
+
 #[derive(ScryptoSbor)]
 pub enum UpdateCDPInput {
     KeyImageURL(String),
@@ -58,6 +60,7 @@ mod lending_market {
             admin => updatable_by: [];
             moderator => updatable_by: [];
             reserve_collector => updatable_by: [];
+            liquidator => updatable_by: [];
         },
 
         methods {
@@ -108,12 +111,14 @@ mod lending_market {
             repay => PUBLIC;
 
             // Liquidation methods
+            mint_liquidator_badge => restrict_to: [admin];
+            update_liquidator_badge => restrict_to: [admin];
             list_liquidable_cdps => PUBLIC;
             refinance => PUBLIC;
             check_cdp_for_liquidation => PUBLIC;
-            start_liquidation => PUBLIC;
-            end_liquidation => PUBLIC;
-            fast_liquidation => PUBLIC;
+            start_liquidation => restrict_to: [admin,liquidator];
+            end_liquidation => restrict_to: [admin,liquidator];
+            fast_liquidation => restrict_to: [admin,liquidator];
 
             // Statistics queries
             list_info_stats => PUBLIC;
@@ -147,6 +152,9 @@ mod lending_market {
         ///
         cdp_counter: u64,
 
+        ///
+        liquidator_counter: u64,
+
         /// Current lending market component address
         market_component_address: ComponentAddress,
 
@@ -164,6 +172,9 @@ mod lending_market {
 
         ///
         transient_res_manager: ResourceManager,
+
+        ///
+        liquidator_badge_manager: ResourceManager,
 
         ///
         operating_status: OperatingStatus,
@@ -201,6 +212,10 @@ mod lending_market {
 
             let reserve_collector_badge = create_reserve_collector_badge(admin_rule.clone());
             let reserve_collector_rule = rule!(require(reserve_collector_badge.resource_address()));
+            
+
+            // * Create liquidator badge manager * //
+            let liquidator_badge_manager = create_liquidator_badge_manager(admin_rule.clone(), component_rule.clone());
 
             // * Create CDP resource manager * //
             let cdp_res_manager =
@@ -216,7 +231,9 @@ mod lending_market {
                 cdp_res_manager,
                 admin_rule: admin_rule.clone(),
                 cdp_counter: 0,
+                liquidator_counter: 0,
                 transient_res_manager,
+                liquidator_badge_manager,
                 pool_unit_refs: IndexMap::new(),
                 reverse_pool_unit_refs: IndexMap::new(),
                 pool_states: KeyValueStore::<ResourceAddress, LendingPoolState>::new_with_registered_type(),
@@ -231,6 +248,7 @@ mod lending_market {
                 admin => admin_rule.clone();
                 moderator => modarator_rule;
                 reserve_collector => reserve_collector_rule;
+                liquidator => rule!(require(liquidator_badge_manager.address()));
             })
             .metadata(metadata!(
                 roles {
@@ -1023,6 +1041,18 @@ mod lending_market {
             (remainders, total_payment_value)
         }
 
+        pub fn mint_liquidator_badge(&mut self, active: bool) -> Bucket {
+            let badge_id = NonFungibleLocalId::Integer(self._get_new_liquidator_id().into());
+
+            self.liquidator_badge_manager
+                .mint_non_fungible(&badge_id, LiquidatorBadgeData { active })
+        }
+
+        pub fn update_liquidator_badge(&self, local_id: NonFungibleLocalId, active: bool) {
+            self.liquidator_badge_manager
+                .update_non_fungible_data(&local_id, "active", active);
+        }
+
         pub fn check_cdp_for_liquidation(&mut self, cdp_id: NonFungibleLocalId) -> bool {
             let mut cdp_data: WrappedCDPData = WrappedCDPData::new(&self.cdp_res_manager, &cdp_id);
 
@@ -1428,6 +1458,11 @@ mod lending_market {
         fn _get_new_cdp_id(&mut self) -> u64 {
             self.cdp_counter += 1;
             self.cdp_counter
+        }
+
+        fn _get_new_liquidator_id(&mut self) -> u64 {
+            self.liquidator_counter += 1;
+            self.liquidator_counter
         }
 
         fn _validate_cdp_proof(&self, cdp: Proof) -> NonFungibleLocalId {
