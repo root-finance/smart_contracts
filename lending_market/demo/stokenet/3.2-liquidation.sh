@@ -12,6 +12,14 @@ echo "CALL_METHOD
     NonFungibleLocalId(\"$CDP_ID\");" >> tx.rtm
 
 echo "CALL_METHOD
+    Address(\"$LIQUIDATOR_ADDRESS\")
+    \"create_proof_of_non_fungibles\"
+    Address(\"$LENDING_MARKET_LIQUIDATOR_BADGE\")
+    Array<NonFungibleLocalId>(
+        NonFungibleLocalId(\"#1#\")
+    );" >> tx.rtm
+
+echo "CALL_METHOD
     Address(\"$LENDING_MARKET_COMPONENT_ADDRESS\")
     \"start_liquidation\"
     NonFungibleLocalId(\"$CDP_ID\")

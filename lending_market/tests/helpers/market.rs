@@ -15,6 +15,7 @@ pub struct MarketTestHelper {
     pub market_admin_badge: ResourceAddress,
     pub market_reserve_collector_badge: ResourceAddress,
     pub liquidation_term_resource_address: ResourceAddress,
+    pub market_liquidator_badge: ResourceAddress,
     pub pools: IndexMap<ResourceAddress, (ComponentAddress, ResourceAddress)>,
 }
 
@@ -78,6 +79,7 @@ impl MarketTestHelper {
         let cdp_resource_address = resource_addresses_created[2];
         let batch_flashloan_resource_address = resource_addresses_created[3];
         let liquidation_term_resource_address = resource_addresses_created[3];
+        let market_liquidator_badge = resource_addresses_created[4];
 
         // // Pools
 
@@ -422,6 +424,7 @@ impl MarketTestHelper {
             cdp_resource_address,
             market_reserve_collector_badge,
             liquidation_term_resource_address,
+            market_liquidator_badge,
             pools,
         }
     }

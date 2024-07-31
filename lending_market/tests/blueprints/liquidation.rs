@@ -79,8 +79,11 @@ fn test_fast_liquidation() {
     market_update_pool_state(&mut helper, usd).expect_commit_success();
 
     // SET UP LIQUIDATOR
-    let (liquidator_user_key, _, liquidator_user_account) =
-        helper.test_runner.new_allocated_account();
+    let auth = rule!(require(NonFungibleGlobalId::from_public_key(&helper.owner_public_key)));
+    let (liquidator_user_key, liquidator_user_account) = (helper.owner_public_key, helper.test_runner.new_account_advanced(OwnerRole::Fixed(auth)));
+    admin_send_liquidator_badge(&mut helper, 1, liquidator_user_account)
+        .expect_commit_success();
+
 
     let requested_collaterals: Vec<ResourceAddress> = vec![XRD];
 
@@ -112,6 +115,7 @@ fn test_fast_liquidation() {
         &mut helper,
         liquidator_user_key,
         liquidator_user_account,
+        1,
         cdp_id,
         payments,
         requested_collaterals,

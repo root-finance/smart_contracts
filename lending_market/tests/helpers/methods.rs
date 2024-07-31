@@ -2,6 +2,43 @@ use super::init::{build_and_dump_to_fs, TestHelper};
 use radix_engine_interface::prelude::*;
 use scrypto_test::prelude::*;
 
+pub fn admin_send_liquidator_badge(
+    helper: &mut TestHelper,
+    liquidator_badge_id: u64,
+    user_account_address: ComponentAddress,
+) -> TransactionReceipt {
+    let manifest = ManifestBuilder::new()
+        .lock_fee_from_faucet()
+        .create_proof_from_account_of_non_fungibles(
+            helper.owner_account_address,
+            helper.market.market_admin_badge,
+            vec![
+                NonFungibleLocalId::integer(1),
+                NonFungibleLocalId::integer(2),
+                NonFungibleLocalId::integer(3),
+                NonFungibleLocalId::integer(4),
+            ],
+        )
+        .call_method(
+            helper.market.market_component_address,
+            "mint_liquidator_badge",
+            manifest_args!(),
+        )
+        .take_non_fungibles_from_worktop(helper.market.market_liquidator_badge, vec![
+            NonFungibleLocalId::integer(liquidator_badge_id),
+        ], "badge_bucket")
+        .with_name_lookup(|builder, lookup| {
+            let badge_bucket = lookup.bucket("badge_bucket");
+            builder.deposit(user_account_address, badge_bucket)
+        });
+        
+
+    helper.test_runner.execute_manifest(
+        build_and_dump_to_fs(manifest, "admin_send_liquidator_badge".into()),
+        vec![NonFungibleGlobalId::from_public_key(&helper.owner_public_key)],
+    )
+}
+
 pub fn admin_update_price(
     helper: &mut TestHelper,
     admin_non_fungible_id: u64,
@@ -66,11 +103,11 @@ pub fn get_resource_flash_loan(
         .lock_fee_from_faucet()
         .take_from_worktop(XRD, xrd_amount, "xrd_bucket")
         .with_name_lookup(|builder, lookup| {
-            let xrd_buket = lookup.bucket("xrd_bucket");
+            let xrd_bucket = lookup.bucket("xrd_bucket");
             builder.call_method(
                 helper.faucet.faucet_component_address,
                 "get_resource",
-                manifest_args!(helper.faucet.usdc_resource_address, xrd_buket),
+                manifest_args!(helper.faucet.usdc_resource_address, xrd_bucket),
             )
         });
 }
@@ -87,11 +124,11 @@ pub fn get_resource(
         .withdraw_from_account(user_account_address, XRD, xrd_amount)
         .take_all_from_worktop(XRD, "xrd_bucket")
         .with_name_lookup(|builder, lookup| {
-            let xrd_buket = lookup.bucket("xrd_bucket");
+            let xrd_bucket = lookup.bucket("xrd_bucket");
             builder.call_method(
                 helper.faucet.faucet_component_address,
                 "get_resource",
-                manifest_args!(resource_address, xrd_buket),
+                manifest_args!(resource_address, xrd_bucket),
             )
         })
         .deposit_batch(user_account_address);
@@ -477,6 +514,7 @@ pub fn market_liquidation(
     helper: &mut TestHelper,
     user_public_key: Secp256k1PublicKey,
     user_account_address: ComponentAddress,
+    liquidator_badge_id: u64,
     cdp_id: u64,
     payments: Vec<(ResourceAddress, Decimal)>,
     total_payment_value: Option<Decimal>,
@@ -484,6 +522,13 @@ pub fn market_liquidation(
 ) -> TransactionReceipt {
     let mut manifest_builder = ManifestBuilder::new()
         .lock_fee(FAUCET, 20000)
+        .create_proof_from_account_of_non_fungible(
+            user_account_address,
+            NonFungibleGlobalId::new(
+                helper.market.market_liquidator_badge,
+                NonFungibleLocalId::integer(liquidator_badge_id),
+            ),
+        )
         .call_method(
             helper.market.market_component_address,
             "start_liquidation",
@@ -537,6 +582,7 @@ pub fn market_fast_liquidation(
     helper: &mut TestHelper,
     user_public_key: Secp256k1PublicKey,
     user_account_address: ComponentAddress,
+    liquidator_badge_id: u64,
     cdp_id: u64,
     payments: Vec<(ResourceAddress, Decimal)>,
     requested_collaterals: Vec<ResourceAddress>,
@@ -544,6 +590,13 @@ pub fn market_fast_liquidation(
     let mut payment_buckets = Vec::<ManifestBucket>::new();
     let manifest_builder = ManifestBuilder::new()
         .lock_fee_from_faucet()
+        .create_proof_from_account_of_non_fungible(
+            user_account_address,
+            NonFungibleGlobalId::new(
+                helper.market.market_liquidator_badge,
+                NonFungibleLocalId::integer(liquidator_badge_id),
+            ),
+        )
         .with_name_lookup(|builder, _lookup| {
             let (_, newbuilder) =
                 payments
@@ -683,7 +736,7 @@ pub fn market_repay_batch_flashloan(
 //         )
 //         .pop_from_auth_zone("cdp_proof")
 //         .withdraw_from_account(user_account_address, res_address, amount)
-//         .take_all_from_worktop(res_address, "res_buket");
+//         .take_all_from_worktop(res_address, "res_bucket");
 
 //     manifest_builder
 // }

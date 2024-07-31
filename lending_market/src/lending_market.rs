@@ -20,7 +20,7 @@ pub enum UpdateCDPInput {
 mod lending_market {
 
     extern_blueprint!(
-        // "package_sim1p4nk9h5kw2mcmwn5u2xcmlmwap8j6dzet7w7zztzz55p70rgqs4vag", // resim sdk
+        //"package_sim1p4nk9h5kw2mcmwn5u2xcmlmwap8j6dzet7w7zztzz55p70rgqs4vag", // resim sdk
         "package_sim1pkc0e8f9yhlvpv38s2ymrplu7q366y3k8zc53zf2srlm7qm64fk043", // testing
         // "package_tdx_2_1p4p4wqvt58vz525uj444mgpfacx5cwzj20zqkmqt04f75qmx5mtc6r",  // stokenet
         SingleResourcePool {
@@ -112,7 +112,6 @@ mod lending_market {
 
             // Liquidation methods
             mint_liquidator_badge => restrict_to: [admin];
-            update_liquidator_badge => restrict_to: [admin];
             list_liquidable_cdps => PUBLIC;
             refinance => PUBLIC;
             check_cdp_for_liquidation => PUBLIC;
@@ -213,17 +212,16 @@ mod lending_market {
             let reserve_collector_badge = create_reserve_collector_badge(admin_rule.clone());
             let reserve_collector_rule = rule!(require(reserve_collector_badge.resource_address()));
             
-
-            // * Create liquidator badge manager * //
-            let liquidator_badge_manager = create_liquidator_badge_manager(admin_rule.clone(), component_rule.clone());
-
             // * Create CDP resource manager * //
             let cdp_res_manager =
                 create_cdp_res_manager(admin_rule.clone(), component_rule.clone());
 
             // * Create transient resource manager * //
             let transient_res_manager =
-                create_transient_res_manager(admin_rule.clone(), component_rule);
+                create_transient_res_manager(admin_rule.clone(), component_rule.clone());
+
+            // * Create liquidator badge manager * //
+            let liquidator_badge_manager = create_liquidator_badge_manager(admin_rule.clone(), component_rule);
 
             // *  Instantiate our component with the previously created resources and addresses * //
             Self {
@@ -1041,16 +1039,11 @@ mod lending_market {
             (remainders, total_payment_value)
         }
 
-        pub fn mint_liquidator_badge(&mut self, active: bool) -> Bucket {
+        pub fn mint_liquidator_badge(&mut self) -> Bucket {
             let badge_id = NonFungibleLocalId::Integer(self._get_new_liquidator_id().into());
 
             self.liquidator_badge_manager
-                .mint_non_fungible(&badge_id, LiquidatorBadgeData { active })
-        }
-
-        pub fn update_liquidator_badge(&self, local_id: NonFungibleLocalId, active: bool) {
-            self.liquidator_badge_manager
-                .update_non_fungible_data(&local_id, "active", active);
+                .mint_non_fungible(&badge_id, LiquidatorBadgeData {})
         }
 
         pub fn check_cdp_for_liquidation(&mut self, cdp_id: NonFungibleLocalId) -> bool {
