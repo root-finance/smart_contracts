@@ -388,20 +388,28 @@ impl LendingPoolState {
                 .unwrap();
             self.total_reserved_amount += reserve_delta;
 
-            let accrued_interest_amount = if new_total_loan_amount - self.total_loan < PreciseDecimal::ZERO { new_total_loan_amount } else { new_total_loan_amount - self.total_loan };
+            let mut accrued_interest_amount = if new_total_loan_amount - self.total_loan < PreciseDecimal::ZERO { new_total_loan_amount } else { new_total_loan_amount - self.total_loan };
 
             // Logger::debug(format!("INTEREST new_total_loan_amount {:?} ; new_total_deposit_amount {:?}; reserve_delta {:?}; accrued_interest_amount {:?}", new_total_loan_amount, new_total_deposit_amount, reserve_delta, accrued_interest_amount));
 
-
-            self.total_loan += new_total_loan_amount;
-            self.total_deposit += new_total_deposit_amount;
+            if self.total_loan + new_total_loan_amount > self.total_deposit {
+                self.total_deposit += new_total_deposit_amount;
+                let new_total_loan_amount = self.total_deposit - self.total_loan;
+                accrued_interest_amount = if new_total_loan_amount - self.total_loan < PreciseDecimal::ZERO { new_total_loan_amount } else { new_total_loan_amount - self.total_loan };
+                self.total_loan = self.total_deposit;
+            } else {
+                self.total_loan += new_total_loan_amount;
+                self.total_deposit += new_total_deposit_amount;
+            }
 
             // Logger::debug(format!("INTEREST updated totals: total_loan {:?} - total_deposit {:?}", self.total_loan, self.total_deposit));
 
             // Virtually increase pooled liquidity with accrued interest amount
-            self.pool.increase_external_liquidity(accrued_interest_amount
-                .checked_truncate(RoundingMode::ToNearestMidpointToEven)
-                .unwrap());
+            if accrued_interest_amount > PreciseDecimal::ZERO {
+                self.pool.increase_external_liquidity(accrued_interest_amount
+                    .checked_truncate(RoundingMode::ToNearestMidpointToEven)
+                    .unwrap());
+            }
 
             self.pool_utilization = self.get_pool_utilization();
             let interest_rate = self.interest_strategy.get_interest_rate(self.pool_utilization, self.pool_config.optimal_usage)?;

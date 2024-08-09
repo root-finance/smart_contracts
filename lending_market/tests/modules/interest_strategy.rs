@@ -92,3 +92,30 @@ fn test_interest_strategy_get_rate_value() {
 
     assert!(interest_strategy.get_interest_rate(dec!(1.1), dec!(0.500)).is_err());
 }
+
+#[test]
+fn test_interest_strategy_check_get_rate_maxed() {
+    let mut interest_strategy = InterestStrategy::new();
+
+    let breakpoints = InterestStrategyBreakPoints {
+        r0: dec!(0),
+        r1: dec!(0.04),
+        r2: dec!(0.75),
+    };
+
+    let result = interest_strategy.set_breakpoints(breakpoints);
+    assert!(result.is_ok());
+
+    assert_eq!(dec!(0.79), interest_strategy.get_interest_rate(dec!(1.0), dec!(0.8)).unwrap());
+
+    let breakpoints = InterestStrategyBreakPoints {
+        r0: dec!(0),
+        r1: dec!(0.04),
+        r2: dec!(3),
+    };
+
+    let result = interest_strategy.set_breakpoints(breakpoints);
+    assert!(result.is_ok());
+
+    assert_eq!(dec!(3.04), interest_strategy.get_interest_rate(dec!(1.0), dec!(0.45)).unwrap());
+}
