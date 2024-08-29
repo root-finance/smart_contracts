@@ -112,6 +112,28 @@ pub fn get_resource_flash_loan(
         });
 }
 
+fn mint_resource_from_faucet(
+    helper: &mut TestHelper,
+    user_public_key: Secp256k1PublicKey,
+    user_account_address: ComponentAddress,
+    amount: Decimal,
+    resource_address: ResourceAddress,
+) -> TransactionReceipt {
+    let manifest = ManifestBuilder::new()
+        .lock_fee_from_faucet()
+        .call_method(
+            helper.faucet.faucet_component_address,
+            "mint_resource",
+            manifest_args!(resource_address, amount),
+        )
+        .deposit_batch(user_account_address);
+
+    helper.test_runner.execute_manifest(
+        build_and_dump_to_fs(manifest, "mint_resource_from_faucet".into()),
+        vec![NonFungibleGlobalId::from_public_key(&user_public_key)],
+    )
+}
+
 pub fn get_resource(
     helper: &mut TestHelper,
     user_public_key: Secp256k1PublicKey,
@@ -677,6 +699,26 @@ pub fn market_collect_reserve(
     )
 }
 
+pub fn market_update_config(
+    helper: &mut TestHelper,
+    user_public_key: Secp256k1PublicKey,
+    user_account_address: ComponentAddress,
+    new_max_cdp_position: u8,
+) -> TransactionReceipt {
+    let manifest_builder = ManifestBuilder::new()
+        .lock_fee_from_faucet()
+        .call_method(
+            helper.market.market_component_address,
+            "update_market_config",
+            manifest_args!(new_max_cdp_position),
+        );
+
+    helper.test_runner.execute_manifest(
+        build_and_dump_to_fs(manifest_builder, "update_market_config".into()),
+        vec![NonFungibleGlobalId::from_public_key(&user_public_key)],
+    )
+}
+
 pub fn market_repay_batch_flashloan(
     helper: &mut TestHelper,
     _user_public_key: Secp256k1PublicKey,
@@ -722,6 +764,24 @@ pub fn market_repay_batch_flashloan(
                 )
                 .deposit_batch(user_account_address)
         });
+}
+
+
+
+pub fn market_list_info_stats(helper: &mut TestHelper) -> TransactionReceipt {
+    let manifest = ManifestBuilder::new()
+        .lock_fee_from_faucet()
+        .call_method(
+            helper.market.market_component_address,
+            "list_info_stats",
+            manifest_args!()
+        )
+        .build();
+
+    helper.test_runner.execute_manifest(
+        manifest,
+        vec![NonFungibleGlobalId::from_public_key(&helper.owner_public_key)],
+    )
 }
 
 // fn generic_txm(manifest_builder: ManifestBuilder) -> ManifestBuilder {

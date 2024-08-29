@@ -71,7 +71,7 @@ impl FaucetTestHelper {
                     "USDT",
                     "USDT",
                     "https://res.cloudinary.com/daisvxhyu/image/upload/v1679440531/825_lkjddk.png",
-                    dec!(1_000_000)
+                    dec!(1_000_000_000)
                 ),
             )
             .call_method(
@@ -81,7 +81,7 @@ impl FaucetTestHelper {
                     "BTC",
                     "BTC",
                     "https://res.cloudinary.com/daisvxhyu/image/upload/v1679440531/825_lkjddk.png",
-                    dec!(1_000_000)
+                    dec!(1_000_000_000)
                 ),
             )
             .call_method(
@@ -91,7 +91,7 @@ impl FaucetTestHelper {
                     "ETH",
                     "ETH",
                     "https://res.cloudinary.com/daisvxhyu/image/upload/v1679440531/825_lkjddk.png",
-                    dec!(1_000_000)
+                    dec!(1_000_000_000)
                 ),
             )
             .call_method(
@@ -101,7 +101,7 @@ impl FaucetTestHelper {
                     "LSU",
                     "LSU",
                     "https://res.cloudinary.com/daisvxhyu/image/upload/v1679440531/825_lkjddk.png",
-                    dec!(1_000_000)
+                    dec!(1_000_000_000)
                 ),
             )
             .call_method(
@@ -111,7 +111,7 @@ impl FaucetTestHelper {
                     "HUG",
                     "HUG",
                     "https://res.cloudinary.com/daisvxhyu/image/upload/v1679440531/825_lkjddk.png",
-                    dec!(1_000_000)
+                    dec!(1_000_000_000)
                 ),
             )
             .call_method(
@@ -121,7 +121,7 @@ impl FaucetTestHelper {
                     "USDC",
                     "USDC",
                     "https://res.cloudinary.com/daisvxhyu/image/upload/v1679440531/825_lkjddk.png",
-                    dec!(1_000_000)
+                    dec!(1_000_000_000)
                 ),
             )
             .deposit_batch(owner_account_address);
@@ -142,27 +142,27 @@ impl FaucetTestHelper {
 
         assert_eq!(
             test_runner.get_component_balance(owner_account_address, usdt_resource_address),
-            dec!(1_000_000)
+            dec!(1_000_000_000)
         );
         assert_eq!(
             test_runner.get_component_balance(owner_account_address, btc_resource_address),
-            dec!(1_000_000)
+            dec!(1_000_000_000)
         );
         assert_eq!(
             test_runner.get_component_balance(owner_account_address, eth_resource_address),
-            dec!(1_000_000)
+            dec!(1_000_000_000)
         );
         assert_eq!(
             test_runner.get_component_balance(owner_account_address, lsu_resource_address),
-            dec!(1_000_000)
+            dec!(1_000_000_000)
         );
         assert_eq!(
             test_runner.get_component_balance(owner_account_address, hug_resource_address),
-            dec!(1_000_000)
+            dec!(1_000_000_000)
         );
         assert_eq!(
             test_runner.get_component_balance(owner_account_address, usdc_resource_address),
-            dec!(1_000_000)
+            dec!(1_000_000_000)
         );
 
         //

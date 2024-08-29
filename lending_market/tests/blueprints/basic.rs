@@ -1,8 +1,11 @@
+use crate::helpers::methods::market_list_info_stats;
 use crate::helpers::{init::{find_event_in_result, TestHelper}, methods::*};
-use lending_market::modules::cdp_data::CDPLiquidableEvent;
+use lending_market::modules::cdp_data::{CDPLiquidableEvent, WrappedCDPData};
+use lending_market::modules::pool_state::MarketStatsAllPools;
 use radix_engine_interface::prelude::*;
 use scrypto_unit::*;
 use std::path::Path;
+use radix_engine::transaction::TransactionOutcome;
 
 #[test]
 fn test_deposit_withdraw_borrow_repay() {
@@ -79,7 +82,7 @@ fn test_deposit_withdraw_borrow_repay() {
             (btc, dec!(0.0001))
         ],
     ) //
-    .expect_commit_success();
+        .expect_commit_success();
 
     assert_eq!(
         helper
@@ -108,7 +111,7 @@ fn test_deposit_withdraw_borrow_repay() {
         usd,
         dec!(1000),
     )
-    .expect_commit_failure();
+        .expect_commit_failure();
 
     market_borrow(
         &mut helper,
@@ -118,7 +121,7 @@ fn test_deposit_withdraw_borrow_repay() {
         usd,
         dec!(100),
     )
-    .expect_commit_success();
+        .expect_commit_success();
 
     market_remove_collateral(
         &mut helper,
@@ -129,7 +132,7 @@ fn test_deposit_withdraw_borrow_repay() {
         dec!(10_000),
         false,
     )
-    .expect_commit_failure();
+        .expect_commit_failure();
 
     helper
         .test_runner
@@ -150,7 +153,7 @@ fn test_deposit_withdraw_borrow_repay() {
         usd,
         dec!(100.250312164987776789),
     )
-    .expect_commit_success();
+        .expect_commit_success();
 
     market_remove_collateral(
         &mut helper,
@@ -161,7 +164,7 @@ fn test_deposit_withdraw_borrow_repay() {
         dec!(10_000),
         false,
     )
-    .expect_commit_success();
+        .expect_commit_success();
 
     assert_eq!(
         helper
@@ -187,7 +190,7 @@ fn test_deposit_withdraw_borrow_repay() {
         usd_pu,
         dec!(2_100),
     ) //
-    .expect_commit_failure();
+        .expect_commit_failure();
 
     market_redeem(
         &mut helper,
@@ -196,7 +199,7 @@ fn test_deposit_withdraw_borrow_repay() {
         usd_pu,
         dec!(2_000),
     ) //
-    .expect_commit_success();
+        .expect_commit_success();
 
     assert_eq!(
         helper
@@ -315,7 +318,7 @@ fn test_liquidation() {
         borrower_account,
         vec![(XRD, dec!(20_000))],
     ) //
-    .expect_commit_success();
+        .expect_commit_success();
 
     let cdp_id: u64 = 1;
     // Borrow USDC, BTC and ETH
@@ -327,7 +330,7 @@ fn test_liquidation() {
         usd,
         dec!(200),
     )
-    .expect_commit_success();
+        .expect_commit_success();
 
     market_borrow(
         &mut helper,
@@ -337,7 +340,7 @@ fn test_liquidation() {
         btc,
         dec!(0.004),
     )
-    .expect_commit_success();
+        .expect_commit_success();
 
     market_borrow(
         &mut helper,
@@ -347,7 +350,7 @@ fn test_liquidation() {
         eth,
         dec!(0.05),
     )
-    .expect_commit_success();
+        .expect_commit_success();
 
     let receipt = market_list_liquidable_cdps(&mut helper);
     let event: CDPLiquidableEvent = find_event_in_result(receipt.expect_commit_success(), "CDPLiquidableEvent").expect("CDPLiquidableEvent not found");
@@ -369,7 +372,7 @@ fn test_liquidation() {
 
     let receipt = market_list_liquidable_cdps(&mut helper);
     let event: CDPLiquidableEvent = find_event_in_result(receipt.expect_commit_success(), "CDPLiquidableEvent").expect("CDPLiquidableEvent not found");
-    
+
     assert!(!event.cdps.is_empty());
     assert_eq!(pdec!(20000), *event.cdps[0].cdp_data.collaterals.get(&XRD).unwrap());
     assert_eq!(pdec!(200), *event.cdps[0].cdp_data.loans.get(&usd).unwrap());
@@ -406,8 +409,8 @@ fn test_liquidation() {
         dec!(35000),
         XRD,
         usd,
-   ).expect_commit_success();
-   swap(
+    ).expect_commit_success();
+    swap(
         &mut helper,
         liquidator_user_account,
         liquidator_user_key,
@@ -424,14 +427,14 @@ fn test_liquidation() {
         eth,
     ).expect_commit_success();
 
-   let xrd_balance = helper
+    let xrd_balance = helper
         .test_runner
         .get_component_balance(liquidator_user_account, XRD);
 
     let usd_balance = helper
         .test_runner
         .get_component_balance(liquidator_user_account, usd);
-    
+
     let btc_balance = helper
         .test_runner
         .get_component_balance(liquidator_user_account, btc);
@@ -458,7 +461,7 @@ fn test_liquidation() {
         requested_collaterals.clone(),
     ).expect_commit_failure();
 
-    let payments: Vec<(ResourceAddress, Decimal)> = vec![(usd, dec!(202)),(btc, dec!(0.0099)), (eth, dec!(0.062))];
+    let payments: Vec<(ResourceAddress, Decimal)> = vec![(usd, dec!(202)), (btc, dec!(0.0099)), (eth, dec!(0.062))];
     market_liquidation(
         &mut helper,
         liquidator_user_key,
@@ -482,47 +485,47 @@ fn test_liquidation() {
         .test_runner
         .get_component_balance(liquidator_user_account, btc) - btc_balance);
 
-        assert_eq!(dec!(0), helper
+    assert_eq!(dec!(0), helper
         .test_runner
         .get_component_balance(liquidator_user_account, eth) - eth_balance);
- 
+
     market_update_pool_state(&mut helper, btc).expect_commit_success();
     market_update_pool_state(&mut helper, usd).expect_commit_success();
     market_update_pool_state(&mut helper, eth).expect_commit_success();
     market_update_pool_state(&mut helper, XRD).expect_commit_success();
- 
+
 
     let receipt = market_list_liquidable_cdps(&mut helper);
     let event: CDPLiquidableEvent = find_event_in_result(receipt.expect_commit_success(), "CDPLiquidableEvent").expect("CDPLiquidableEvent not found");
-    
+
     assert!(event.cdps.is_empty());
 
-     // ENTERS A NEW BORROWER
-     let (borrower2_key, _, borrower2_account) = helper.test_runner.new_allocated_account();
-     helper
-         .test_runner
-         .load_account_from_faucet(borrower_account);
- 
-     //Create CDP WITH 10_000 XRD AS Collateral <=> 100 USD
-     market_create_cdp(
-         &mut helper,
-         borrower2_key,
-         borrower2_account,
-         vec![(XRD, dec!(10_000))],
-     ) //
-     .expect_commit_success();
- 
-     let cdp_id: u64 = 2;
-     // // Borrow 300$  Of USD
-     market_borrow(
-         &mut helper,
-         borrower2_key,
-         borrower2_account,
-         cdp_id,
-         usd,
-         dec!(100),
-     )
-     .expect_commit_success();
+    // ENTERS A NEW BORROWER
+    let (borrower2_key, _, borrower2_account) = helper.test_runner.new_allocated_account();
+    helper
+        .test_runner
+        .load_account_from_faucet(borrower_account);
+
+    //Create CDP WITH 10_000 XRD AS Collateral <=> 100 USD
+    market_create_cdp(
+        &mut helper,
+        borrower2_key,
+        borrower2_account,
+        vec![(XRD, dec!(10_000))],
+    ) //
+        .expect_commit_success();
+
+    let cdp_id: u64 = 2;
+    // // Borrow 300$  Of USD
+    market_borrow(
+        &mut helper,
+        borrower2_key,
+        borrower2_account,
+        cdp_id,
+        usd,
+        dec!(100),
+    )
+        .expect_commit_success();
 
     assert!(event.cdps.is_empty());
 }
@@ -576,7 +579,7 @@ fn test_partial_liquidation() {
         borrower_account,
         vec![(XRD, dec!(3000))],
     ) //
-    .expect_commit_success();
+        .expect_commit_success();
 
     let cdp_id: u64 = 1;
     // Borrow USDC, BTC and ETH
@@ -588,22 +591,22 @@ fn test_partial_liquidation() {
         usd,
         dec!(76),
     )
-    .expect_commit_success();
+        .expect_commit_success();
 
-   
+
     let receipt = market_list_liquidable_cdps(&mut helper);
     let event: CDPLiquidableEvent = find_event_in_result(receipt.expect_commit_success(), "CDPLiquidableEvent").expect("CDPLiquidableEvent not found");
     assert!(event.cdps.is_empty());
 
-     // SET UP LIQUIDATOR
-     let auth = rule!(require(NonFungibleGlobalId::from_public_key(&helper.owner_public_key)));
-     let (liquidator_user_key, liquidator_user_account) = (helper.owner_public_key, helper.test_runner.new_account_advanced(OwnerRole::Fixed(auth)));
-     admin_send_liquidator_badge(&mut helper, 1, liquidator_user_account)
-         .expect_commit_success();
+    // SET UP LIQUIDATOR
+    let auth = rule!(require(NonFungibleGlobalId::from_public_key(&helper.owner_public_key)));
+    let (liquidator_user_key, liquidator_user_account) = (helper.owner_public_key, helper.test_runner.new_account_advanced(OwnerRole::Fixed(auth)));
+    admin_send_liquidator_badge(&mut helper, 1, liquidator_user_account)
+        .expect_commit_success();
     helper
         .test_runner
         .load_account_from_faucet(liquidator_user_account);
-    
+
 
     // SWAP TO Cover debt
     swap(
@@ -616,16 +619,16 @@ fn test_partial_liquidation() {
     ).expect_commit_success();
 
     // PREPARE LIQUIDATION
-    admin_update_price(&mut helper, 1u64, usd, dec!(28)).expect_commit_success();    
+    admin_update_price(&mut helper, 1u64, usd, dec!(28)).expect_commit_success();
     market_update_pool_state(&mut helper, usd).expect_commit_success();
 
     let receipt = market_list_liquidable_cdps(&mut helper);
     let event: CDPLiquidableEvent = find_event_in_result(receipt.expect_commit_success(), "CDPLiquidableEvent").expect("CDPLiquidableEvent not found");
-    
+
     assert!(!event.cdps.is_empty());
     assert_eq!(pdec!(3000), *event.cdps[0].cdp_data.collaterals.get(&XRD).unwrap());
     assert_eq!(pdec!(76), *event.cdps[0].cdp_data.loans.get(&usd).unwrap());
-        
+
     // START LIQUIDATION
     check_cdp_for_liquidation(&mut helper, liquidator_user_key, cdp_id).expect_commit_success();
 
@@ -660,17 +663,15 @@ fn test_partial_liquidation() {
         .test_runner
         .get_component_balance(liquidator_user_account, usd) - usd_balance);
 
-  
- 
+
     market_update_pool_state(&mut helper, usd).expect_commit_success();
     market_update_pool_state(&mut helper, XRD).expect_commit_success();
- 
+
 
     let receipt = market_list_liquidable_cdps(&mut helper);
     let event: CDPLiquidableEvent = find_event_in_result(receipt.expect_commit_success(), "CDPLiquidableEvent").expect("CDPLiquidableEvent not found");
-    
-    assert!(event.cdps.is_empty());
 
+    assert!(event.cdps.is_empty());
 }
 
 
@@ -765,10 +766,10 @@ fn test_partial_liquidation_multi_collateral_multi_loan() {
         borrower_key,
         borrower_account,
         vec![
-            (eth, dec!(0.01724137931034375)), 
+            (eth, dec!(0.01724137931034375)),
             (btc, dec!(0.0008333333333325))],
     ) //
-    .expect_commit_success();
+        .expect_commit_success();
 
     let cdp_id: u64 = 1;
     // Borrow
@@ -780,7 +781,7 @@ fn test_partial_liquidation_multi_collateral_multi_loan() {
         usd,
         dec!(35),
     )
-    .expect_commit_success();
+        .expect_commit_success();
     market_borrow(
         &mut helper,
         borrower_key,
@@ -789,22 +790,22 @@ fn test_partial_liquidation_multi_collateral_multi_loan() {
         hug,
         dec!(850000),
     )
-    .expect_commit_success();
+        .expect_commit_success();
 
-   
+
     let receipt = market_list_liquidable_cdps(&mut helper);
     let event: CDPLiquidableEvent = find_event_in_result(receipt.expect_commit_success(), "CDPLiquidableEvent").expect("CDPLiquidableEvent not found");
     assert!(event.cdps.is_empty());
 
-     // SET UP LIQUIDATOR
+    // SET UP LIQUIDATOR
     let auth = rule!(require(NonFungibleGlobalId::from_public_key(&helper.owner_public_key)));
     let (liquidator_user_key, liquidator_user_account) = (helper.owner_public_key, helper.test_runner.new_account_advanced(OwnerRole::Fixed(auth)));
     admin_send_liquidator_badge(&mut helper, 1, liquidator_user_account)
-         .expect_commit_success();
+        .expect_commit_success();
     helper
         .test_runner
         .load_account_from_faucet(liquidator_user_account);
-    
+
 
     // SWAP TO Cover debt
     swap(
@@ -830,13 +831,13 @@ fn test_partial_liquidation_multi_collateral_multi_loan() {
 
     let receipt = market_list_liquidable_cdps(&mut helper);
     let event: CDPLiquidableEvent = find_event_in_result(receipt.expect_commit_success(), "CDPLiquidableEvent").expect("CDPLiquidableEvent not found");
-    
+
     assert!(!event.cdps.is_empty());
     assert_eq!(pdec!(0.01724137931034375), *event.cdps[0].cdp_data.collaterals.get(&eth).unwrap());
     assert_eq!(pdec!(0.0008333333333325), *event.cdps[0].cdp_data.collaterals.get(&btc).unwrap());
     assert_eq!(pdec!(35), *event.cdps[0].cdp_data.loans.get(&usd).unwrap());
     assert_eq!(pdec!(850000), *event.cdps[0].cdp_data.loans.get(&hug).unwrap());
-        
+
     // START LIQUIDATION
     check_cdp_for_liquidation(&mut helper, liquidator_user_key, cdp_id).expect_commit_success();
 
@@ -860,7 +861,7 @@ fn test_partial_liquidation_multi_collateral_multi_loan() {
         1,
         cdp_id,
         payments,
-        Some(dec!(0.4) * ( dec!(35) * dec!(25)  + dec!(850000) * dec!(0.001))),
+        Some(dec!(0.4) * (dec!(35) * dec!(25) + dec!(850000) * dec!(0.001))),
         requested_collaterals.clone(),
     ).expect_commit_success();
 
@@ -872,7 +873,7 @@ fn test_partial_liquidation_multi_collateral_multi_loan() {
         .test_runner
         .get_component_balance(liquidator_user_account, hug) - hug_balance);
 
-  
+
     market_update_pool_state(&mut helper, eth).expect_commit_success();
     market_update_pool_state(&mut helper, btc).expect_commit_success();
     market_update_pool_state(&mut helper, usd).expect_commit_success();
@@ -880,12 +881,380 @@ fn test_partial_liquidation_multi_collateral_multi_loan() {
 
     let receipt = market_list_liquidable_cdps(&mut helper);
     let event: CDPLiquidableEvent = find_event_in_result(receipt.expect_commit_success(), "CDPLiquidableEvent").expect("CDPLiquidableEvent not found");
-    
+
     assert!(event.cdps.is_empty());
 
     let receipt = market_show_cdp(&mut helper, cdp_id);
     assert!(format!("{:?}", receipt).contains("9.608"));
     assert!(format!("{:?}", receipt).contains("850000"));
     receipt.expect_commit_success();
+}
 
+#[test]
+fn test_contribute_and_borrow_limits() {
+    let mut helper = TestHelper::new();
+    let usd = helper.faucet.usdc_resource_address;
+
+    // Set up initial pool state
+    let (lp_user_key, _, lp_user_account) = helper.test_runner.new_allocated_account();
+    for _ in 1..30 {
+        helper.test_runner.load_account_from_faucet(lp_user_account);
+    }
+    get_resource(&mut helper, lp_user_key, lp_user_account, dec!(300000), usd)
+        .expect_commit_success();
+
+    market_contribute(&mut helper, lp_user_key, lp_user_account, usd, dec!(10000))
+        .expect_commit_success();
+
+    // Set up borrower
+    let (borrower_key, _, borrower_account) = helper.test_runner.new_allocated_account();
+    for _ in 1..30 {
+        helper.test_runner.load_account_from_faucet(borrower_account);
+    }
+    get_resource(&mut helper, borrower_key, borrower_account, dec!(300000), usd)
+        .expect_commit_success();
+
+    // Borrower contributes collateral
+    let collateral_amount = dec!(5000);
+    market_contribute(&mut helper, borrower_key, borrower_account, usd, collateral_amount)
+        .expect_commit_success();
+
+    // Create CDP
+    market_create_cdp(
+        &mut helper,
+        borrower_key,
+        borrower_account,
+        vec![(usd, collateral_amount)],
+    )
+        .expect_commit_success();
+
+    // Try to borrow within allowed LTV (assuming 75% LTV)
+    let safe_borrow_amount = collateral_amount * dec!(0.7); // 70% of collateral
+    let safe_borrow_receipt = market_borrow(
+        &mut helper,
+        borrower_key,
+        borrower_account,
+        1u64,
+        usd,
+        safe_borrow_amount,
+    );
+
+    // This borrow should succeed
+    safe_borrow_receipt.expect_commit_success();
+    println!("Safe borrow of {} USD succeeded", safe_borrow_amount);
+
+    // Now try to borrow more, exceeding the LTV limit
+    let excess_borrow_amount = collateral_amount * dec!(0.3); // Additional 30%, total would be 100%
+    let excess_borrow_receipt = market_borrow(
+        &mut helper,
+        borrower_key,
+        borrower_account,
+        1u64,
+        usd,
+        excess_borrow_amount,
+    );
+
+    // This borrow should fail
+    assert!(excess_borrow_receipt.is_commit_failure(), "Excess borrow should have failed");
+}
+
+#[test]
+fn test_flashloan_abuse_attempt() {
+    let mut helper = TestHelper::new();
+    let usd = helper.faucet.usdc_resource_address;
+    admin_update_price(&mut helper, 1u64, usd, dec!(0.00001)).expect_commit_success();
+
+    // Set up initial pool state
+    let (lp_user_key, _, lp_user_account) = helper.test_runner.new_allocated_account();
+
+    helper.test_runner.load_account_from_faucet(lp_user_account);
+
+    get_resource(&mut helper, lp_user_key, lp_user_account, dec!(100), usd)
+        .expect_commit_success();
+
+    market_contribute(&mut helper, lp_user_key, lp_user_account, usd, dec!(4_000_000))
+        .expect_commit_success();
+
+    // Set up attacker
+    let (attacker_key, _, attacker_account) = helper.test_runner.new_allocated_account();
+    helper.test_runner.load_account_from_faucet(attacker_account);
+
+    get_resource(&mut helper, attacker_key, attacker_account, dec!(500), usd)
+        .expect_commit_success();
+
+    // Attacker contributes a large amount
+    let attacker_collateral = dec!(9_000_000);
+    market_contribute(&mut helper, attacker_key, attacker_account, usd, attacker_collateral)
+        .expect_commit_success();
+
+    // Create CDP
+    market_create_cdp(
+        &mut helper,
+        attacker_key,
+        attacker_account,
+        vec![(usd, attacker_collateral)],
+    )
+        .expect_commit_success();
+
+    // Try to borrow the maximum possible amount
+    let max_borrow_amount = attacker_collateral * dec!(0.75); // Assuming 75% LTV
+    let borrow_receipt = market_borrow(
+        &mut helper,
+        attacker_key,
+        attacker_account,
+        1u64,
+        usd,
+        max_borrow_amount,
+    );
+
+    // This borrow should succeed
+    borrow_receipt.expect_commit_success();
+
+    // Now, try to remove all collateral (which should fail)
+    let remove_collateral_receipt = market_remove_collateral(
+        &mut helper,
+        attacker_key,
+        attacker_account,
+        1u64,
+        usd,
+        attacker_collateral,
+        false,
+    );
+
+    // This removal should fail
+    assert!(remove_collateral_receipt.is_commit_failure(), "Collateral removal should have failed");
+
+    // Try to repay a small amount and then remove more collateral than should be allowed
+    let small_repay_amount = dec!(1000);
+    market_repay(&mut helper, attacker_key, attacker_account, 1u64, usd, small_repay_amount)
+        .expect_commit_success();
+
+    let excess_remove_amount = attacker_collateral - max_borrow_amount + small_repay_amount + dec!(1);
+    let excess_remove_receipt = market_remove_collateral(
+        &mut helper,
+        attacker_key,
+        attacker_account,
+        1u64,
+        usd,
+        excess_remove_amount,
+        false,
+    );
+
+    // This removal should also fail
+    assert!(excess_remove_receipt.is_commit_failure(), "Excess collateral removal should have failed");
+}
+
+#[test]
+fn test_contribute_and_borrow_abuse() {
+    let mut helper = TestHelper::new();
+    let usd = helper.faucet.usdc_resource_address;
+    admin_update_price(&mut helper, 1u64, usd, dec!(0.00001)).expect_commit_success();
+
+    // Set up initial pool state
+    let (lp_user_key, _, lp_user_account) = helper.test_runner.new_allocated_account();
+    helper.test_runner.load_account_from_faucet(lp_user_account);
+    get_resource(&mut helper, lp_user_key, lp_user_account, dec!(100), usd)
+        .expect_commit_success();
+    market_contribute(&mut helper, lp_user_key, lp_user_account, usd, dec!(500_000))
+        .expect_commit_success();
+
+    // Set up attacker
+    let (attacker_key, _, attacker_account) = helper.test_runner.new_allocated_account();
+    helper.test_runner.load_account_from_faucet(attacker_account);
+    get_resource(&mut helper, attacker_key, attacker_account, dec!(100), usd)
+        .expect_commit_success();
+
+    let attacker_initial_balance = helper.test_runner.get_component_balance(attacker_account, usd);
+
+    // Attacker contributes a large amount
+    let attacker_contribution = dec!(900_000);
+    market_contribute(&mut helper, attacker_key, attacker_account, usd, attacker_contribution)
+        .expect_commit_success();
+
+    // Check pool state after contribution
+    let pool_component = helper.market.pools.get(&usd).unwrap().0;
+    let (available_after_contribution, borrowed_after_contribution) = get_pool_amounts(&mut helper, pool_component);
+
+    // Attacker immediately borrows against this collateral
+    let borrow_amount = attacker_contribution * dec!(0.7); // Assuming 70% LTV
+    market_create_cdp(
+        &mut helper,
+        attacker_key,
+        attacker_account,
+        vec![(usd, attacker_contribution)],
+    )
+        .expect_commit_success();
+
+    let borrow_receipt = market_borrow(
+        &mut helper,
+        attacker_key,
+        attacker_account,
+        1u64,
+        usd,
+        borrow_amount,
+    );
+
+    // Check if the borrow was successful
+    assert!(borrow_receipt.is_commit_success(), "Borrow should have succeeded");
+
+    // Check pool state after borrow
+    let (available_after_borrow, borrowed_after_borrow) = get_pool_amounts(&mut helper, pool_component);
+
+    // Attempt to redeem the contribution
+    let usd_pu = helper.market.pools.get(&usd).unwrap().clone().1;
+    let redeem_receipt = market_redeem(
+        &mut helper,
+        attacker_key,
+        attacker_account,
+        usd_pu,
+        dec!(700000),
+    );
+
+    assert!(redeem_receipt.is_commit_success(), "Redemption succeeded unexpectedly");
+
+    let attacker_final_balance = helper.test_runner.get_component_balance(attacker_account, usd);
+
+    // Calculate attacker's actual profit
+    let attacker_actual_profit = attacker_final_balance - attacker_initial_balance;
+
+    // Check final pool state
+    let (final_available, final_borrowed) = get_pool_amounts(&mut helper, pool_component);
+    println!("Attacker's initial USD balance: {}", attacker_initial_balance);
+    println!("Pool state after contribution: Available: {}, Borrowed: {}", available_after_contribution, borrowed_after_contribution);
+    println!("Borrowed amount: {}", borrow_amount);
+    println!("Pool state after borrow: Available: {}, Borrowed: {}", available_after_borrow, borrowed_after_borrow);
+    println!("Attacker's final USD balance: {}", attacker_final_balance);
+    println!("Attacker's actual profit: {}", attacker_actual_profit);
+    println!("Final pool state: Available: {}, Borrowed: {}", final_available, final_borrowed);
+
+    // Additional assertions
+    assert!(attacker_actual_profit > dec!(0), "Attacker profited from this exploit");
+    assert!(final_available < available_after_contribution - borrow_amount,
+            "Pool available balance is less than it should be, indicating a drain");
+    assert!(final_available + final_borrowed > dec!(0), "Pool should not be completely drained");
+}
+
+#[test]
+fn test_contribute_and_borrow_abuse_2() {
+    let mut helper = TestHelper::new();
+    let usd = helper.faucet.usdc_resource_address;
+    admin_update_price(&mut helper, 1u64, usd, dec!(0.00001)).expect_commit_success();
+
+    // Set up initial pool state
+    let (lp_user_key, _, lp_user_account) = helper.test_runner.new_allocated_account();
+    helper.test_runner.load_account_from_faucet(lp_user_account);
+    get_resource(&mut helper, lp_user_key, lp_user_account, dec!(100), usd)
+        .expect_commit_success();
+    market_contribute(&mut helper, lp_user_key, lp_user_account, usd, dec!(500_000))
+        .expect_commit_success();
+
+    // Set up attacker
+    let (attacker_key, _, attacker_account) = helper.test_runner.new_allocated_account();
+    helper.test_runner.load_account_from_faucet(attacker_account);
+    get_resource(&mut helper, attacker_key, attacker_account, dec!(100), usd)
+        .expect_commit_success();
+
+    let attacker_initial_balance = helper.test_runner.get_component_balance(attacker_account, usd);
+
+    // Attacker contributes a large amount
+    let attacker_contribution = dec!(900_000);
+    market_contribute(&mut helper, attacker_key, attacker_account, usd, attacker_contribution)
+        .expect_commit_success();
+
+    let attacker_balance_after_contribute = helper.test_runner.get_component_balance(attacker_account, usd);
+
+    // Check pool state after contribution
+    let pool_component = helper.market.pools.get(&usd).unwrap().0;
+    let (available_after_contribution, borrowed_after_contribution) = get_pool_amounts(&mut helper, pool_component);
+
+    // Attacker immediately borrows against this collateral
+    let borrow_amount = attacker_contribution * dec!(0.7); // Assuming 70% LTV
+    market_create_cdp(
+        &mut helper,
+        attacker_key,
+        attacker_account,
+        vec![(usd, attacker_contribution)],
+    )
+        .expect_commit_success();
+
+    let borrow_receipt = market_borrow(
+        &mut helper,
+        attacker_key,
+        attacker_account,
+        1u64,
+        usd,
+        borrow_amount,
+    );
+
+    // Check if the borrow was successful
+    assert!(borrow_receipt.is_commit_success(), "Borrow should have succeeded");
+
+    let attacker_balance_after_borrow = helper.test_runner.get_component_balance(attacker_account, usd);
+
+    // Check pool state after borrow
+    let (available_after_borrow, borrowed_after_borrow) = get_pool_amounts(&mut helper, pool_component);
+
+    // Get the pool unit balance of the attacker
+    let pool_unit_res_address = helper.market.pools.get(&usd).unwrap().1;
+    let attacker_pool_unit_balance = helper.test_runner.get_component_balance(attacker_account, pool_unit_res_address);
+
+    // Attempt to redeem the contribution
+    let redeem_receipt = market_redeem(
+        &mut helper,
+        attacker_key,
+        attacker_account,
+        pool_unit_res_address,
+        attacker_pool_unit_balance,  // Try to redeem all pool units
+    );
+
+    assert!(redeem_receipt.is_commit_success(), "Redemption succeeded unexpectedly");
+
+    let attacker_final_balance = helper.test_runner.get_component_balance(attacker_account, usd);
+
+    // Check attacker's final pool unit balance
+    let attacker_final_pool_unit_balance = helper.test_runner.get_component_balance(attacker_account, pool_unit_res_address);
+
+    // Calculate attacker's actual profit
+    let attacker_actual_profit = attacker_final_balance - attacker_initial_balance;
+
+    // Check final pool state
+    let (final_available, final_borrowed) = get_pool_amounts(&mut helper, pool_component);
+
+    // Additional checks
+    println!("Attacker's initial USD balance: {}", attacker_initial_balance);
+
+    println!("Attacker's balance after contribute: {}", attacker_balance_after_contribute);
+
+    println!("Pool state after contribution: Available: {}, Borrowed: {}", available_after_contribution, borrowed_after_contribution);
+
+    println!("Borrowed amount: {}", borrow_amount);
+
+    println!("Attacker's balance after borrow: {}", attacker_balance_after_borrow);
+
+    println!("Pool state after borrow: Available: {}, Borrowed: {}", available_after_borrow, borrowed_after_borrow);
+
+    println!("Attacker's pool unit balance before redeem: {}", attacker_pool_unit_balance);
+
+    println!("Attacker's final USD balance: {}", attacker_final_balance);
+
+    println!("Attacker's pool unit balance after redeem: {}", attacker_final_pool_unit_balance);
+
+    println!("Attacker's actual profit: {}", attacker_actual_profit);
+
+    println!("Final pool state: Available: {}, Borrowed: {}", final_available, final_borrowed);
+
+    println!("Total USD accounted for: {}", attacker_final_balance + final_available + final_borrowed);
+    println!("Expected total USD: {}", attacker_initial_balance + dec!(500_000));
+
+    // Assertions
+    assert_eq!(attacker_final_pool_unit_balance, dec!(0), "Attacker should have no pool units left after redeem");
+    assert!(attacker_final_balance >= attacker_balance_after_borrow, "Attacker's balance should not decrease after redeem");
+    assert!(final_available + final_borrowed <= available_after_borrow + borrowed_after_borrow, "Total pool funds should not increase");
+}
+
+fn get_pool_amounts(helper: &mut TestHelper, pool_component: ComponentAddress) -> (Decimal, Decimal) {
+    let binding = helper.test_runner.call_method(pool_component, "get_pooled_amount", ());
+    let result = binding.expect_commit_success();
+    let amounts: (Decimal, Decimal) = result.output::<(Decimal, Decimal)>(1);
+    amounts
 }

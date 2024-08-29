@@ -113,7 +113,7 @@ pub fn create_cdp_res_manager(
           burner_updater => rule!(deny_all);
         })
         .non_fungible_data_update_roles(non_fungible_data_update_roles! {
-          non_fungible_data_updater => component_rule;
+          non_fungible_data_updater => component_rule.clone();
           non_fungible_data_updater_updater => rule!(deny_all);
         })
         .create_with_no_initial_supply()
@@ -136,6 +136,10 @@ pub fn create_transient_res_manager(
             minter => component_rule.clone();
             minter_updater => rule!(deny_all);
         })
+        //NOTE: TODO: change to
+        //            burner => rule!(component_rule.clone());
+        //            burner_updater => rule!(deny_all);
+        //
         .burn_roles(burn_roles! {
             burner => rule!(allow_all);
             burner_updater => rule!(allow_all);
