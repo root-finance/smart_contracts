@@ -299,7 +299,7 @@ and ensure that badges can be deactivated or reassigned as necessary.
 - **Commit:** 4d8ed164
 - **Status:** New
 - **Tests:** Not applicable
-- 
+
 #### Description:
 
 The current price feed mechanism relies on a single source of truth, which introduces a centralization risk.
