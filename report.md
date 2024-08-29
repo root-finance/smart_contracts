@@ -11,14 +11,18 @@
 
 ## Table of Contents
 
-1. [Introduction](#project-overview)
-2. [Scope of the Audit](#table-of-contents)
-3. [Audit Methodology](#introduction)
-4. [Findings Summary](#scope-of-the-audit)
-5. [Detailed Findings](#audit-methodology)
-6. [Recommendations](#highly-permissive-roles-in-the-system)
-7. [Conclusion](#admin-role)
-8. [Disclaimer](#moderator-role)
+1. [Project Overview](#project-overview)
+2. [Introduction](#introduction)
+3. [Scope of the Audit](#scope-of-the-audit)
+4. [Audit Methodology](#audit-methodology)
+5. [Highly Permissive Roles in the System](#highly-permissive-roles-in-the-system)
+6. [Findings Summary](#findings-summary)
+7. [Detailed Findings](#detailed-findings)
+   - [Critical](#critical)
+   - [Medium](#medium)
+   - [Low](#low)
+8. [General Information](#general-information)
+   - [Code Quality and Best Practices](#code-quality-and-best-practices)
 
 ## Introduction
 
