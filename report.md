@@ -3,7 +3,7 @@
 ## Project Overview
 
 **Project Name:** Root Finance  
-**Contract Name:** Lending Market 
+**Contract Name:** Lending Market
 **Audit Date:** 29 September 2024  
 **Auditor(s):** Yevhenii Bezuhlyi    
 **Programming Language:** Scrypto / Rust  
@@ -11,14 +11,14 @@
 
 ## Table of Contents
 
-1. [Introduction](#introduction)
-2. [Scope of the Audit](#scope-of-the-audit)
-3. [Audit Methodology](#audit-methodology)
-4. [Findings Summary](#findings-summary)
-5. [Detailed Findings](#detailed-findings)
-6. [Recommendations](#recommendations)
-7. [Conclusion](#conclusion)
-8. [Disclaimer](#disclaimer)
+1. [Introduction](#project-overview)
+2. [Scope of the Audit](#table-of-contents)
+3. [Audit Methodology](#introduction)
+4. [Findings Summary](#scope-of-the-audit)
+5. [Detailed Findings](#audit-methodology)
+6. [Recommendations](#highly-permissive-roles-in-the-system)
+7. [Conclusion](#admin-role)
+8. [Disclaimer](#moderator-role)
 
 ## Introduction
 
@@ -177,9 +177,9 @@ This vulnerability could lead to significant financial losses for the lending po
 #### Recommendation:
 1. Implement a check in the redemption process to verify if there are any outstanding loans against the collateral being redeemed.
 2. If loans exist, either:
-   a) Prevent redemption entirely, or 
+   a) Prevent redemption entirely, or
    b) Allow only partial redemption up to the amount not borrowed against.
-3. Ensure that any redemption reduces the borrowed amount in the pool state if it's being used to settle a loan. 
+3. Ensure that any redemption reduces the borrowed amount in the pool state if it's being used to settle a loan.
 4. Add a comprehensive reconciliation process to ensure that total funds in the system remain consistent after all operations.
 
 ## MEDIUM
@@ -194,9 +194,9 @@ This vulnerability could lead to significant financial losses for the lending po
 - **Tests:** Not applicable
 
 #### Description:
-The `list_liquidable_cdps` function currently mutates data and emits events, 
-which incurs transaction fees for the execution. 
-This may lead to unnecessary costs when the primary intention 
+The `list_liquidable_cdps` function currently mutates data and emits events,
+which incurs transaction fees for the execution.
+This may lead to unnecessary costs when the primary intention
 is simply to retrieve a list of liquidable CDPs without requiring any state change or event emission.
 
 **Steps to Reproduce:**
@@ -204,8 +204,8 @@ is simply to retrieve a list of liquidable CDPs without requiring any state chan
 2. Observe that the function mutates data and emits events, resulting in transaction fees.
 
 **Impact:**
-This approach could lead to inefficiencies, especially when the function is intended for read-only operations. 
-Users or systems that need to frequently retrieve lists of liquidable CDPs may incur unnecessary costs, 
+This approach could lead to inefficiencies, especially when the function is intended for read-only operations.
+Users or systems that need to frequently retrieve lists of liquidable CDPs may incur unnecessary costs,
 which could be avoided with a more efficient implementation.
 
 #### Recommendation:
@@ -229,14 +229,14 @@ The `mint_liquidator_badge` function currently allows for the minting of liquida
 2. Observe that there is no corresponding function to revoke the badge once it has been minted.
 
 **Impact:**
-Without the ability to revoke liquidator badges, 
-there is a potential risk that users could retain liquidator privileges indefinitely, 
-even if they are no longer trusted or needed in that role. 
+Without the ability to revoke liquidator badges,
+there is a potential risk that users could retain liquidator privileges indefinitely,
+even if they are no longer trusted or needed in that role.
 This could lead to security concerns if the badges are misused.
 
 #### Recommendation:
-Implement a mechanism to revoke liquidator badges. 
-This would allow for better control over who holds liquidator privileges 
+Implement a mechanism to revoke liquidator badges.
+This would allow for better control over who holds liquidator privileges
 and ensure that badges can be deactivated or reassigned as necessary.
 
 ### Centralized Price Feed (M-03)
@@ -247,15 +247,15 @@ and ensure that badges can be deactivated or reassigned as necessary.
 - **Target:** Price feed mechanism
 
 #### Description:
-The current price feed mechanism relies on a single source of truth, which introduces a centralization risk. 
+The current price feed mechanism relies on a single source of truth, which introduces a centralization risk.
 If this single price feed is compromised or experiences downtime, it could affect the entire system's functionality.
 
 **Impact:**
-A compromised or malfunctioning price feed could lead to incorrect valuations, 
+A compromised or malfunctioning price feed could lead to incorrect valuations,
 potentially allowing users to borrow more than they should or triggering unnecessary liquidations.
 
 #### Recommendation:
-Implement a more robust, decentralized price feed system. 
+Implement a more robust, decentralized price feed system.
 Consider using a combination of multiple price feeds and implementing a median or weighted average mechanism.
 
 ## LOW
@@ -270,10 +270,10 @@ Consider using a combination of multiple price feeds and implementing a median o
 - **Tests:** Not applicable
 
 #### Description:
-A potential issue has been identified in the `create_cdp` function of the lending market system. 
-The current implementation allows the creation of a Collateralized Debt Position (CDP) 
-even when no collateral is provided (i.e., when the `deposits` vector is empty). 
-Although there is a note in the code indicating that the creation of empty CDPs should be forbidden, 
+A potential issue has been identified in the `create_cdp` function of the lending market system.
+The current implementation allows the creation of a Collateralized Debt Position (CDP)
+even when no collateral is provided (i.e., when the `deposits` vector is empty).
+Although there is a note in the code indicating that the creation of empty CDPs should be forbidden,
 this restriction is not enforced.
 
 **Steps to Reproduce:**
@@ -281,14 +281,14 @@ this restriction is not enforced.
 2. Observe that a CDP is created without any collateral being added.
 
 **Impact:**
-Allowing the creation of empty CDPs could lead to unnecessary entries in the system, 
-resulting in potential clutter and making the management of CDPs more complex. 
+Allowing the creation of empty CDPs could lead to unnecessary entries in the system,
+resulting in potential clutter and making the management of CDPs more complex.
 While this issue does not pose a direct security risk, it could cause confusion or inefficiencies in the system.
 
 #### Recommendation:
-Implement a check within the `create_cdp` function to prevent the creation 
-of a CDP if the `deposits` vector is empty. 
-If the vector is empty, the function should return an error or halt the process 
+Implement a check within the `create_cdp` function to prevent the creation
+of a CDP if the `deposits` vector is empty.
+If the vector is empty, the function should return an error or halt the process
 to ensure that all CDPs have collateral.
 
 ## Lack of Decimal Precision Handling (L-02)
@@ -300,15 +300,15 @@ to ensure that all CDPs have collateral.
 
 ### Description:
 The project extensively uses the `Decimal` type for financial calculations,
-but there's no consistent handling of decimal precision or rounding. 
-This could lead to small discrepancies in calculations, 
+but there's no consistent handling of decimal precision or rounding.
+This could lead to small discrepancies in calculations,
 which may accumulate over time or in high-volume scenarios.
 
 ### Impact:
-Inconsistent rounding or precision issues could result in small but cumulative errors in interest calculations, 
-collateral valuations, or loan-to-value ratios. 
+Inconsistent rounding or precision issues could result in small but cumulative errors in interest calculations,
+collateral valuations, or loan-to-value ratios.
 Over time, this could lead to discrepancies between expected and actual balances.
 
 ### Recommendation:
-Implement a standardized approach to decimal precision and rounding throughout the codebase. 
+Implement a standardized approach to decimal precision and rounding throughout the codebase.
 Consider creating helper functions for financial calculations that enforce consistent precision and rounding rules.
