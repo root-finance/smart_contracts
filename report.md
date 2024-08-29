@@ -399,25 +399,25 @@ Consider creating helper functions for financial calculations that enforce consi
 
 ### Adherence to Rust and Scrypto Best Practices
 
-## Positives
+#### Positives
 
 1. Proper use of Rust's type system, including enums for variant types
 2. Consistent use of Result for error handling in many functions
 3. Appropriate use of Scrypto-specific types like Decimal, PreciseDecimal, and ResourceAddress
 
-## Areas for Improvement
+#### Areas for Improvement
 
 1. Some functions use `panic!` or `expect()` instead of returning Result for error handling
 2. Inconsistent use of Decimal and PreciseDecimal types
 
 ### Code Duplication and Complexity
 
-## Positives
+#### Positives
 
 1. Use of macros like `save_cdp_macro!` and `emit_cdp_event!` to reduce code duplication
 2. Separation of concerns into different modules (e.g., cdp_health_checker.rs, interest_strategy.rs)
 
-## Areas for Improvement
+#### Areas for Improvement
 
 1. Some duplication in error checking and state updates across different functions
 
