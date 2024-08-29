@@ -3,9 +3,9 @@
 ## Project Overview
 
 **Project Name:** Root Finance  
-**Contract Name:** Lending Market
+**Contract Name:** Lending Market\
 **Audit Date:** 29 September 2024  
-**Auditor(s):** Yevhenii Bezuhlyi    
+**Auditor(s):** Yevhenii Bezuhlyi     
 **Programming Language:** Scrypto / Rust  
 **Blockchain Platform:** Radix
 
@@ -118,10 +118,6 @@ these roles are critical for the safe operation of the system.
 
 The following is a summary of the findings from the audit:
 
-## Findings Summary
-
-The following is a summary of the findings from the audit:
-
 | **Severity** | **Issue**                                             | **Status** | **Notes**                         |
 |--------------|-------------------------------------------------------|------------|-----------------------------------|
 | Critical     | Access Control Violation (C-01)                       | New        | Flashloan mechanism vulnerability |
@@ -181,8 +177,7 @@ the audit commit.
 - **Commit:** 4d8ed164
 - **Status:** New
 - **Target:** `./lending_market/src/lending_market.rs: fn redeem()`
-- **Tests:
-  ** `./lending_merket/rests/blueprints/basic.rs: test_contribute_and_borrow_abuse() test_contribute_and_borrow_abuse_2()`
+- **Tests:** `./lending_merket/rests/blueprints/basic.rs: test_contribute_and_borrow_abuse() test_contribute_and_borrow_abuse_2()`
 
 #### Description:
 
@@ -227,9 +222,9 @@ system is left with bad debt, and the total assets in the system are artificiall
 
 ### Potential Inefficiency in CDP Listing Function (M-01)
 
-- **Severity:** Low
+- **Severity:** Medium
 - **Impact:** Low
-- **Likelihood:** Medium
+- **Likelihood:** High
 - **Type:** Performance
 - **Commit:** 4d8ed164
 - **Status:** New
@@ -301,7 +296,10 @@ and ensure that badges can be deactivated or reassigned as necessary.
 - **Likelihood:** Low
 - **Type:** Centralization Risk
 - **Target:** Price feed mechanism
-
+- **Commit:** 4d8ed164
+- **Status:** New
+- **Tests:** Not applicable
+- 
 #### Description:
 
 The current price feed mechanism relies on a single source of truth, which introduces a centralization risk.
@@ -360,7 +358,10 @@ to ensure that all CDPs have collateral.
 - **Impact:** Low
 - **Likelihood:** Medium
 - **Type:** Numerical Precision
+- **Commit:** 4d8ed164
+- **Status:** New
 - **Target:** Throughout the codebase, especially in financial calculations
+- **Tests:** Not applicable
 
 ### Description:
 
