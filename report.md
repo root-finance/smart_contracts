@@ -18,11 +18,11 @@
 5. [Highly Permissive Roles in the System](#highly-permissive-roles-in-the-system)
 6. [Findings Summary](#findings-summary)
 7. [Detailed Findings](#detailed-findings)
-   - [Critical](#critical)
-   - [Medium](#medium)
-   - [Low](#low)
+    - [Critical](#critical)
+    - [Medium](#medium)
+    - [Low](#low)
 8. [General Information](#general-information)
-   - [Code Quality and Best Practices](#code-quality-and-best-practices)
+    - [Code Quality and Best Practices](#code-quality-and-best-practices)
 
 ## Introduction
 
@@ -118,17 +118,14 @@ these roles are critical for the safe operation of the system.
 
 The following is a summary of the findings from the audit:
 
-| **Severity** | **Issue**                                             | **Status** | **Notes**                         |
-|--------------|-------------------------------------------------------|------------|-----------------------------------|
-| Critical     | Access Control Violation (C-01)                       | New        | Flashloan mechanism vulnerability |
-| Critical     | Data Consistency (C-02)                               | New        | Collateral redemption issue       |
-| Medium       | Potential Inefficiency in CDP Listing Function (M-01) | New        | Performance concern               |
-| Medium       | Lack of Liquidator Badge Revocation Mechanism (M-02)  | New        | Access control issue              |
-| Medium       | Centralized Price Feed (M-03)                         | New        | Centralization risk               |
-| Low          | Creation of Empty CDPs (L-01)                         | New        | Logic flaw                        |
-| Low          | Lack of Decimal Precision Handling (L-02)             | New        | Numerical precision issue         |
+| **Severity** | **Issue**                                            | **Status** | **Notes**                         |
+|--------------|------------------------------------------------------|------------|-----------------------------------|
+| Critical     | Access Control Violation (C-01)                      | New        | Flashloan mechanism vulnerability |
+| Medium       | Lack of Liquidator Badge Revocation Mechanism (M-02) | Mitigated  | Access control issue              |
+| Medium       | Centralized Price Feed (M-03)                        | New        | Centralization risk               |
+| Low          | Creation of Empty CDPs (L-01)                        | New        | Logic flaw                        |
 
-**Total Issues Found:** 7
+**Total Issues Found:** 4
 **Total Issues Found:** [Total Count]
 
 ## Detailed Findings
@@ -168,91 +165,7 @@ entire flashloan mechanism and poses a severe risk to the stability and trustwor
 Modify the `TransientResData` resource in `resources.rs` to restrict burning. An example implementation is provided in
 the audit commit.
 
-### Data Consistency (C-02)
-
-- **Severity:** Critical
-- **Impact:** High
-- **Likelihood:** High
-- **Type:** Logic Error
-- **Commit:** 4d8ed164
-- **Status:** New
-- **Target:** `./lending_market/src/lending_market.rs: fn redeem()`
-- **Tests:** `./lending_merket/rests/blueprints/basic.rs: test_contribute_and_borrow_abuse() test_contribute_and_borrow_abuse_2()`
-
-#### Description:
-
-The current implementation allows users to redeem their collateral even when they have outstanding loans, leading to
-potential system exploitation and fund loss.
-
-**Steps to Reproduce:**
-
-1. User starts with 10,000,000 USD.
-2. User contributes 900,000 USD to the lending pool.
-3. User borrows 630,000 USD against their contribution.
-4. User attempts to redeem their entire contribution of 900,000 pool units.
-
-**Expected Behavior:**
-The redemption should fail due to the outstanding loan, or only allow partial redemption up to the unborrowed amount.
-
-**Actual Behavior:**
-
-1. The redemption succeeds, allowing the user to withdraw their entire collateral.
-2. The user's final balance increases by 900,000 USD (from 8,830,000 to 9,730,000 USD).
-3. The user's pool unit balance goes to 0, indicating a full redemption.
-4. The pool's available balance decreases by 900,000 USD (from 1,670,000 to 770,000 USD).
-5. The borrowed amount in the pool remains unchanged at 630,000 USD.
-
-**Impact:**
-This vulnerability could lead to significant financial losses for the lending pool and its depositors. It allows
-malicious users to drain the pool by borrowing funds and then redeeming their collateral without repaying the loan. The
-system is left with bad debt, and the total assets in the system are artificially inflated.
-
-#### Recommendation:
-
-1. Implement a check in the redemption process to verify if there are any outstanding loans against the collateral being
-   redeemed.
-2. If loans exist, either:
-   a) Prevent redemption entirely, or
-   b) Allow only partial redemption up to the amount not borrowed against.
-3. Ensure that any redemption reduces the borrowed amount in the pool state if it's being used to settle a loan.
-4. Add a comprehensive reconciliation process to ensure that total funds in the system remain consistent after all
-   operations.
-
 ## MEDIUM
-
-### Potential Inefficiency in CDP Listing Function (M-01)
-
-- **Severity:** Medium
-- **Impact:** Low
-- **Likelihood:** High
-- **Type:** Performance
-- **Commit:** 4d8ed164
-- **Status:** New
-- **Target:** `./lending_market/src/lending_market.rs: fn list_liquidable_cdps()`
-- **Tests:** Not applicable
-
-#### Description:
-
-The `list_liquidable_cdps` function currently mutates data and emits events,
-which incurs transaction fees for the execution.
-This may lead to unnecessary costs when the primary intention
-is simply to retrieve a list of liquidable CDPs without requiring any state change or event emission.
-
-**Steps to Reproduce:**
-
-1. Call the `list_liquidable_cdps` function with a specified `skip` and `limit`.
-2. Observe that the function mutates data and emits events, resulting in transaction fees.
-
-**Impact:**
-This approach could lead to inefficiencies, especially when the function is intended for read-only operations.
-Users or systems that need to frequently retrieve lists of liquidable CDPs may incur unnecessary costs,
-which could be avoided with a more efficient implementation.
-
-#### Recommendation:
-
-Consider implementing an additional version of the `list_liquidable_cdps` function that does not emit events or mutate
-data. This would allow users to retrieve the information they need without incurring the transaction fees associated
-with state changes or event emissions.
 
 ### Lack of Liquidator Badge Revocation Mechanism (M-02)
 
@@ -261,7 +174,7 @@ with state changes or event emissions.
 - **Likelihood:** Medium
 - **Type:** Access Control
 - **Commit:** 4d8ed164
-- **Status:** New
+- **Status:** Mitigated
 - **Target:** `./lending_market/src/lending_market.rs: fn mint_liquidator_badge()`
 - **Tests:** Not applicable
 
@@ -323,7 +236,7 @@ Consider using a combination of multiple price feeds and implementing a median o
 - **Likelihood:** Medium
 - **Type:** Logic Flaw
 - **Commit:** 4d8ed164
-- **Status:** New
+- **Status:** Mitigated
 - **Target:** `./lending_market/src/lending_market.rs: fn create_cdp()`
 - **Tests:** Not applicable
 
