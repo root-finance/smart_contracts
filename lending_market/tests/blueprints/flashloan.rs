@@ -1,6 +1,5 @@
 use crate::helpers::{init::TestHelper, methods::*};
 use radix_engine_interface::prelude::*;
-use scrypto_unit::*;
 use transaction::builder::ManifestBuilder;
 
 #[test]
@@ -139,11 +138,11 @@ pub fn test_valid_flash_loan() {
             Decimal::from(1),
             "flash_loan_term_bucket",
         )
-        .with_name_lookup(|builder, _lookup| {
-            let flash_loan_term_bucket = _lookup.bucket("flash_loan_term_bucket");
-            let xrd_bucket = _lookup.bucket("xrd_buket");
-            let usd_bucket = _lookup.bucket("usd_buket");
-            let usd_bucket_2 = _lookup.bucket("usd_buket_2");
+        .with_name_lookup(|builder, lookup| {
+            let flash_loan_term_bucket = lookup.bucket("flash_loan_term_bucket");
+            let xrd_bucket = lookup.bucket("xrd_buket");
+            let usd_bucket = lookup.bucket("usd_buket");
+            let usd_bucket_2 = lookup.bucket("usd_buket_2");
 
             builder
                 .call_method(
@@ -155,6 +154,7 @@ pub fn test_valid_flash_loan() {
                     ),
                 )
         })
+        .deposit_batch(lp_user_account)
         .build();
 
     helper
@@ -219,11 +219,11 @@ pub fn test_exploit_flashloan_by_burning_transient() {
         vec![NonFungibleGlobalId::from_public_key(&exploiter_key)],
     );
 
-    // The transaction should succeed. When the issue is fixed, change the assertion to expect_commit_failure().
-    receipt.expect_commit_success();
+    // The transaction should not succeed
+    receipt.expect_commit_failure();
 
-    // Check that the exploiter's balance has increased by the flashloan amount
+    // Check that the exploiter's balance has not increased
     let final_balance = helper.test_runner.get_component_balance(exploiter_account, usd);
-    assert_eq!(final_balance, initial_balance + dec!(50));
+    assert_eq!(final_balance, initial_balance);
 
 }
