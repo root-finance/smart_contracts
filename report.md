@@ -118,12 +118,13 @@ these roles are critical for the safe operation of the system.
 
 The following is a summary of the findings from the audit:
 
-| **Severity** | **Issue**                                            | **Status** | **Notes**                         |
-|--------------|------------------------------------------------------|------------|-----------------------------------|
-| Critical     | Access Control Violation (C-01)                      | New        | Flashloan mechanism vulnerability |
-| Medium       | Lack of Liquidator Badge Revocation Mechanism (M-02) | Mitigated  | Access control issue              |
-| Medium       | Centralized Price Feed (M-03)                        | New        | Centralization risk               |
-| Low          | Creation of Empty CDPs (L-01)                        | New        | Logic flaw                        |
+| **Severity** | **Issue**                                            | **Status** | **Notes**                                                                                                             |
+|--------------|------------------------------------------------------|------------|-----------------------------------------------------------------------------------------------------------------------|
+| Critical     | Access Control Violation (C-01)                      | Fixed      |                                                                                                                       |
+| Medium       | Lack of Liquidator Badge Revocation Mechanism (M-02) | Mitigated  | Since abilities of liquidators are limited by the contract logic and could not cause harm, the issue can be mitigated. |
+| Medium       | Centralized Price Feed (M-03)                        | Mitigated  | Lack of thirdparty trusted oracles on the Radix chain makes can mitigate the issue until those will appear.           |
+| Low          | Creation of Empty CDPs (L-01)                        | Mitigated  | Number of CDPs are limited to 1 per user causing no general harm to the system.                                       |
+| Low          | Lack of Decimal Precision Handling (L-02)            | Mitigated  | Impact is extremely low.                                                                                              |
 
 **Total Issues Found:** 4
 **Total Issues Found:** [Total Count]
@@ -210,7 +211,7 @@ and ensure that badges can be deactivated or reassigned as necessary.
 - **Type:** Centralization Risk
 - **Target:** Price feed mechanism
 - **Commit:** 4d8ed164
-- **Status:** New
+- **Status:** Mitigated
 - **Tests:** Not applicable
 
 #### Description:
@@ -272,7 +273,7 @@ to ensure that all CDPs have collateral.
 - **Likelihood:** Medium
 - **Type:** Numerical Precision
 - **Commit:** 4d8ed164
-- **Status:** New
+- **Status:** Mitigated
 - **Target:** Throughout the codebase, especially in financial calculations
 - **Tests:** Not applicable
 

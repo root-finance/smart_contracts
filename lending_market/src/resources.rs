@@ -70,12 +70,12 @@ pub fn create_reserve_collector_badge(owner_rule: AccessRule) -> NonFungibleBuck
 }
 
 pub fn create_liquidator_badge_manager(
-    owner_rule: AccessRule, 
-    component_rule: AccessRule
+    owner_rule: AccessRule,
+    component_rule: AccessRule,
 ) -> ResourceManager {
     ResourceBuilder::new_integer_non_fungible::<LiquidatorBadgeData>(OwnerRole::Fixed(
         owner_rule.clone(),
-        ))
+    ))
         .mint_roles(mint_roles! {
             minter => component_rule.clone();
             minter_updater =>  rule!(deny_all);
@@ -85,7 +85,6 @@ pub fn create_liquidator_badge_manager(
         non_fungible_data_updater_updater => rule!(deny_all);
         })
         .create_with_no_initial_supply()
-
 }
 
 pub fn create_cdp_res_manager(
@@ -136,13 +135,9 @@ pub fn create_transient_res_manager(
             minter => component_rule.clone();
             minter_updater => rule!(deny_all);
         })
-        //NOTE: TODO: change to
-        //            burner => rule!(component_rule.clone());
-        //            burner_updater => rule!(deny_all);
-        //
         .burn_roles(burn_roles! {
-            burner => rule!(allow_all);
-            burner_updater => rule!(allow_all);
+            burner => component_rule.clone();
+            burner_updater => rule!(deny_all);
         })
         .deposit_roles(deposit_roles! {
             depositor => rule!(deny_all);
