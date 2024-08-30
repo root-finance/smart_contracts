@@ -112,6 +112,7 @@ pub fn get_resource_flash_loan(
         });
 }
 
+#[allow(dead_code)]
 fn mint_resource_from_faucet(
     helper: &mut TestHelper,
     user_public_key: Secp256k1PublicKey,
@@ -702,7 +703,7 @@ pub fn market_collect_reserve(
 pub fn market_update_config(
     helper: &mut TestHelper,
     user_public_key: Secp256k1PublicKey,
-    user_account_address: ComponentAddress,
+    _user_account_address: ComponentAddress,
     new_max_cdp_position: u8,
 ) -> TransactionReceipt {
     let manifest_builder = ManifestBuilder::new()

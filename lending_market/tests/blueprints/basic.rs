@@ -1,11 +1,8 @@
-use crate::helpers::methods::market_list_info_stats;
 use crate::helpers::{init::{find_event_in_result, TestHelper}, methods::*};
-use lending_market::modules::cdp_data::{CDPLiquidableEvent, WrappedCDPData};
-use lending_market::modules::pool_state::MarketStatsAllPools;
+use lending_market::modules::cdp_data::CDPLiquidableEvent;
 use radix_engine_interface::prelude::*;
 use scrypto_unit::*;
 use std::path::Path;
-use radix_engine::transaction::TransactionOutcome;
 
 #[test]
 fn test_deposit_withdraw_borrow_repay() {
