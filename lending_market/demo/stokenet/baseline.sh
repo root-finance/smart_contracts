@@ -114,7 +114,7 @@ LENDING_MARKET_LIQUIDATOR_BADGE=resource_tdx_2_1ngfaxprsdmvegjsh9520yq0tdll9gdza
 echo "CALL_METHOD Address(\"$OWNER_ADDRESS\") \"create_proof_of_non_fungibles\" Address(\"$LENDING_MARKET_ADMIN_ADDRESS\") Array<NonFungibleLocalId>(NonFungibleLocalId(\"#1#\"),NonFungibleLocalId(\"#2#\"),NonFungibleLocalId(\"#3#\"),NonFungibleLocalId(\"#4#\"));" >> tx.rtm
 echo "CALL_METHOD Address(\"$LENDING_MARKET_COMPONENT_ADDRESS\") \"create_lending_pool\" Address(\"$PRICE_FEED_COMPONENT_ADDRESS\") Address(\"$XRD\")
     Tuple(
-        Decimal(\"0.2\"),
+        Decimal(\"0.35\"),
         Decimal(\"0.15\"),
         Decimal(\"0.08\"),
         Decimal(\"0.001\"),
@@ -184,7 +184,7 @@ echo "CALL_METHOD
 echo "CALL_METHOD Address(\"$OWNER_ADDRESS\") \"create_proof_of_non_fungibles\" Address(\"$LENDING_MARKET_ADMIN_ADDRESS\") Array<NonFungibleLocalId>(NonFungibleLocalId(\"#1#\"),NonFungibleLocalId(\"#2#\"),NonFungibleLocalId(\"#3#\"),NonFungibleLocalId(\"#4#\"));" >> tx.rtm
 echo "CALL_METHOD Address(\"$LENDING_MARKET_COMPONENT_ADDRESS\") \"create_lending_pool\" Address(\"$PRICE_FEED_COMPONENT_ADDRESS\") Address(\"$XWBTC_RESOURCE_ADDRESS\")
     Tuple(
-        Decimal(\"0.2\"),
+        Decimal(\"0.25\"),
         Decimal(\"0.15\"),
         Decimal(\"0.08\"),
         Decimal(\"0.001\"),
@@ -216,7 +216,7 @@ echo "CALL_METHOD Address(\"$LENDING_MARKET_COMPONENT_ADDRESS\") \"create_lendin
 
 echo "CALL_METHOD Address(\"$LENDING_MARKET_COMPONENT_ADDRESS\") \"create_lending_pool\" Address(\"$PRICE_FEED_COMPONENT_ADDRESS\") Address(\"$XETH_RESOURCE_ADDRESS\")
     Tuple(
-        Decimal(\"0.2\"),
+        Decimal(\"0.25\"),
         Decimal(\"0.15\"),
         Decimal(\"0.08\"),
         Decimal(\"0.001\"),
@@ -248,7 +248,7 @@ echo "CALL_METHOD Address(\"$LENDING_MARKET_COMPONENT_ADDRESS\") \"create_lendin
 
 echo "CALL_METHOD Address(\"$LENDING_MARKET_COMPONENT_ADDRESS\") \"create_lending_pool\" Address(\"$PRICE_FEED_COMPONENT_ADDRESS\") Address(\"$LSU_RESOURCE_ADDRESS\")
     Tuple(
-        Decimal(\"0.2\"),
+        Decimal(\"0.35\"),
         Decimal(\"0.15\"),
         Decimal(\"0.08\"),
         Decimal(\"0.001\"),

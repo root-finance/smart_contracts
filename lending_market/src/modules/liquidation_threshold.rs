@@ -1,6 +1,7 @@
 use crate::modules::utils::is_valid_rate;
 use scrypto::prelude::*;
 
+/// Input to update liquidation threshold
 #[derive(ScryptoSbor)]
 pub enum UpdateLiquidationThresholdInput {
     DefaultValue(Decimal),
@@ -10,15 +11,25 @@ pub enum UpdateLiquidationThresholdInput {
     AssetTypeEntry(u8, Option<Decimal>),
 }
 
+/// Liquidation threshold configuration
 #[derive(ScryptoSbor, Clone, Debug)]
 pub struct LiquidationThreshold {
+    /// Threshold for position having same asset in loan and as collateral
     pub identical_resource: Option<Decimal>,
+    /// Threshold for position having same asset type in loan and as collateral
     pub identical_asset_type: Option<Decimal>,
+    /// Threshold for a specific resource
     pub resource: IndexMap<ResourceAddress, Decimal>,
+    /// Threshold for a specific asset type
     pub asset_type: IndexMap<u8, Decimal>,
+    /// Default threshold
     pub default_value: Decimal,
 }
 impl LiquidationThreshold {
+    /// Perform a check on the liquidation threshold configuration
+    /// 
+    /// *Error*
+    /// - If the configuration is invalid
     pub fn check(&self) -> Result<(), String> {
         if !is_valid_rate(self.default_value) {
             return Err("Invalid liquidation threshold default value".into());
@@ -48,6 +59,13 @@ impl LiquidationThreshold {
         Ok(())
     }
 
+    /// Getter the liquidation threshold according to params.
+    /// 
+    /// *Params*
+    /// - `collateral_res_address`: The collateral resource address
+    /// - `collateral_asset_type`: The collateral asset type
+    /// - `loan_res_address`: The loan resource address
+    /// - `loan_asset_type`: The loan asset type
     pub fn get_ratio(
         &self,
         collateral_res_address: ResourceAddress,
@@ -78,6 +96,13 @@ impl LiquidationThreshold {
             })
     }
 
+    /// Update the liquidation threshold configuration
+    /// 
+    /// *Params*
+    /// - `UpdateLiquidationThresholdInput`: The input structure for the update
+    /// 
+    /// *Errors*
+    /// - If update of the internal state fails
     pub fn update_liquidation_threshold(
         &mut self,
         value: UpdateLiquidationThresholdInput,
