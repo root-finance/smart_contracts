@@ -4,24 +4,37 @@ use scrypto::prelude::*;
 // Amount at which a position is considered zeroed
 pub const ZERO_EPSILON: Decimal = dec!(0.000000001);
 
+/// Type of position
 pub enum LoadPositionType {
     Collateral,
     Loan,
 }
 
+/// Type of load
 pub enum LoadDataType {
     Own,
 }
-
+/// Position data
 #[derive(ScryptoSbor, Debug, Clone)]
 pub struct PositionData {
+    /// Unit amount
     pub units: PreciseDecimal,
+    /// Asset amount
     pub amount: Decimal,
+    /// Value of the position according to the asset price
     pub value: Decimal,
-
+    /// Pool unit ratio from the respective pool
     pub unit_ratio: PreciseDecimal,
 }
 impl PositionData {
+    /// Load the position data
+    /// 
+    /// *Params*
+    /// - `units``: The position units
+    /// - `load_type`: The load type
+    /// 
+    /// *Error*
+    /// - If update of the internal state fails
     pub fn load_onledger_data(
         &mut self,
         units: PreciseDecimal,
@@ -34,6 +47,13 @@ impl PositionData {
         Ok(())
     }
 
+    /// Update the position data
+    /// 
+    /// *Params*
+    /// - `price``: This position's asset price
+    /// 
+    /// *Error*
+    /// - If update of the internal state fails
     pub fn update_data(&mut self, price: Decimal) -> Result<(), String> {
         self.amount = (self.units / self.unit_ratio)
             .checked_truncate(RoundingMode::ToNearestMidpointToEven)
@@ -46,14 +66,31 @@ impl PositionData {
 /// Extends the collateral position with necessary information for the CDP health check
 #[derive(ScryptoSbor, Clone, Debug)]
 pub struct ExtendedCollateralPositionData {
+    /// The pool resource address
     pub pool_res_address: ResourceAddress,
+    /// Price of the asset
     pub price: Decimal,
+    /// Type of the asset from pool state. This is defined at the time pool component is instantiated
+    /// but it's expected to have 0 for cryptocurrencies and 1 for stable coins
     pub asset_type: u8,
+    /// Liquidation threshold information from pool state
     pub liquidation_threshold: LiquidationThreshold,
+    /// Liquidation bonus rate information from pool state
     pub liquidation_bonus_rate: Decimal,
+    /// The position data
     pub data: PositionData,
 }
 impl ExtendedCollateralPositionData {
+    /// Load the `ExtendedCollateralPositionData` data
+    /// 
+    /// *Params*
+    /// - `units``: The position units
+    /// - `load_type`: The load type
+    /// - `pool_state`: Reference to the on-chain key-value storage entry where key is asset resource 
+    ///                 address and value is the current pool state
+    /// 
+    /// *Error*
+    /// - If update of the internal state fails
     pub fn load_onledger_data(
         &mut self,
         units: PreciseDecimal,
@@ -69,6 +106,10 @@ impl ExtendedCollateralPositionData {
         Ok(())
     }
 
+    /// Update the `ExtendedCollateralPositionData` data by mean of the current asset price
+    /// 
+    /// *Error*
+    /// - If update of the internal state fails
     pub fn update_data(&mut self) -> Result<(), String> {
         self.data.update_data(self.price)
     }
@@ -77,14 +118,31 @@ impl ExtendedCollateralPositionData {
 /// Extends the loan position with necessary information for the CDP health check
 #[derive(ScryptoSbor, Clone, Debug)]
 pub struct ExtendedLoanPositionData {
+    /// The pool resource address
     pub pool_res_address: ResourceAddress,
+    /// Price of the asset
     pub price: Decimal,
+    /// Type of the asset from pool state. This is defined at the time pool component is instantiated
+    /// but it's expected to have 0 for cryptocurrencies and 1 for stable coins
     pub asset_type: u8,
+    /// Ratio to be repaid before the loan can be closed
     pub loan_close_factor: Decimal,
+    /// The position data
     pub data: PositionData,
+    /// The amount of collateral needed to sustain this loan so that the position is not liquidable
     pub discounted_collateral_value: Decimal,
 }
 impl ExtendedLoanPositionData {
+    /// Load the `ExtendedLoanPositionData` data
+    /// 
+    /// *Params*
+    /// - `units``: The position units
+    /// - `load_type`: The load type
+    /// - `pool_state`: Reference to the on-chain key-value storage entry where key is asset resource 
+    ///                 address and value is the current pool state
+    /// 
+    /// *Error*
+    /// - If update of the internal state fails
     pub fn load_onledger_data(
         &mut self,
         units: PreciseDecimal,
@@ -100,6 +158,10 @@ impl ExtendedLoanPositionData {
         Ok(())
     }
 
+    /// Update the `ExtendedLoanPositionData` data by mean of the respective collateral positions
+    /// 
+    /// *Error*
+    /// - If update of the internal state fails
     pub fn update_data(
         &mut self,
         collateral_positions: &IndexMap<ResourceAddress, ExtendedCollateralPositionData>,
@@ -156,8 +218,16 @@ pub struct CDPHealthChecker {
     pub loan_positions: IndexMap<ResourceAddress, ExtendedLoanPositionData>,
 }
 impl CDPHealthChecker {
-    // Created an extended CDP from a CDP NFT data
-
+    /// Constructor with pool state update side effect
+    /// 
+    /// *Params*
+    /// - `wrapped_cdp_data``: The CDP to check
+    /// - `load_type`: The load type
+    /// - `pool_state`: Reference to the on-chain key-value storage where key is asset resource 
+    ///                 address and value is the current pool state
+    /// 
+    /// *Output*
+    /// `CDPHealthChecker`
     pub fn new(
         wrapped_cdp_data: &WrappedCDPData,
         pool_states: &mut KeyValueStore<ResourceAddress, LendingPoolState>,
@@ -167,6 +237,16 @@ impl CDPHealthChecker {
             .expect("Error creating CDP health checker")
     }
 
+    /// Constructor without pool state update side effect
+    /// 
+    /// *Params*
+    /// - `wrapped_cdp_data``: The CDP to check
+    /// - `load_type`: The load type
+    /// - `pool_state`: Reference to the on-chain key-value storage where key is asset resource 
+    ///                 address and value is the current pool state
+    /// 
+    /// *Output*
+    /// `CDPHealthChecker`
     pub fn new_without_update(
         wrapped_cdp_data: &WrappedCDPData,
         pool_states: &KeyValueStore<ResourceAddress, LendingPoolState>,
@@ -267,6 +347,10 @@ impl CDPHealthChecker {
         Ok(extended_cdp)
     }
 
+    /// Perform health check
+    /// 
+    /// *Error*
+    /// - If the health check fails
     pub fn check_cdp(&mut self) -> Result<(), String> {
         self.update_health_check_data()?;
 
@@ -282,6 +366,10 @@ impl CDPHealthChecker {
         Ok(())
     }
 
+    /// Check if CDP can be liquidated
+    /// 
+    /// *Error*
+    /// - If the CDP is not liquidable
     pub fn can_liquidate(&mut self) -> Result<(), String> {
         self.update_health_check_data()?;
 
@@ -295,6 +383,7 @@ impl CDPHealthChecker {
         Ok(())
     }
 
+    /// (UNUSED)
     pub fn can_refinance(&mut self) -> Result<(), String> {
         self.update_health_check_data()?;
 
@@ -374,6 +463,11 @@ impl CDPHealthChecker {
             .unwrap())
     }
 
+    /// Perform update of the data required for the health check, in order that the result is 
+    /// coherent with the on-chain state
+    /// 
+    /// *Error*
+    /// - If update of the internal state fails
     pub fn update_health_check_data(&mut self) -> Result<(), String> {
         // Update the collateral positions data and calculate the total solvency value
         self.collateral_positions

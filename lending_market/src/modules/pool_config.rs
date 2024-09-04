@@ -1,6 +1,7 @@
 use crate::modules::utils::is_valid_rate;
 use scrypto::prelude::*;
 
+/// Input to update liquidation threshold
 #[derive(ScryptoSbor)]
 pub enum UpdatePoolConfigInput {
     ProtocolInterestFeeRate(Decimal),
@@ -24,6 +25,7 @@ pub enum UpdatePoolConfigInput {
     OptimalUsage(Decimal),
 }
 
+// Allow to set limit on deposit, borrow and usage limits for a pool
 pub enum CheckPoolConfigLimitInput {
     DepositLimit(Decimal),
     BorrowLimit(Decimal),
@@ -67,6 +69,10 @@ pub struct PoolConfig {
     pub optimal_usage: Decimal,
 }
 impl PoolConfig {
+    /// Perform a check on the pool configuration
+    /// 
+    /// *Error*
+    /// - If the configuration is invalid
     pub fn check(&self) -> Result<(), String> {
         if !is_valid_rate(self.protocol_interest_fee_rate) {
             return Err("Lending fee rate must be between 0 and 1".into());
@@ -127,6 +133,13 @@ impl PoolConfig {
         Ok(())
     }
 
+    /// Update the pool configuration
+    /// 
+    /// *Params*
+    /// - `pool_config_input`: The input structure for the update
+    /// 
+    /// *Errors*
+    /// - If update of the internal state fails
     pub fn update(&mut self, pool_config_input: UpdatePoolConfigInput) -> Result<(), String> {
         match pool_config_input {
             UpdatePoolConfigInput::DepositLimit(deposit_limit) => {
@@ -190,6 +203,10 @@ impl PoolConfig {
         Ok(())
     }
 
+    /// Perform a check on pool configuration limit
+    /// 
+    /// *Error*
+    /// - If the configuration is invalid
     pub fn check_limit(&self, input: CheckPoolConfigLimitInput) -> Result<(), String> {
         match input {
             CheckPoolConfigLimitInput::DepositLimit(current_deposit) => {

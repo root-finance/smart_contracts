@@ -1,11 +1,13 @@
 use scrypto::prelude::*;
 
+/// A semaphore to the pool operating status
 #[derive(ScryptoSbor, Debug, Clone, Default)]
 pub struct OperatingStatusValue {
     enabled: bool,
     set_by_admin: bool,
 }
 
+/// Enumeration of the possible operations on the pool
 #[derive(ScryptoSbor, Debug, Clone)]
 pub enum OperatingService {
     Contribute,
@@ -19,6 +21,7 @@ pub enum OperatingService {
     Flashloan,
 }
 
+/// The operating status of the pool
 #[derive(ScryptoSbor, Default)]
 pub struct OperatingStatus {
     pub is_contribute_enabled: OperatingStatusValue,
@@ -33,6 +36,10 @@ pub struct OperatingStatus {
 }
 //
 impl OperatingStatus {
+    /// Constructor
+    /// 
+    /// *Output*
+    /// An `OperatingStatus`
     pub fn new() -> Self {
         Self {
             is_contribute_enabled: OperatingStatusValue {
@@ -74,6 +81,15 @@ impl OperatingStatus {
         }
     }
 
+    /// Update the operating status
+    /// 
+    /// *Params*
+    /// - `operating_status`: The current pool operation
+    /// - `enabled`: Whether to enable or disable the operation
+    /// - `set_by_admin`: Whether the operating status change is performed by an admin
+    /// 
+    /// *Errors*
+    /// - If update of the internal state fails
     pub fn update(
         &mut self,
         operating_status: OperatingService,
@@ -105,6 +121,10 @@ impl OperatingStatus {
         Ok(())
     }
 
+    /// Getter of the currentyl enabled operation
+    /// 
+    /// *Params*
+    /// - `value`: The operation to check
     pub fn check(&self, value: OperatingService) -> bool {
         match value {
             OperatingService::Contribute => self.is_contribute_enabled.enabled,

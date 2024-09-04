@@ -79,7 +79,7 @@ fn test_deposit_withdraw_borrow_repay() {
             (btc, dec!(0.0001))
         ],
     ) //
-    .expect_commit_success();
+        .expect_commit_success();
 
     assert_eq!(
         helper
@@ -108,7 +108,7 @@ fn test_deposit_withdraw_borrow_repay() {
         usd,
         dec!(1000),
     )
-    .expect_commit_failure();
+        .expect_commit_failure();
 
     market_borrow(
         &mut helper,
@@ -118,7 +118,7 @@ fn test_deposit_withdraw_borrow_repay() {
         usd,
         dec!(100),
     )
-    .expect_commit_success();
+        .expect_commit_success();
 
     market_remove_collateral(
         &mut helper,
@@ -129,7 +129,7 @@ fn test_deposit_withdraw_borrow_repay() {
         dec!(10_000),
         false,
     )
-    .expect_commit_failure();
+        .expect_commit_failure();
 
     helper
         .test_runner
@@ -150,7 +150,7 @@ fn test_deposit_withdraw_borrow_repay() {
         usd,
         dec!(100.250312164987776789),
     )
-    .expect_commit_success();
+        .expect_commit_success();
 
     market_remove_collateral(
         &mut helper,
@@ -161,7 +161,7 @@ fn test_deposit_withdraw_borrow_repay() {
         dec!(10_000),
         false,
     )
-    .expect_commit_success();
+        .expect_commit_success();
 
     assert_eq!(
         helper
@@ -187,7 +187,7 @@ fn test_deposit_withdraw_borrow_repay() {
         usd_pu,
         dec!(2_100),
     ) //
-    .expect_commit_failure();
+        .expect_commit_failure();
 
     market_redeem(
         &mut helper,
@@ -196,7 +196,7 @@ fn test_deposit_withdraw_borrow_repay() {
         usd_pu,
         dec!(2_000),
     ) //
-    .expect_commit_success();
+        .expect_commit_success();
 
     assert_eq!(
         helper
@@ -315,7 +315,7 @@ fn test_liquidation() {
         borrower_account,
         vec![(XRD, dec!(20_000))],
     ) //
-    .expect_commit_success();
+        .expect_commit_success();
 
     let cdp_id: u64 = 1;
     // Borrow USDC, BTC and ETH
@@ -327,7 +327,7 @@ fn test_liquidation() {
         usd,
         dec!(200),
     )
-    .expect_commit_success();
+        .expect_commit_success();
 
     market_borrow(
         &mut helper,
@@ -337,7 +337,7 @@ fn test_liquidation() {
         btc,
         dec!(0.004),
     )
-    .expect_commit_success();
+        .expect_commit_success();
 
     market_borrow(
         &mut helper,
@@ -347,7 +347,7 @@ fn test_liquidation() {
         eth,
         dec!(0.05),
     )
-    .expect_commit_success();
+        .expect_commit_success();
 
     let receipt = market_list_liquidable_cdps(&mut helper);
     let event: CDPLiquidableEvent = find_event_in_result(receipt.expect_commit_success(), "CDPLiquidableEvent").expect("CDPLiquidableEvent not found");
@@ -369,7 +369,7 @@ fn test_liquidation() {
 
     let receipt = market_list_liquidable_cdps(&mut helper);
     let event: CDPLiquidableEvent = find_event_in_result(receipt.expect_commit_success(), "CDPLiquidableEvent").expect("CDPLiquidableEvent not found");
-    
+
     assert!(!event.cdps.is_empty());
     assert_eq!(pdec!(20000), *event.cdps[0].cdp_data.collaterals.get(&XRD).unwrap());
     assert_eq!(pdec!(200), *event.cdps[0].cdp_data.loans.get(&usd).unwrap());
@@ -406,8 +406,8 @@ fn test_liquidation() {
         dec!(35000),
         XRD,
         usd,
-   ).expect_commit_success();
-   swap(
+    ).expect_commit_success();
+    swap(
         &mut helper,
         liquidator_user_account,
         liquidator_user_key,
@@ -424,14 +424,14 @@ fn test_liquidation() {
         eth,
     ).expect_commit_success();
 
-   let xrd_balance = helper
+    let xrd_balance = helper
         .test_runner
         .get_component_balance(liquidator_user_account, XRD);
 
     let usd_balance = helper
         .test_runner
         .get_component_balance(liquidator_user_account, usd);
-    
+
     let btc_balance = helper
         .test_runner
         .get_component_balance(liquidator_user_account, btc);
@@ -458,7 +458,7 @@ fn test_liquidation() {
         requested_collaterals.clone(),
     ).expect_commit_failure();
 
-    let payments: Vec<(ResourceAddress, Decimal)> = vec![(usd, dec!(202)),(btc, dec!(0.0099)), (eth, dec!(0.062))];
+    let payments: Vec<(ResourceAddress, Decimal)> = vec![(usd, dec!(202)), (btc, dec!(0.0099)), (eth, dec!(0.062))];
     market_liquidation(
         &mut helper,
         liquidator_user_key,
@@ -482,47 +482,47 @@ fn test_liquidation() {
         .test_runner
         .get_component_balance(liquidator_user_account, btc) - btc_balance);
 
-        assert_eq!(dec!(0), helper
+    assert_eq!(dec!(0), helper
         .test_runner
         .get_component_balance(liquidator_user_account, eth) - eth_balance);
- 
+
     market_update_pool_state(&mut helper, btc).expect_commit_success();
     market_update_pool_state(&mut helper, usd).expect_commit_success();
     market_update_pool_state(&mut helper, eth).expect_commit_success();
     market_update_pool_state(&mut helper, XRD).expect_commit_success();
- 
+
 
     let receipt = market_list_liquidable_cdps(&mut helper);
     let event: CDPLiquidableEvent = find_event_in_result(receipt.expect_commit_success(), "CDPLiquidableEvent").expect("CDPLiquidableEvent not found");
-    
+
     assert!(event.cdps.is_empty());
 
-     // ENTERS A NEW BORROWER
-     let (borrower2_key, _, borrower2_account) = helper.test_runner.new_allocated_account();
-     helper
-         .test_runner
-         .load_account_from_faucet(borrower_account);
- 
-     //Create CDP WITH 10_000 XRD AS Collateral <=> 100 USD
-     market_create_cdp(
-         &mut helper,
-         borrower2_key,
-         borrower2_account,
-         vec![(XRD, dec!(10_000))],
-     ) //
-     .expect_commit_success();
- 
-     let cdp_id: u64 = 2;
-     // // Borrow 300$  Of USD
-     market_borrow(
-         &mut helper,
-         borrower2_key,
-         borrower2_account,
-         cdp_id,
-         usd,
-         dec!(100),
-     )
-     .expect_commit_success();
+    // ENTERS A NEW BORROWER
+    let (borrower2_key, _, borrower2_account) = helper.test_runner.new_allocated_account();
+    helper
+        .test_runner
+        .load_account_from_faucet(borrower_account);
+
+    //Create CDP WITH 10_000 XRD AS Collateral <=> 100 USD
+    market_create_cdp(
+        &mut helper,
+        borrower2_key,
+        borrower2_account,
+        vec![(XRD, dec!(10_000))],
+    ) //
+        .expect_commit_success();
+
+    let cdp_id: u64 = 2;
+    // // Borrow 300$  Of USD
+    market_borrow(
+        &mut helper,
+        borrower2_key,
+        borrower2_account,
+        cdp_id,
+        usd,
+        dec!(100),
+    )
+        .expect_commit_success();
 
     assert!(event.cdps.is_empty());
 }
@@ -576,7 +576,7 @@ fn test_partial_liquidation() {
         borrower_account,
         vec![(XRD, dec!(3000))],
     ) //
-    .expect_commit_success();
+        .expect_commit_success();
 
     let cdp_id: u64 = 1;
     // Borrow USDC, BTC and ETH
@@ -588,22 +588,22 @@ fn test_partial_liquidation() {
         usd,
         dec!(76),
     )
-    .expect_commit_success();
+        .expect_commit_success();
 
-   
+
     let receipt = market_list_liquidable_cdps(&mut helper);
     let event: CDPLiquidableEvent = find_event_in_result(receipt.expect_commit_success(), "CDPLiquidableEvent").expect("CDPLiquidableEvent not found");
     assert!(event.cdps.is_empty());
 
-     // SET UP LIQUIDATOR
-     let auth = rule!(require(NonFungibleGlobalId::from_public_key(&helper.owner_public_key)));
-     let (liquidator_user_key, liquidator_user_account) = (helper.owner_public_key, helper.test_runner.new_account_advanced(OwnerRole::Fixed(auth)));
-     admin_send_liquidator_badge(&mut helper, 1, liquidator_user_account)
-         .expect_commit_success();
+    // SET UP LIQUIDATOR
+    let auth = rule!(require(NonFungibleGlobalId::from_public_key(&helper.owner_public_key)));
+    let (liquidator_user_key, liquidator_user_account) = (helper.owner_public_key, helper.test_runner.new_account_advanced(OwnerRole::Fixed(auth)));
+    admin_send_liquidator_badge(&mut helper, 1, liquidator_user_account)
+        .expect_commit_success();
     helper
         .test_runner
         .load_account_from_faucet(liquidator_user_account);
-    
+
 
     // SWAP TO Cover debt
     swap(
@@ -616,16 +616,16 @@ fn test_partial_liquidation() {
     ).expect_commit_success();
 
     // PREPARE LIQUIDATION
-    admin_update_price(&mut helper, 1u64, usd, dec!(28)).expect_commit_success();    
+    admin_update_price(&mut helper, 1u64, usd, dec!(28)).expect_commit_success();
     market_update_pool_state(&mut helper, usd).expect_commit_success();
 
     let receipt = market_list_liquidable_cdps(&mut helper);
     let event: CDPLiquidableEvent = find_event_in_result(receipt.expect_commit_success(), "CDPLiquidableEvent").expect("CDPLiquidableEvent not found");
-    
+
     assert!(!event.cdps.is_empty());
     assert_eq!(pdec!(3000), *event.cdps[0].cdp_data.collaterals.get(&XRD).unwrap());
     assert_eq!(pdec!(76), *event.cdps[0].cdp_data.loans.get(&usd).unwrap());
-        
+
     // START LIQUIDATION
     check_cdp_for_liquidation(&mut helper, liquidator_user_key, cdp_id).expect_commit_success();
 
@@ -660,17 +660,15 @@ fn test_partial_liquidation() {
         .test_runner
         .get_component_balance(liquidator_user_account, usd) - usd_balance);
 
-  
- 
+
     market_update_pool_state(&mut helper, usd).expect_commit_success();
     market_update_pool_state(&mut helper, XRD).expect_commit_success();
- 
+
 
     let receipt = market_list_liquidable_cdps(&mut helper);
     let event: CDPLiquidableEvent = find_event_in_result(receipt.expect_commit_success(), "CDPLiquidableEvent").expect("CDPLiquidableEvent not found");
-    
-    assert!(event.cdps.is_empty());
 
+    assert!(event.cdps.is_empty());
 }
 
 
@@ -765,10 +763,10 @@ fn test_partial_liquidation_multi_collateral_multi_loan() {
         borrower_key,
         borrower_account,
         vec![
-            (eth, dec!(0.01724137931034375)), 
+            (eth, dec!(0.01724137931034375)),
             (btc, dec!(0.0008333333333325))],
     ) //
-    .expect_commit_success();
+        .expect_commit_success();
 
     let cdp_id: u64 = 1;
     // Borrow
@@ -780,7 +778,7 @@ fn test_partial_liquidation_multi_collateral_multi_loan() {
         usd,
         dec!(35),
     )
-    .expect_commit_success();
+        .expect_commit_success();
     market_borrow(
         &mut helper,
         borrower_key,
@@ -789,22 +787,22 @@ fn test_partial_liquidation_multi_collateral_multi_loan() {
         hug,
         dec!(850000),
     )
-    .expect_commit_success();
+        .expect_commit_success();
 
-   
+
     let receipt = market_list_liquidable_cdps(&mut helper);
     let event: CDPLiquidableEvent = find_event_in_result(receipt.expect_commit_success(), "CDPLiquidableEvent").expect("CDPLiquidableEvent not found");
     assert!(event.cdps.is_empty());
 
-     // SET UP LIQUIDATOR
+    // SET UP LIQUIDATOR
     let auth = rule!(require(NonFungibleGlobalId::from_public_key(&helper.owner_public_key)));
     let (liquidator_user_key, liquidator_user_account) = (helper.owner_public_key, helper.test_runner.new_account_advanced(OwnerRole::Fixed(auth)));
     admin_send_liquidator_badge(&mut helper, 1, liquidator_user_account)
-         .expect_commit_success();
+        .expect_commit_success();
     helper
         .test_runner
         .load_account_from_faucet(liquidator_user_account);
-    
+
 
     // SWAP TO Cover debt
     swap(
@@ -830,13 +828,13 @@ fn test_partial_liquidation_multi_collateral_multi_loan() {
 
     let receipt = market_list_liquidable_cdps(&mut helper);
     let event: CDPLiquidableEvent = find_event_in_result(receipt.expect_commit_success(), "CDPLiquidableEvent").expect("CDPLiquidableEvent not found");
-    
+
     assert!(!event.cdps.is_empty());
     assert_eq!(pdec!(0.01724137931034375), *event.cdps[0].cdp_data.collaterals.get(&eth).unwrap());
     assert_eq!(pdec!(0.0008333333333325), *event.cdps[0].cdp_data.collaterals.get(&btc).unwrap());
     assert_eq!(pdec!(35), *event.cdps[0].cdp_data.loans.get(&usd).unwrap());
     assert_eq!(pdec!(850000), *event.cdps[0].cdp_data.loans.get(&hug).unwrap());
-        
+
     // START LIQUIDATION
     check_cdp_for_liquidation(&mut helper, liquidator_user_key, cdp_id).expect_commit_success();
 
@@ -860,7 +858,7 @@ fn test_partial_liquidation_multi_collateral_multi_loan() {
         1,
         cdp_id,
         payments,
-        Some(dec!(0.4) * ( dec!(35) * dec!(25)  + dec!(850000) * dec!(0.001))),
+        Some(dec!(0.4) * (dec!(35) * dec!(25) + dec!(850000) * dec!(0.001))),
         requested_collaterals.clone(),
     ).expect_commit_success();
 
@@ -872,7 +870,7 @@ fn test_partial_liquidation_multi_collateral_multi_loan() {
         .test_runner
         .get_component_balance(liquidator_user_account, hug) - hug_balance);
 
-  
+
     market_update_pool_state(&mut helper, eth).expect_commit_success();
     market_update_pool_state(&mut helper, btc).expect_commit_success();
     market_update_pool_state(&mut helper, usd).expect_commit_success();
@@ -880,12 +878,165 @@ fn test_partial_liquidation_multi_collateral_multi_loan() {
 
     let receipt = market_list_liquidable_cdps(&mut helper);
     let event: CDPLiquidableEvent = find_event_in_result(receipt.expect_commit_success(), "CDPLiquidableEvent").expect("CDPLiquidableEvent not found");
-    
+
     assert!(event.cdps.is_empty());
 
     let receipt = market_show_cdp(&mut helper, cdp_id);
     assert!(format!("{:?}", receipt).contains("9.608"));
     assert!(format!("{:?}", receipt).contains("850000"));
     receipt.expect_commit_success();
+}
 
+#[test]
+fn test_contribute_and_borrow_limits() {
+    let mut helper = TestHelper::new();
+    let usd = helper.faucet.usdc_resource_address;
+
+    // Set up initial pool state
+    let (lp_user_key, _, lp_user_account) = helper.test_runner.new_allocated_account();
+    for _ in 1..30 {
+        helper.test_runner.load_account_from_faucet(lp_user_account);
+    }
+    get_resource(&mut helper, lp_user_key, lp_user_account, dec!(300000), usd)
+        .expect_commit_success();
+
+    market_contribute(&mut helper, lp_user_key, lp_user_account, usd, dec!(10000))
+        .expect_commit_success();
+
+    // Set up borrower
+    let (borrower_key, _, borrower_account) = helper.test_runner.new_allocated_account();
+    for _ in 1..30 {
+        helper.test_runner.load_account_from_faucet(borrower_account);
+    }
+    get_resource(&mut helper, borrower_key, borrower_account, dec!(300000), usd)
+        .expect_commit_success();
+
+    // Borrower contributes collateral
+    let collateral_amount = dec!(5000);
+    market_contribute(&mut helper, borrower_key, borrower_account, usd, collateral_amount)
+        .expect_commit_success();
+
+    // Create CDP
+    market_create_cdp(
+        &mut helper,
+        borrower_key,
+        borrower_account,
+        vec![(usd, collateral_amount)],
+    )
+        .expect_commit_success();
+
+    // Try to borrow within allowed LTV (assuming 75% LTV)
+    let safe_borrow_amount = collateral_amount * dec!(0.7); // 70% of collateral
+    let safe_borrow_receipt = market_borrow(
+        &mut helper,
+        borrower_key,
+        borrower_account,
+        1u64,
+        usd,
+        safe_borrow_amount,
+    );
+
+    // This borrow should succeed
+    safe_borrow_receipt.expect_commit_success();
+    println!("Safe borrow of {} USD succeeded", safe_borrow_amount);
+
+    // Now try to borrow more, exceeding the LTV limit
+    let excess_borrow_amount = collateral_amount * dec!(0.3); // Additional 30%, total would be 100%
+    let excess_borrow_receipt = market_borrow(
+        &mut helper,
+        borrower_key,
+        borrower_account,
+        1u64,
+        usd,
+        excess_borrow_amount,
+    );
+
+    // This borrow should fail
+    assert!(excess_borrow_receipt.is_commit_failure(), "Excess borrow should have failed");
+}
+
+#[test]
+fn test_flashloan_abuse_attempt() {
+    let mut helper = TestHelper::new();
+    let usd = helper.faucet.usdc_resource_address;
+    admin_update_price(&mut helper, 1u64, usd, dec!(0.00001)).expect_commit_success();
+
+    // Set up initial pool state
+    let (lp_user_key, _, lp_user_account) = helper.test_runner.new_allocated_account();
+
+    helper.test_runner.load_account_from_faucet(lp_user_account);
+
+    get_resource(&mut helper, lp_user_key, lp_user_account, dec!(100), usd)
+        .expect_commit_success();
+
+    market_contribute(&mut helper, lp_user_key, lp_user_account, usd, dec!(4_000_000))
+        .expect_commit_success();
+
+    // Set up attacker
+    let (attacker_key, _, attacker_account) = helper.test_runner.new_allocated_account();
+    helper.test_runner.load_account_from_faucet(attacker_account);
+
+    get_resource(&mut helper, attacker_key, attacker_account, dec!(500), usd)
+        .expect_commit_success();
+
+    // Attacker contributes a large amount
+    let attacker_collateral = dec!(9_000_000);
+    market_contribute(&mut helper, attacker_key, attacker_account, usd, attacker_collateral)
+        .expect_commit_success();
+
+    // Create CDP
+    market_create_cdp(
+        &mut helper,
+        attacker_key,
+        attacker_account,
+        vec![(usd, attacker_collateral)],
+    )
+        .expect_commit_success();
+
+    // Try to borrow the maximum possible amount
+    let max_borrow_amount = attacker_collateral * dec!(0.75); // Assuming 75% LTV
+    let borrow_receipt = market_borrow(
+        &mut helper,
+        attacker_key,
+        attacker_account,
+        1u64,
+        usd,
+        max_borrow_amount,
+    );
+
+    // This borrow should succeed
+    borrow_receipt.expect_commit_success();
+
+    // Now, try to remove all collateral (which should fail)
+    let remove_collateral_receipt = market_remove_collateral(
+        &mut helper,
+        attacker_key,
+        attacker_account,
+        1u64,
+        usd,
+        attacker_collateral,
+        false,
+    );
+
+    // This removal should fail
+    assert!(remove_collateral_receipt.is_commit_failure(), "Collateral removal should have failed");
+
+    // Try to repay a small amount and then remove more collateral than should be allowed
+    let small_repay_amount = dec!(1000);
+    market_repay(&mut helper, attacker_key, attacker_account, 1u64, usd, small_repay_amount)
+        .expect_commit_success();
+
+    let excess_remove_amount = attacker_collateral - max_borrow_amount + small_repay_amount + dec!(1);
+    let excess_remove_receipt = market_remove_collateral(
+        &mut helper,
+        attacker_key,
+        attacker_account,
+        1u64,
+        usd,
+        excess_remove_amount,
+        false,
+    );
+
+    // This removal should also fail
+    assert!(excess_remove_receipt.is_commit_failure(), "Excess collateral removal should have failed");
 }

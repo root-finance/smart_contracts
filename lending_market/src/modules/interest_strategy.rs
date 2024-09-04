@@ -1,6 +1,7 @@
 use super::utils::is_valid_rate;
 use scrypto::prelude::*;
 
+/// Slopes of the interest strategy
 #[derive(ScryptoSbor, Clone, Debug, Default)]
 pub struct InterestStrategyBreakPoints {
     pub r0: Decimal,
@@ -8,18 +9,30 @@ pub struct InterestStrategyBreakPoints {
     pub r2: Decimal,
 }
 
+/// Linear interest strategy allowing several slopes
 #[derive(ScryptoSbor, Default, Clone)]
 pub struct InterestStrategy {
     break_points: InterestStrategyBreakPoints,
 }
 
 impl InterestStrategy {
+    /// Constructor
+    /// 
+    /// *Output*
+    /// A new `InterestStrategy` 
     pub fn new() -> Self {
         Self {
             break_points: InterestStrategyBreakPoints::default(),
         }
     }
 
+    /// Setter of the interest strategy breakpoints
+    /// 
+    /// *Params*
+    /// - `interest_strategy_break_points``: The interest strategy breakpoints to set
+    /// 
+    /// *Error*
+    /// - If update of the internal state fails
     pub fn set_breakpoints(
         &mut self,
         interest_strategy_break_points: InterestStrategyBreakPoints,
@@ -48,6 +61,14 @@ impl InterestStrategy {
         Ok(())
     }
 
+    /// Getter of the interest rate
+    /// 
+    /// *Params*
+    ///  - `usage`: The pool usage
+    ///  - `optimal_usage`: The optimal pool usage
+    /// 
+    /// *Errors*
+    ///  - If parameters are invalid
     pub fn get_interest_rate(&self, usage: Decimal, optimal_usage: Decimal) -> Result<Decimal, String> {
         if !is_valid_rate(usage) {
             return Err(format!("Usage must be between 0 and 1, inclusive, was {usage}"));

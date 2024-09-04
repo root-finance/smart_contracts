@@ -58,7 +58,7 @@ fn test_get_loan_unit() {
         loan_updated: false,
         liquidated_updated: false
     };
-    assert_eq!(wrapped_cdp_data.get_loan_unit(res_address), pdec!(10));
+    assert_eq!(wrapped_cdp_data.get_loan_units(res_address), pdec!(10));
 }
 
 #[test]

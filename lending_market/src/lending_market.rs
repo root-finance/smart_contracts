@@ -6,7 +6,7 @@ use crate::resources::*;
 use scrypto::prelude::*;
 
 
-
+/// Input to update CDP data
 #[derive(ScryptoSbor)]
 pub enum UpdateCDPInput {
     KeyImageURL(String),
@@ -20,8 +20,11 @@ pub enum UpdateCDPInput {
 mod lending_market {
 
     extern_blueprint!(
+        // Uncomment one of the following addresses in order to wire the correct component
+        // according to the test scenario or depoloyment
+        //
         // "package_sim1p4nk9h5kw2mcmwn5u2xcmlmwap8j6dzet7w7zztzz55p70rgqs4vag", // resim sdk
-        //"package_sim1pkc0e8f9yhlvpv38s2ymrplu7q366y3k8zc53zf2srlm7qm64fk043", // testing
+        // "package_sim1pkc0e8f9yhlvpv38s2ymrplu7q366y3k8zc53zf2srlm7qm64fk043", // testing
         "package_tdx_2_1p4p4wqvt58vz525uj444mgpfacx5cwzj20zqkmqt04f75qmx5mtc6r",  // stokenet
         SingleResourcePool {
 
@@ -141,48 +144,57 @@ mod lending_market {
         };
     }
 
+    /// Lending market component
     struct LendingMarket {
         /// Save the admin rule for lending pool creation
         admin_rule: AccessRule,
 
-        ///
+        /// Resource manager of CDPs
         cdp_res_manager: ResourceManager,
 
-        ///
+        /// Counter of created CDPs
         cdp_counter: u64,
 
-        ///
+        /// Counter of created liquidators
         liquidator_counter: u64,
 
         /// Current lending market component address
         market_component_address: ComponentAddress,
 
-        ///
+        /// Map the asset resource address to the respective pool unit resource address
         pool_unit_refs: IndexMap<ResourceAddress, ResourceAddress>,
 
-        ///
+        /// Map the pool unit resource address to the respective asset resource address
         reverse_pool_unit_refs: IndexMap<ResourceAddress, ResourceAddress>,
 
-        ///
+        /// List of assets 
         listed_assets: IndexSet<ResourceAddress>,
 
-        ///
+        /// Map the asset resource addresses to the pool states
         pool_states: KeyValueStore<ResourceAddress, LendingPoolState>,
 
-        ///
+        /// Resource manager of the transient token, like liquidation token
         transient_res_manager: ResourceManager,
 
-        ///
+        /// Resource manager of the liquidator badge
         liquidator_badge_manager: ResourceManager,
 
-        ///
+        /// The operating status of the market
         operating_status: OperatingStatus,
 
-        ///
+        /// The markedt configuration
         market_config: MarketConfig,
     }
 
     impl LendingMarket {
+        /// Instantiate the lending market component with a global address
+        /// 
+        /// *Params*
+        /// - `market_config`: The market configuration
+        /// 
+        /// *Output*
+        /// - Admin badge
+        /// - Reserve collector badge
         pub fn instantiate(market_config: MarketConfig) -> (NonFungibleBucket, NonFungibleBucket) {
             // Check inputs
             market_config.check().expect("Invalid market config");
@@ -265,6 +277,14 @@ mod lending_market {
         POOL MANAGEMENT METHODS
         */
 
+        /// Create a lending pool inside the maket
+        /// 
+        /// *Params*
+        /// - `price_feed_component`: Global address of the price oracle
+        /// - `pool_res_address`: The resource address of the asset exchanged in the pool
+        /// - `pool_config`: The pool configuration
+        /// - `interest_strategy_break_points`: The interest strategy break points
+        /// - `liquidation_threshold`: The liquidation threshold
         pub fn create_lending_pool(
             &mut self,
             price_feed_component: Global<AnyComponent>,
@@ -371,7 +391,12 @@ mod lending_market {
             self.listed_assets.insert(pool_res_address);
         }
 
-        // Collect reserve retention from all pools
+        /// Collect reserve retention from all pools
+        /// 
+        /// *Output*
+        /// - List of tuples having
+        ///     - The price of the asset
+        ///     - The asset coming from the reserve vault
         pub fn collect_reserve(&mut self) -> Vec<(Decimal, Bucket)> {
             let listed_assets = self.listed_assets.clone();
 
@@ -389,6 +414,11 @@ mod lending_market {
                 .collect()
         }
 
+        /// Update the price oracle component of a pool
+        /// 
+        /// *Params*
+        /// - `pool_res_address`: The pool resource address for which to change the price oracle
+        /// - `price_feed`: Global address of the price oracle component
         pub fn update_price_feed(
             &mut self,
             pool_res_address: ResourceAddress,
@@ -401,6 +431,11 @@ mod lending_market {
             pool_state.price_feed_comp = price_feed;
         }
 
+        /// Update liquidation threshold of a pool
+        /// 
+        /// *Params*
+        /// - `pool_res_address`: The pool resource address for which to change the liquidation threshold
+        /// - `value`: Input of the liquidation threshold update
         pub fn update_liquidation_threshold(
             &mut self,
             pool_res_address: ResourceAddress,
@@ -414,6 +449,11 @@ mod lending_market {
                 .expect("Invalid liquidation threshold");
         }
 
+        /// Update interest strategy of a pool
+        /// 
+        /// *Params*
+        /// - `pool_res_address`: The pool resource address for which to change the interest strategy
+        /// - `interest_strategy_break_points`: Input of the interest strategy update
         pub fn update_interest_strategy(
             &mut self,
             pool_res_address: ResourceAddress,
@@ -427,12 +467,21 @@ mod lending_market {
                 .expect("Invalid interest strategy breakpoints");
         }
 
+        /// Update market configuration
+        /// 
+        /// *Params*
+        /// - `value`: Input of the market configuration update
         pub fn update_market_config(&mut self, value: UpdateMarketConfigInput) {
             self.market_config
                 .update(value)
                 .expect("Invalid market config");
         }
 
+        /// Update pool configuration
+        /// 
+        /// *Params*
+        /// - `pool_res_address`: The pool resource address for which to change the interest strategy
+        /// - `value`: Input of the pool configuration update
         pub fn update_pool_config(
             &mut self,
             pool_res_address: ResourceAddress,
@@ -446,6 +495,12 @@ mod lending_market {
                 .expect("Invalid pool config");
         }
 
+        /// Update pool state, recomputing price of the asset and accrued interest
+        /// 
+        /// *Params*
+        /// - `pool_res_address`: The pool resource address for which to change the interest strategy
+        /// - `bypass_price_debounce`: Whether to debounce the price update if a recent update already happened
+        /// - `bypass_interest_debounce`: Whether to debounce the interest update if a recent update already happened
         pub fn update_pool_state(
             &mut self,
             pool_res_address: ResourceAddress,
@@ -479,8 +534,13 @@ mod lending_market {
             }
         }
 
-        // Update the operating status of the lending market or a specific pool
-        // Update made by a moderator can be reverted by an admin
+        /// Update the operating status of the lending market or a specific pool
+        /// Update made by a moderator can be reverted by an admin
+        /// 
+        /// *Params*
+        /// - `value`: The operating status
+        /// - `enabled`: Whether the operating status is enabled or not
+        /// - `pool_res_address`: Optionally specify the pool to restrict the change, else it will be applied to the market
         pub fn update_operating_status(
             &mut self,
             value: OperatingService,
@@ -491,8 +551,13 @@ mod lending_market {
                 .expect("Error updating operating status by a moderator")
         }
 
-        // Update the operating status of the lending market or a specific pool with admin flag
-        // Update made by an admin will not be reverted by a moderator
+        /// Update the operating status of the lending market or a specific pool with admin flag
+        /// Update made by an admin will not be reverted by a moderator
+        /// 
+        /// *Params*
+        /// - `value`: The operating status
+        /// - `enabled`: Whether the operating status is enabled or not
+        /// - `pool_res_address`: Optionally specify the pool to restrict the change, else it will be applied to the market
         pub fn admin_update_operating_status(
             &mut self,
             value: OperatingService,
@@ -503,8 +568,17 @@ mod lending_market {
                 .expect("Error updating operating status by an admin")
         }
 
-        ///*  CDP CREATION AND MANAGEMENT METHODS * ///
+        /*  CDP CREATION AND MANAGEMENT METHODS */
 
+        /// Retrieves a paginated list of CDPs to liquidate.
+        /// Pagination is necessary since the transaction may exceed maximum execution cost
+        /// if too many CDPs are evaluted.
+        /// **This method does not update the chain state and is invoked preferably
+        /// by RPC, without incurring in any cost.**
+        /// 
+        /// *Params*
+        /// - `skip`: The pagination offset
+        /// - `limit`: The pagination limit
         pub fn list_liquidable_cdps(&self, skip: u64, limit: u64) -> Vec<CDPLiquidable> {
             let mut results = vec![];
             // Logger::debug(format!("self.cdp_counter  {}", self.cdp_counter ));
@@ -534,6 +608,16 @@ mod lending_market {
             results
         }
 
+        /// Create a CDP
+        /// 
+        /// *Params*
+        /// - `name`: The optional name of the CDP
+        /// - `description`: The optional description of the CDP
+        /// - `key_image_url`: The optional icon of the CDP
+        /// - deposits: The assets to put as collateral
+        /// 
+        /// *Output*
+        /// - An NFT identifying the newly created CDP
         pub fn create_cdp(
             &mut self,
             name: Option<String>,
@@ -541,6 +625,10 @@ mod lending_market {
             key_image_url: Option<String>,
             deposits: Vec<Bucket>,
         ) -> Bucket {
+            if deposits.is_empty() {
+                panic!("INVALID_INPUT: creation of a CDP without deposits is not allowed")
+            }
+            
             let cdp_id = NonFungibleLocalId::Integer(self._get_new_cdp_id().into());
 
             let now = Clock::current_time(TimePrecision::Second).seconds_since_unix_epoch;
@@ -567,6 +655,11 @@ mod lending_market {
             cdp
         }
 
+        /// Update a CDP
+        /// 
+        /// *Params*
+        /// - `cdp_proof`: Proof of ownership of the CDP
+        /// - `value`: Input of the cdp update
         pub fn update_cdp(&mut self, cdp_proof: Proof, value: UpdateCDPInput) {
             let cdp_id = self._validate_cdp_proof(cdp_proof);
 
@@ -598,6 +691,15 @@ mod lending_market {
             );
         }
 
+        /// Shows a CDP
+        /// **This method does not update the chain state and is invoked preferably
+        /// by RPC, without incurring in any cost.**
+        /// 
+        /// *Params*
+        /// - `cdp_id`: Id of the CDP to show
+        /// 
+        /// *Output*
+        /// - A `WrappedCDPData` if the CDP exists, nothing otherwise
         pub fn show_cdp(&self, cdp_id: u64) -> Option<WrappedCDPData> {
             let cdp_id = &NonFungibleLocalId::Integer(cdp_id.into());
             if self.cdp_res_manager.non_fungible_exists(cdp_id) {
@@ -608,8 +710,9 @@ mod lending_market {
             }
         }
 
-        // / * Flashloan methods * ///
+        /* Flashloan methods */
 
+        /// (UNUSED)
         pub fn take_batch_flashloan(
             &mut self,
             loan_amounts: IndexMap<ResourceAddress, Decimal>,
@@ -661,6 +764,7 @@ mod lending_market {
             )
         }
 
+        /// (UNUSED)
         pub fn repay_batch_flashloan(
             &mut self,
             payments: Vec<Bucket>,
@@ -744,8 +848,15 @@ mod lending_market {
             remainders
         }
 
-        //* Lending and Borrowing methods * //
+        /* Lending and Borrowing methods */
 
+        /// Contribute assets to the lending market
+        /// 
+        /// *Params*
+        /// - `assets`: Assets to contribute
+        /// 
+        /// *Output*
+        /// - Pool units equivalent of the contributed assets
         pub fn contribute(&mut self, assets: Bucket) -> Bucket {
             self._check_operating_status(OperatingService::Contribute);
 
@@ -760,6 +871,13 @@ mod lending_market {
                 .expect("Error contributing to pool")
         }
 
+        /// Redeem assets from the lending market
+        /// 
+        /// *Params*
+        /// - `pool_units`: Pool units to return
+        /// 
+        /// *Output*
+        /// - Assets equivalent of the returned pool units
         pub fn redeem(&mut self, pool_units: Bucket) -> Bucket {
             self._check_operating_status(OperatingService::Redeem);
 
@@ -772,6 +890,11 @@ mod lending_market {
                 .redeem_proxy(pool_units, false)
         }
 
+        /// Add collateral 
+        /// 
+        /// *Params*
+        /// - `cdp_proof`: Proof of ownership of the CDP where to add collateral
+        /// - `deposits`: The collaterals to deposit
         pub fn add_collateral(&mut self, cdp_proof: Proof, deposits: Vec<Bucket>) {
             let cdp_id = self._validate_cdp_proof(cdp_proof);
 
@@ -780,6 +903,17 @@ mod lending_market {
             emit_cdp_event!(cdp_id, CDPUpdatedEvenType::AddCollateral);
         }
 
+        /// Remove collateral 
+        /// 
+        /// *Params*
+        /// - `cdp_proof`: Proof of ownership of the CDP where to remove collateral
+        /// - `withdraw_details`: A list of details for the withdraw specifying
+        ///   - The resource address
+        ///   - The amount of asset
+        ///   - Whether to keep pool units or redeem asset
+        /// 
+        /// *Output*
+        /// The withdrawn resources, either assets or pool units
         pub fn remove_collateral(
             &mut self,
             cdp_proof: Proof,
@@ -838,6 +972,13 @@ mod lending_market {
             withdrawals
         }
 
+        /// Borrow assets from the market
+        /// 
+        /// *Params*
+        /// - `cdp_proof`: Proof of ownership of the CDP where to add the loan
+        /// - `borrows`: List of tuples indicating
+        ///   - The resource address
+        ///   - The amount of asset to borrow
         pub fn borrow(
             &mut self,
             cdp_proof: Proof,
@@ -886,6 +1027,16 @@ mod lending_market {
             loans
         }
 
+        /// Repay assets from the market
+        /// 
+        /// *Params*
+        /// - `cdp_proof`: Proof of ownership of the CDP where to add the loan
+        /// - `_delegatee_cdp_id`: (UNUSED)
+        /// - `payments`: List of payments
+        /// 
+        /// *Output*
+        /// - The remainders of the payments
+        /// - The total value payed
         pub fn repay(
             &mut self,
             cdp_proof: Proof,
@@ -914,6 +1065,7 @@ mod lending_market {
             (remainders, payment_value)
         }
 
+        /// (UNUSED)
         pub fn refinance(
             &mut self,
             cdp_id: NonFungibleLocalId,
@@ -940,6 +1092,19 @@ mod lending_market {
             (remainders, payment_value)
         }
 
+        /// Starts partial or complete liquidation of a CDP. This method must be executed
+        /// in the same transaction as `end_liquidation` and will return a transient NFT to
+        /// keep trace of the process.
+        /// 
+        /// *Params*
+        /// - `cdp_id`: Id of the CDP to liquidate
+        /// - `requested_collaterals`: The collaterals to liquidate
+        /// - `total_payment_value`: The value to repay in order to bring the CDP back into 
+        ///   an healthy state
+        /// 
+        /// *Output*
+        /// - The liquidated colaterals
+        /// - The NFT to terminate the transaction
         pub fn start_liquidation(
             &mut self,
             cdp_id: NonFungibleLocalId,
@@ -990,6 +1155,16 @@ mod lending_market {
             (returned_collaterals, liquidation_term)
         }
 
+        /// Terminates a liquidation started in the same transaction as `start_liquidation`
+        /// 
+        /// *Params*
+        /// - `payments`: List of payments to bring the CDP back into 
+        ///   an healthy state
+        /// - `liquidation_term`: NFT to use to terminate the transaction
+        /// 
+        /// *Output*
+        /// - The payment remainders
+        /// - The total value payed
         pub fn end_liquidation(
             &mut self,
             payments: Vec<Bucket>,
@@ -1039,6 +1214,10 @@ mod lending_market {
             (remainders, total_payment_value)
         }
 
+        /// Mints a new liquidator badge
+        /// 
+        /// *Output*
+        /// - A new liquidator badge
         pub fn mint_liquidator_badge(&mut self) -> Bucket {
             let badge_id = NonFungibleLocalId::Integer(self._get_new_liquidator_id().into());
 
@@ -1046,6 +1225,16 @@ mod lending_market {
                 .mint_non_fungible(&badge_id, LiquidatorBadgeData {})
         }
 
+        /// Verifies whether a CDP is liquidable or not. This is necessary right before the
+        /// call to start liquidation and will determine the exact liquidable amount.
+        /// If more than a minute is elapsed between the call to `check_cdp_for_liquidation` and 
+        /// the call to `start_liquidation`, the information is considered obsolete.
+        /// 
+        /// *Params*
+        /// - `cdp_id`: The id of the CDP to check
+        /// 
+        /// *Output*
+        /// - Whether the CDP is liquidable or not
         pub fn check_cdp_for_liquidation(&mut self, cdp_id: NonFungibleLocalId) -> bool {
             let mut cdp_data: WrappedCDPData = WrappedCDPData::new(&self.cdp_res_manager, &cdp_id);
 
@@ -1073,6 +1262,7 @@ mod lending_market {
             can_liquidate
         }
 
+        /// (UNUSED)
         pub fn fast_liquidation(
             &mut self,
             cdp_id: NonFungibleLocalId,
@@ -1112,8 +1302,9 @@ mod lending_market {
             (remainders, returned_collaterals, total_payment_value)
         }
 
-        //*  PUBLIC QUERIES   *//
+        /*  PUBLIC QUERIES   */
 
+        /// Getter of the statistics of all the pools in the market
         pub fn list_info_stats(&self) -> MarketStatsAllPools {
             let second_per_year = 31536000;
             let mut total_supply_all_pools = Decimal::zero();
@@ -1181,7 +1372,7 @@ mod lending_market {
             market_total_stats
         }
 
-        //*  PRIVATE UTILITY METHODS   *//
+        /*  PRIVATE UTILITY METHODS */
 
         fn _add_collateral_internal(&mut self, cdp_id: NonFungibleLocalId, deposits: Vec<Bucket>) {
             self._check_operating_status(OperatingService::AddCollateral);
@@ -1346,7 +1537,7 @@ mod lending_market {
 
                 let (_, pool_borrowed_amount) = pool_state.pool.get_pooled_amount();
 
-                let position_loan_units = cdp_data.get_loan_unit(pool_res_address);
+                let position_loan_units = cdp_data.get_loan_units(pool_res_address);
 
                 let mut max_loan_amount = position_loan_units / loan_unit_ratio;
 
@@ -1381,7 +1572,7 @@ mod lending_market {
                     .deposit_for_repay(payment.take_advanced(
                         repay_amount,
                         WithdrawStrategy::Rounded(RoundingMode::ToNearestMidpointToEven),
-                    ), !for_liquidation)
+                    ), for_liquidation)
                     .expect("Error in deposit_from_repay");
 
                 cdp_data
