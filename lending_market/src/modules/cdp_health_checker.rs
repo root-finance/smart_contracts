@@ -200,13 +200,13 @@ impl ExtendedLoanPositionData {
 #[derive(ScryptoSbor, Clone, Debug)]
 pub struct CDPHealthChecker {
     /// The type of the CDP
-    cdp_type: CDPType,
+    pub cdp_type: CDPType,
 
     /// The total value of the loan in the CDP 
-    total_loan_value: Decimal,
+    pub total_loan_value: Decimal,
 
     /// The loan to value ratio is the ratio between the total loan value, and the total collateral value.
-    total_loan_to_value_ratio: Decimal,
+    pub total_loan_to_value_ratio: Decimal,
 
     /// Max loan value in the CDP that can be repaid
     pub self_closable_loan_value: Decimal,
@@ -378,17 +378,6 @@ impl CDPHealthChecker {
                 "CDP can not be liquidated: LTV ratio of {} is lower than 1",
                 self.total_loan_to_value_ratio
             ));
-        }
-
-        Ok(())
-    }
-
-    /// (UNUSED)
-    pub fn can_refinance(&mut self) -> Result<(), String> {
-        self.update_health_check_data()?;
-
-        if self.total_loan_to_value_ratio != Decimal::MAX {
-            return Err("This CDP can not be refinanced: LTV ratio greater than 1".into());
         }
 
         Ok(())

@@ -3,6 +3,7 @@ use radix_engine_interface::prelude::*;
 use transaction::builder::ManifestBuilder;
 
 #[test]
+#[ignore = "Tested code was definitively removed because unused"]
 pub fn test_invalid_flash_loan() {
     let mut helper = TestHelper::new();
 
@@ -84,6 +85,7 @@ pub fn test_invalid_flash_loan() {
 }
 
 #[test]
+#[ignore = "Tested code was definitively removed because unused"]
 pub fn test_valid_flash_loan() {
     let mut helper = TestHelper::new();
 
@@ -168,6 +170,7 @@ pub fn test_valid_flash_loan() {
 
 
 #[test]
+#[ignore = "Tested code was definitively removed because unused"]
 pub fn test_exploit_flashloan_by_burning_transient() {
     let mut helper = TestHelper::new();
 

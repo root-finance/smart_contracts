@@ -14,9 +14,7 @@ pub enum CDPUpdatedEvenType {
     /// Signals repay of a borrowed amount happened
     Repay,
     /// Signals CDP liquidation
-    Liquidate,
-    /// (UNUSED)
-    Refinance,
+    Liquidate
 }
 
 /// Event launched in case of CDP update
@@ -89,12 +87,6 @@ pub struct CollaterizedDebtPositionData {
     #[mutable]
     pub loans: IndexMap<ResourceAddress, PreciseDecimal>,
 
-    /// Map of liquidated values, having the asset as key and the unit amount as value.
-    /// Here, `PreciseDecimal` helps in keeping precision in computation
-    /// even if the actual amount will require to be expressed as `Decimal`
-    #[mutable]
-    pub liquidated: IndexMap<ResourceAddress, PreciseDecimal>,
-
     /// The maximum amount of liquidable value for this collateralized debt position
     #[mutable]
     pub liquidable: Option<Decimal>
@@ -108,14 +100,10 @@ pub struct WrappedCDPData {
     pub cdp_data: CollaterizedDebtPositionData,
     /// The wrapped CDP id
     pub cdp_id: NonFungibleLocalId,
-    /// (UNUSED)
-    pub cdp_type_updated: bool,
     /// Indicator of an update in the collateral values
     pub collateral_updated: bool,
     /// Indicator of an update in the loaned values
     pub loan_updated: bool,
-    /// Indicator of an update in the liquidated values
-    pub liquidated_updated: bool,
 }
 
 impl WrappedCDPData {
@@ -132,10 +120,8 @@ impl WrappedCDPData {
         WrappedCDPData {
             cdp_id: cdp_id.clone(),
             cdp_data,
-            cdp_type_updated: false,
             collateral_updated: false,
-            loan_updated: false,
-            liquidated_updated: false
+            loan_updated: false
         }
     }
 
@@ -160,12 +146,6 @@ impl WrappedCDPData {
     /// Getter of the loan units amount
     pub fn get_loan_units(&self, loan: ResourceAddress) -> PreciseDecimal {
         Self::get_units(&self.cdp_data.loans, loan)
-    }
-
-    /// (UNUSED)
-    pub fn update_cdp_type(&mut self, cdp_type: CDPType) {
-        self.cdp_data.cdp_type = cdp_type;
-        self.cdp_type_updated = true;
     }
 
     /// Update the CDP collateral values
@@ -212,11 +192,7 @@ impl WrappedCDPData {
         &mut self
     ) -> Result<(), String> {
         if self.cdp_data.collaterals.len() == 0 && self.cdp_data.loans.len() > 0 {
-            for (res_address, units) in &self.cdp_data.loans {
-                Self::update_map(&mut self.cdp_data.liquidated, *res_address, *units).map_err(|err| format!("Error updating cdp loan to liquidated: {err}"))?;
-            }
             self.cdp_data.loans.clear();
-            self.liquidated_updated = true;
             self.loan_updated = true;
         }
         Ok(())
@@ -237,15 +213,6 @@ impl WrappedCDPData {
     ) -> Result<(), String> {
         let mut updated = false;
 
-        if self.cdp_type_updated {
-            res_manager.update_non_fungible_data(
-                &self.cdp_id,
-                "cdp_type",
-                self.cdp_data.cdp_type.clone(),
-            );
-            updated = true;
-        }
-
         if self.collateral_updated {
             res_manager.update_non_fungible_data(
                 &self.cdp_id,
@@ -260,15 +227,6 @@ impl WrappedCDPData {
                 &self.cdp_id,
                 "loans",
                 self.cdp_data.loans.clone(),
-            );
-            updated = true;
-        }
-
-        if self.liquidated_updated {
-            res_manager.update_non_fungible_data(
-                &self.cdp_id,
-                "liquidated",
-                self.cdp_data.liquidated.clone(),
             );
             updated = true;
         }

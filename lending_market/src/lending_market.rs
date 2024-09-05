@@ -24,8 +24,8 @@ mod lending_market {
         // according to the test scenario or depoloyment
         //
         // "package_sim1p4nk9h5kw2mcmwn5u2xcmlmwap8j6dzet7w7zztzz55p70rgqs4vag", // resim sdk
-        // "package_sim1pkc0e8f9yhlvpv38s2ymrplu7q366y3k8zc53zf2srlm7qm64fk043", // testing
-        "package_tdx_2_1p4p4wqvt58vz525uj444mgpfacx5cwzj20zqkmqt04f75qmx5mtc6r",  // stokenet
+        "package_sim1pkc0e8f9yhlvpv38s2ymrplu7q366y3k8zc53zf2srlm7qm64fk043", // testing
+        // "package_tdx_2_1p4p4wqvt58vz525uj444mgpfacx5cwzj20zqkmqt04f75qmx5mtc6r",  // stokenet
         SingleResourcePool {
 
             fn instantiate(
@@ -98,11 +98,6 @@ mod lending_market {
 
             show_cdp => PUBLIC;
 
-            // Flashloan methods
-
-            take_batch_flashloan => PUBLIC;
-            repay_batch_flashloan => PUBLIC;
-
             // Lending and Borrowing methods
 
             contribute => PUBLIC;
@@ -116,7 +111,6 @@ mod lending_market {
             // Liquidation methods
             mint_liquidator_badge => restrict_to: [admin];
             list_liquidable_cdps => PUBLIC;
-            refinance => PUBLIC;
             check_cdp_for_liquidation => PUBLIC;
             start_liquidation => restrict_to: [admin,liquidator];
             end_liquidation => restrict_to: [admin,liquidator];
@@ -640,7 +634,6 @@ mod lending_market {
                 cdp_type: CDPType::Standard,
                 collaterals: IndexMap::new(),
                 loans: IndexMap::new(),
-                liquidated: IndexMap::new(),
                 minted_at: now,
                 updated_at: now,
                 liquidable: None,
@@ -708,144 +701,6 @@ mod lending_market {
             } else {
                 None
             }
-        }
-
-        /* Flashloan methods */
-
-        /// (UNUSED)
-        pub fn take_batch_flashloan(
-            &mut self,
-            loan_amounts: IndexMap<ResourceAddress, Decimal>,
-        ) -> (Vec<Bucket>, Bucket) {
-            self._check_operating_status(OperatingService::Flashloan);
-
-            let mut loans: Vec<Bucket> = Vec::new();
-            let mut terms: IndexMap<ResourceAddress, BatchFlashloanItem> = IndexMap::new();
-
-            for (pool_res_address, amount) in loan_amounts.iter() {
-                assert!(
-                    amount >= &Decimal::ZERO,
-                    "INVALID_INPUT: borrowed amount must be greater than zero"
-                );
-
-                let pool_state = self
-                    .pool_states
-                    .get(pool_res_address)
-                    .expect("Pool state not found for provided resource");
-
-                pool_state
-                    .check_operating_status(OperatingService::Flashloan)
-                    .expect("Flashloan is not enabled for the pool");
-
-                let fee_amount = (*amount) * pool_state.pool_config.flashloan_fee_rate;
-
-                let loan_term = BatchFlashloanItem {
-                    fee_amount,
-                    loan_amount: *amount,
-                    paid_back: false,
-                };
-
-                let loan = pool_state.pool.protected_withdraw(
-                    *amount,
-                    WithdrawType::TemporaryUse,
-                    WithdrawStrategy::Rounded(RoundingMode::ToNearestMidpointToEven),
-                );
-
-                loans.push(loan);
-                terms.insert(*pool_res_address, loan_term);
-            }
-
-            (
-                loans,
-                self.transient_res_manager
-                    .mint_ruid_non_fungible(TransientResData {
-                        data: TransientResDataType::BatchFlashloanItem(terms),
-                    }),
-            )
-        }
-
-        /// (UNUSED)
-        pub fn repay_batch_flashloan(
-            &mut self,
-            payments: Vec<Bucket>,
-            batch_loan_term: Bucket,
-        ) -> Vec<Bucket> {
-            let mut remainders: Vec<Bucket> = Vec::new();
-
-            let transient_res_data: TransientResData =
-                batch_loan_term.as_non_fungible().non_fungible().data();
-
-            let mut batch_loan_term_data = match transient_res_data.data {
-                TransientResDataType::BatchFlashloanItem(batch_loan_term_data) => {
-                    batch_loan_term_data
-                }
-                _ => panic!("Invalid transient resource data"),
-            };
-
-            for mut payment in payments {
-                let pool_res_address = payment.resource_address();
-
-                let loan_term = batch_loan_term_data
-                    .get_mut(&pool_res_address)
-                    .expect("flash loan term not found for provided resource");
-
-                if loan_term.paid_back {
-                    remainders.push(payment);
-                    continue;
-                }
-
-                let due_amount = loan_term.fee_amount + loan_term.loan_amount;
-
-                assert!(
-                    payment.amount() >= (due_amount),
-                    "Insufficient repayment given for your loan!"
-                );
-
-                let mut pool_state = self
-                    .pool_states
-                    .get_mut(&pool_res_address)
-                    .expect("Pool state not found for provided resource");
-
-                pool_state.pool.protected_deposit(
-                    payment.take_advanced(
-                        loan_term.loan_amount,
-                        WithdrawStrategy::Rounded(RoundingMode::ToNearestMidpointToEven),
-                    ),
-                    DepositType::FromTemporaryUse,
-                );
-
-                let protocol_fee_amount =
-                    loan_term.fee_amount * pool_state.pool_config.protocol_flashloan_fee_rate;
-
-                let lp_fee_amount = loan_term.fee_amount - protocol_fee_amount;
-
-                pool_state.pool.protected_deposit(
-                    payment.take_advanced(
-                        lp_fee_amount,
-                        WithdrawStrategy::Rounded(RoundingMode::ToNearestMidpointToEven),
-                    ),
-                    DepositType::LiquiditySupply,
-                );
-
-                pool_state.reserve.put(payment.take_advanced(
-                    protocol_fee_amount,
-                    WithdrawStrategy::Rounded(RoundingMode::ToNearestMidpointToEven),
-                ));
-
-                loan_term.paid_back = true;
-
-                remainders.push(payment);
-            }
-
-            let all_paid_back = batch_loan_term_data
-                .iter()
-                .all(|(_, loan_term)| loan_term.paid_back);
-
-            assert!(all_paid_back, "Not all loans are paid back");
-
-            self.transient_res_manager.burn(batch_loan_term);
-
-            remainders
         }
 
         /* Lending and Borrowing methods */
@@ -1065,33 +920,6 @@ mod lending_market {
             (remainders, payment_value)
         }
 
-        /// (UNUSED)
-        pub fn refinance(
-            &mut self,
-            cdp_id: NonFungibleLocalId,
-            payments: Vec<Bucket>,
-        ) -> (Vec<Bucket>, Decimal) {
-            let mut cdp_data = WrappedCDPData::new(&self.cdp_res_manager, &cdp_id);
-
-            CDPHealthChecker::new(
-                &cdp_data,
-                &mut self.pool_states,
-            )
-            .can_refinance()
-            .expect("Error checking CDP");
-
-            let (remainders, payment_value) = self._repay_internal(
-                &mut cdp_data,
-                payments,
-                None,
-                false,
-            );
-
-            emit_cdp_event!(cdp_id, CDPUpdatedEvenType::Refinance);
-
-            (remainders, payment_value)
-        }
-
         /// Starts partial or complete liquidation of a CDP. This method must be executed
         /// in the same transaction as `end_liquidation` and will return a transient NFT to
         /// keep trace of the process.
@@ -1262,7 +1090,18 @@ mod lending_market {
             can_liquidate
         }
 
-        /// (UNUSED)
+        /// Allows to liquidate a CDP in a single call. This requires to anticipate the payments
+        /// of the loans, since collaterals will be returned at the end
+        /// 
+        /// *Params*
+        /// - `cdp_id`: The id of the CDP to liquidate
+        /// - `payments`: The payments for the loans
+        /// - `requested_collaterals`: The collaterals to return
+        /// 
+        /// *Output*
+        /// - Payments remainders
+        /// - Collaterals
+        /// - Total payment value
         pub fn fast_liquidation(
             &mut self,
             cdp_id: NonFungibleLocalId,

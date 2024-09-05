@@ -12,7 +12,7 @@ pub enum UpdateLiquidationThresholdInput {
 }
 
 /// Liquidation threshold configuration
-#[derive(ScryptoSbor, Clone, Debug)]
+#[derive(ScryptoSbor, Clone, Debug, Default)]
 pub struct LiquidationThreshold {
     /// Threshold for position having same asset in loan and as collateral
     pub identical_resource: Option<Decimal>,
