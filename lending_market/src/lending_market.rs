@@ -802,7 +802,7 @@ mod lending_market {
                         .expect("Error redeeming pool units from collateral");
 
                     let returned_assets = if !keep_deposit_unit {
-                        pool_state.redeem_proxy(deposit_units, false)
+                        pool_state.redeem_proxy(deposit_units, true)
                     } else {
                         deposit_units
                     };
