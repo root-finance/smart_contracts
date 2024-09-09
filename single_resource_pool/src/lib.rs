@@ -116,6 +116,7 @@ pub mod single_resource_pool {
         pub fn instantiate(
             pool_res_address: ResourceAddress,
             owner_role: OwnerRole,
+            metadata_rule: AccessRule,
             admin_rule: AccessRule,
             contribute_rule: AccessRule,
             redeem_rule: AccessRule,
@@ -140,6 +141,14 @@ pub mod single_resource_pool {
                     can_redeem => redeem_rule;
                 ))
                 .with_address(address_reservation)
+                .metadata(metadata!(
+                    roles {
+                        metadata_setter => metadata_rule.clone();
+                        metadata_setter_updater => rule!(deny_all);
+                        metadata_locker => metadata_rule;
+                        metadata_locker_updater => rule!(deny_all);
+                    }
+                ))
                 .globalize();
 
             (pool_component, pool_unit_res_address)

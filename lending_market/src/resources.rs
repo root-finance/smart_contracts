@@ -100,7 +100,7 @@ pub fn create_cdp_res_manager(
                 metadata_locker_updater => owner_rule;
             },
             init {
-                "name" => format!("Collateralized Debt Position"), locked;
+                "name" => format!("Collateralized Debt Position"), updatable;
             }
         ))
         .mint_roles(mint_roles! {

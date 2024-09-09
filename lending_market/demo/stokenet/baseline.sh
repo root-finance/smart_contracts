@@ -12,9 +12,9 @@ SUPRA_PROOF=5c2101202101040a000000000000000020072097005e53b1a210741ce728e51ee023
 
 PRICE_FEED_PACKAGE=package_tdx_2_1p5psu0kzcu7jrm7pavq85q2qn34s26mx6pxwedkramd7f5qa7ed4v6
 
-POOL_PACKAGE=package_tdx_2_1p4p4wqvt58vz525uj444mgpfacx5cwzj20zqkmqt04f75qmx5mtc6r
+POOL_PACKAGE=package_tdx_2_1ph5spccdrj2g40nrazndp0el0uw2cudpdx9fk4uzpaf6lht9uuzf6z
 
-LENDING_MARKET_PACKAGE=package_tdx_2_1pkf8lejdglx2ztgtmegrkej9sugcc646dewcruem6wzdlee07aefk8
+LENDING_MARKET_PACKAGE=package_tdx_2_1phk3tm56h820pcs7w2jqn8l9hpkqs5f33wgszklljaaxkql2wc9ve6
 
 FAUCET_PACKAGE=package_tdx_2_1pkwgr3xz6a52uda3hl3j83ug29255s5a3r29k43ml92x2298r3pyeu
 
@@ -102,13 +102,13 @@ echo "CALL_METHOD
     Expression(\"ENTIRE_WORKTOP\");" >> tx.rtm
 
 
-LENDING_MARKET_COMPONENT_ADDRESS=component_tdx_2_1crfv6jrcakuejd6y38zmswxcyn2wg7dpfcr2z2j7qqa00gqpgcg5r2
-LENDING_MARKET_ADMIN_ADDRESS=resource_tdx_2_1ngv9hxjd94hk2aljhud7panp0u55jm5sar0a9jj76klczjp922dy0t
-LENDING_MARKET_RESERVE_COLLECTOR_BADGE=resource_tdx_2_1nflandke20zepysgzf3qj46kerym3k89a8gxl6e8zh4verp9q9c7y2
-LENDING_MARKET_CDP_RESOURCE_ADDRESS=resource_tdx_2_1n2glhd3sfanwx34em77fdv6r0pdqm367ra6vlal9dp3jvqmwq6euu5
-LENDING_BATCH_FLASH_LOAN_RESOURCE_ADDRESS=resource_tdx_2_1ngu0cttn03l2j7rc2386e08856uqhx8e3y55tx48xmreaa5pcgcnlp
-LENDING_LIQUIDATION_TERM_RESOURCE_ADDRESS=resource_tdx_2_1ngu0cttn03l2j7rc2386e08856uqhx8e3y55tx48xmreaa5pcgcnlp
-LENDING_MARKET_LIQUIDATOR_BADGE=resource_tdx_2_1ngfaxprsdmvegjsh9520yq0tdll9gdzateldjvxy0xgxtfcvekv5un
+LENDING_MARKET_COMPONENT_ADDRESS=component_tdx_2_1czggfxd4ktd85lfrn7xl5hs0mhmlcmlh97dkl5vsa5m9jxl3h8c50t
+LENDING_MARKET_ADMIN_ADDRESS=resource_tdx_2_1ntedvad4atketsvcuxc2l2jr6s2n346eqflxm4pmt9cdv9e2vyredn
+LENDING_MARKET_RESERVE_COLLECTOR_BADGE=resource_tdx_2_1nfdleswuumvxh6vzk99szcqfyauzkheswd4m7knrn9st3032j4uf7e
+LENDING_MARKET_CDP_RESOURCE_ADDRESS=resource_tdx_2_1ngs3yggzw6dka9k40985pyl88svalwlyq6r4zdsu9ujjzs8hr6x8ly
+LENDING_BATCH_FLASH_LOAN_RESOURCE_ADDRESS=resource_tdx_2_1ntr4uaxmy58mjx6a6dva94epukshqatf0aqrgfkg2rdk4t6j6zkwsq
+LENDING_LIQUIDATION_TERM_RESOURCE_ADDRESS=resource_tdx_2_1ntr4uaxmy58mjx6a6dva94epukshqatf0aqrgfkg2rdk4t6j6zkwsq
+LENDING_MARKET_LIQUIDATOR_BADGE=resource_tdx_2_1n2dgmkn7l8ld3jhxngvtdktpudxt9lmxk2at4t5tsl2j6llgzng5f6
 
 # ------------------------------------------------------------------------------------ Create liquidity pools
 echo "CALL_METHOD Address(\"$OWNER_ADDRESS\") \"create_proof_of_non_fungibles\" Address(\"$LENDING_MARKET_ADMIN_ADDRESS\") Array<NonFungibleLocalId>(NonFungibleLocalId(\"#1#\"),NonFungibleLocalId(\"#2#\"),NonFungibleLocalId(\"#3#\"),NonFungibleLocalId(\"#4#\"));" >> tx.rtm

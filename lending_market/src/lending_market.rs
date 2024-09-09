@@ -24,13 +24,14 @@ mod lending_market {
         // according to the test scenario or depoloyment
         //
         // "package_sim1p4nk9h5kw2mcmwn5u2xcmlmwap8j6dzet7w7zztzz55p70rgqs4vag", // resim sdk
-        "package_sim1pkc0e8f9yhlvpv38s2ymrplu7q366y3k8zc53zf2srlm7qm64fk043", // testing
-        // "package_tdx_2_1p4p4wqvt58vz525uj444mgpfacx5cwzj20zqkmqt04f75qmx5mtc6r",  // stokenet
+        // "package_sim1pkc0e8f9yhlvpv38s2ymrplu7q366y3k8zc53zf2srlm7qm64fk043", // testing
+        "package_tdx_2_1ph5spccdrj2g40nrazndp0el0uw2cudpdx9fk4uzpaf6lht9uuzf6z",  // stokenet
         SingleResourcePool {
 
             fn instantiate(
                 pool_res_address: ResourceAddress,
                 owner_role: OwnerRole,
+                metadata_rule: AccessRule,
                 admin_rule: AccessRule,
                 contribute_rule: AccessRule,
                 redeem_rule: AccessRule,
@@ -319,6 +320,7 @@ mod lending_market {
             let (pool, pool_unit_res_address) = Blueprint::<SingleResourcePool>::instantiate(
                 pool_res_address,
                 OwnerRole::Fixed(component_rule.clone()),
+                self.admin_rule.clone(),
                 component_rule.clone(),
                 component_rule.clone(),
                 component_rule,
@@ -605,18 +607,18 @@ mod lending_market {
         /// Create a CDP
         /// 
         /// *Params*
-        /// - `name`: The optional name of the CDP
-        /// - `description`: The optional description of the CDP
-        /// - `key_image_url`: The optional icon of the CDP
-        /// - deposits: The assets to put as collateral
+        /// - `name`: (UNUSED)
+        /// - `description`: (UNUSED)
+        /// - `key_image_url`: (UNUSED)
+        /// - `deposits``: The assets to put as collateral
         /// 
         /// *Output*
         /// - An NFT identifying the newly created CDP
         pub fn create_cdp(
             &mut self,
-            name: Option<String>,
-            description: Option<String>,
-            key_image_url: Option<String>,
+            _name: Option<String>,
+            _description: Option<String>,
+            _key_image_url: Option<String>,
             deposits: Vec<Bucket>,
         ) -> Bucket {
             if deposits.is_empty() {
@@ -628,9 +630,9 @@ mod lending_market {
             let now = Clock::current_time(TimePrecision::Second).seconds_since_unix_epoch;
 
             let data = CollaterizedDebtPositionData {
-                name: name.unwrap_or("".into()),
-                description: description.unwrap_or("".into()),
-                key_image_url: key_image_url.unwrap_or("".into()),
+                name: "".into(),
+                description: "".into(),
+                key_image_url: "".into(),
                 cdp_type: CDPType::Standard,
                 collaterals: IndexMap::new(),
                 loans: IndexMap::new(),
