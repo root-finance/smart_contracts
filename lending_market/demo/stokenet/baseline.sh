@@ -3,18 +3,18 @@
 echo "" > tx.rtm;
 
 # ------------------------------------------------------------------------------------ Reinitialize
-OWNER_ADDRESS=account_tdx_2_12ymq466ag96y7ksx2ypuj9perjxdts2g43kxfuywu0tq27zzw6hsah
+OWNER_ADDRESS=account_tdx_2_129z7xrx6d8jc0yjj2v77utnpz36tysyk99xyv7d2puyzazm0avtpcm
 XRD=resource_tdx_2_1tknxxxxxxxxxradxrdxxxxxxxxx009923554798xxxxxxxxxtfd2jc
 SUPRA_PROOF=5c2101202101040a000000000000000020072097005e53b1a210741ce728e51ee02345267f7c429086d199b67f870b3f1799ee2007608ae6587fbd751aced028d0e5314e6a5dd606b760aea03a077e0b6f4ac2efdd42c3f559284e305dade21569980761f8a9138edd0a2423fc07348457f3564350795b0e00ee8ec713d818099e57b6907e3a4c673fe076bc7931169225314b839c2420210102210509140100000b0080a4a61971d60000000000000000000a9016e8e08e0100000812000a5015e8e08e0100002020090720dd5490e8c99e44e441c86b514cf4f7c1d3b0b1e82d6a2efcefbc3c3c236b6a520720d9503c6895245d1c69b261d083687abb08a4a21ffe33f0405b8ea16c42f9647e07208fb25af57390a0555ed7d04b1ece82c00df85fd5b5cf4985bcbb160cc8fa318807205ff7d20a6d4b8e63d9feeae85564195f40e70cac0a10a39ed286451efa0fd96007205ca0c5d8981c5bebf80eb759450add92176e6b04a8c1e8062be3a31a790a17dd0720daff9a68fbb4762377d825c2ab4c84fee793a818d82fe7e49fd77dd852547fc7072063ec35bd32b820452f8e5dd329484d6189daca59f38bd318f717fda4677cccd307200a6eaeb7e0927c73e734d29363f833b6d39dcaec225fabb11e0aa28dc16a919107200b6e5c5d2ad0b3e32eb90343b3a71e1aeeeeb25d2a4540d9fb1627e830bee6b0
 
 
 # ------------------------------------------------------------------------------------ Instantiate packages
 
-PRICE_FEED_PACKAGE=package_tdx_2_1p5psu0kzcu7jrm7pavq85q2qn34s26mx6pxwedkramd7f5qa7ed4v6
+PRICE_FEED_PACKAGE=package_tdx_2_1phaje8wumdg2q3x86n0qsgptmu0ul2r6ljqskjlqfgpuhtkr609d0y
 
-POOL_PACKAGE=package_tdx_2_1ph5spccdrj2g40nrazndp0el0uw2cudpdx9fk4uzpaf6lht9uuzf6z
+POOL_PACKAGE=package_tdx_2_1p5tandg8q8389vzuangeh06zjprqsjwtkuylq6awacjw0tknum5sy0
 
-LENDING_MARKET_PACKAGE=package_tdx_2_1phk3tm56h820pcs7w2jqn8l9hpkqs5f33wgszklljaaxkql2wc9ve6
+LENDING_MARKET_PACKAGE=package_tdx_2_1p4u7n7v0e55adgrhg3dwsefyqc3x95x4hera8xf0hxxyejvwqcw8rf
 
 FAUCET_PACKAGE=package_tdx_2_1pkwgr3xz6a52uda3hl3j83ug29255s5a3r29k43ml92x2298r3pyeu
 
@@ -29,9 +29,9 @@ echo "CALL_METHOD
     Address(\"$OWNER_ADDRESS\")
     \"deposit_batch\"
     Expression(\"ENTIRE_WORKTOP\");" >> tx.rtm
-PRICE_FEED_COMPONENT_ADDRESS=component_tdx_2_1crsme2ssqcy4guecmv69dgkanlr4fkg0u6w5p3rk8pw4u9rmayz0jv
-PRICE_FEED_ADMIN_BADGE=resource_tdx_2_1nt5edh8g96cnrf4wcwer3kks5vytvtce7hdqmkt79ftyjf0t95mclp
-PRICE_FEED_UPDATER_BADGE=resource_tdx_2_1nt37ht06cdcyw0rd830eknw4s7azwk4750mu38ud9nu2e55ka576f2
+PRICE_FEED_COMPONENT_ADDRESS=component_tdx_2_1cqyd7z7drkggaavmwps2q9zmcugyk27wj4ve6jjnhy8z634zrkzpsl
+PRICE_FEED_ADMIN_BADGE=resource_tdx_2_1nfy67acfse5y95xq3k0s3he8t4xqaxknzkp3jpth0ru4kfydfsfghy
+PRICE_FEED_UPDATER_BADGE=resource_tdx_2_1n2gckw462rckpmhv2ansvu0plt5eqyx0gntdmx09gnay0paddpwelc
 
 echo "CALL_FUNCTION
     Address(\"$FAUCET_PACKAGE\")
@@ -102,13 +102,13 @@ echo "CALL_METHOD
     Expression(\"ENTIRE_WORKTOP\");" >> tx.rtm
 
 
-LENDING_MARKET_COMPONENT_ADDRESS=component_tdx_2_1czggfxd4ktd85lfrn7xl5hs0mhmlcmlh97dkl5vsa5m9jxl3h8c50t
-LENDING_MARKET_ADMIN_ADDRESS=resource_tdx_2_1ntedvad4atketsvcuxc2l2jr6s2n346eqflxm4pmt9cdv9e2vyredn
-LENDING_MARKET_RESERVE_COLLECTOR_BADGE=resource_tdx_2_1nfdleswuumvxh6vzk99szcqfyauzkheswd4m7knrn9st3032j4uf7e
-LENDING_MARKET_CDP_RESOURCE_ADDRESS=resource_tdx_2_1ngs3yggzw6dka9k40985pyl88svalwlyq6r4zdsu9ujjzs8hr6x8ly
-LENDING_BATCH_FLASH_LOAN_RESOURCE_ADDRESS=resource_tdx_2_1ntr4uaxmy58mjx6a6dva94epukshqatf0aqrgfkg2rdk4t6j6zkwsq
-LENDING_LIQUIDATION_TERM_RESOURCE_ADDRESS=resource_tdx_2_1ntr4uaxmy58mjx6a6dva94epukshqatf0aqrgfkg2rdk4t6j6zkwsq
-LENDING_MARKET_LIQUIDATOR_BADGE=resource_tdx_2_1n2dgmkn7l8ld3jhxngvtdktpudxt9lmxk2at4t5tsl2j6llgzng5f6
+LENDING_MARKET_COMPONENT_ADDRESS=component_tdx_2_1czsw4la7fr28r8ctl5f88zazn8n0l0275qrcujgev8pw9pvfq5gm8j
+LENDING_MARKET_ADMIN_ADDRESS=resource_tdx_2_1ntcepwa2ac5xynqzq8g4s0l24ccu6etj28hxrqnksmqqdxg6zlqlak
+LENDING_MARKET_RESERVE_COLLECTOR_BADGE=resource_tdx_2_1nf5ea6ptkz9ndqlkmmxsz9d9wsx60564vy82yz8paze660mfgpzexh
+LENDING_MARKET_CDP_RESOURCE_ADDRESS=resource_tdx_2_1ng5nc7ufsnkudk3xxhd6ep4f8fnvhcm09pn02whd5f5czjf2uszlx3
+LENDING_BATCH_FLASH_LOAN_RESOURCE_ADDRESS=resource_tdx_2_1n2rj3574hruawc2qg469kcwc4gkjj90f7e7309xdfmssde4tkqz7c7
+LENDING_LIQUIDATION_TERM_RESOURCE_ADDRESS=resource_tdx_2_1n2rj3574hruawc2qg469kcwc4gkjj90f7e7309xdfmssde4tkqz7c7
+LENDING_MARKET_LIQUIDATOR_BADGE=resource_tdx_2_1ng50q3smgsthr7mup4g9jsdtg50rmkzj7fpqrg9ch5hh4xsn6j3mh9
 
 # ------------------------------------------------------------------------------------ Create liquidity pools
 echo "CALL_METHOD Address(\"$OWNER_ADDRESS\") \"create_proof_of_non_fungibles\" Address(\"$LENDING_MARKET_ADMIN_ADDRESS\") Array<NonFungibleLocalId>(NonFungibleLocalId(\"#1#\"),NonFungibleLocalId(\"#2#\"),NonFungibleLocalId(\"#3#\"),NonFungibleLocalId(\"#4#\"));" >> tx.rtm
