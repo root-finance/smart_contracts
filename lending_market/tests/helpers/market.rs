@@ -58,7 +58,7 @@ impl MarketTestHelper {
                 market_package_address,
                 "LendingMarket",
                 "instantiate",
-                manifest_args!((10u8, dec!(0.4001))),
+                manifest_args!((10u8, dec!(0.4), dec!(0.98))),
             )
             .deposit_batch(owner_account_address);
 

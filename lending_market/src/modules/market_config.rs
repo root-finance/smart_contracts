@@ -5,6 +5,7 @@ use scrypto::prelude::*;
 pub enum UpdateMarketConfigInput {
     MaxCDPPosition(u8),
     MaxLiquidableValue(Decimal),
+    LiquidationDexSwapRate(Decimal),
 }
 
 /// The lending market configuration
@@ -13,7 +14,10 @@ pub struct MarketConfig {
     /// Max positions per CDP per user
     pub max_cdp_position: u8,
     /// Max liquidable value to take out of collateral when partially liquidating a CDP (rate)
-    pub max_liquidable_value: Decimal
+    pub max_liquidable_value: Decimal,
+    /// Dex swap efficiency, where 1 means the whole collateral is converted to loan to liquidate, but often this is lesser than 1 so 
+    /// a certain tolerance on the fact that not all collateral is used to extinguish the loan is given this way
+    pub liquidation_dex_swap_rate: Decimal
 }
 impl MarketConfig {
     /// Perform a check on the market configuration
@@ -26,6 +30,9 @@ impl MarketConfig {
         }
         if self.max_liquidable_value < dec!(0) || self.max_liquidable_value > dec!(1) {
             return Err("Max liquidable value must be in range 0..1".into());
+        }
+        if self.liquidation_dex_swap_rate < dec!(0) || self.liquidation_dex_swap_rate > dec!(1) {
+            return Err("Liquidation dex swap rate value must be in range 0..1".into());
         }
 
         Ok(())
@@ -45,7 +52,10 @@ impl MarketConfig {
             }
             UpdateMarketConfigInput::MaxLiquidableValue(max_liquidable_value) => {
                 self.max_liquidable_value = max_liquidable_value;
-            },
+            }
+            UpdateMarketConfigInput::LiquidationDexSwapRate(liquidation_dex_swap_rate) => {
+                self.liquidation_dex_swap_rate = liquidation_dex_swap_rate;
+            }
         }
 
         self.check()?;

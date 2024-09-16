@@ -24,8 +24,8 @@ mod lending_market {
         // according to the test scenario or depoloyment
         //
         // "package_sim1p4nk9h5kw2mcmwn5u2xcmlmwap8j6dzet7w7zztzz55p70rgqs4vag", // resim sdk
-        // "package_sim1pkc0e8f9yhlvpv38s2ymrplu7q366y3k8zc53zf2srlm7qm64fk043", // testing
-        "package_tdx_2_1p5tandg8q8389vzuangeh06zjprqsjwtkuylq6awacjw0tknum5sy0",  // stokenet
+        "package_sim1pkc0e8f9yhlvpv38s2ymrplu7q366y3k8zc53zf2srlm7qm64fk043", // testing
+        // "package_tdx_2_1p5tandg8q8389vzuangeh06zjprqsjwtkuylq6awacjw0tknum5sy0",  // stokenet
         SingleResourcePool {
 
             fn instantiate(
@@ -177,7 +177,7 @@ mod lending_market {
         /// The operating status of the market
         operating_status: OperatingStatus,
 
-        /// The markedt configuration
+        /// The market configuration
         market_config: MarketConfig,
     }
 
@@ -1304,7 +1304,7 @@ mod lending_market {
                     temp_requested_value -= max_collateral_value / bonus_rate;
                 }
 
-                returned_collaterals_value += max_collateral_value * (1 - pool_state.pool_config.protocol_liquidation_fee_rate + pool_state.pool_config.liquidation_bonus_rate);
+                returned_collaterals_value += max_collateral_value / bonus_rate;
 
                 let collateral_units = (max_collateral_value / pool_state.price) * unit_ratio;
 
@@ -1317,8 +1317,11 @@ mod lending_market {
                     .expect("Error redeeming pool units from collateral");
 
                 let mut collaterals = pool_state.redeem_proxy(pool_unit, true);
-                let protocol_fee_amount = collaterals.amount()
+                let collateral_amount = collaterals.amount();
+                let protocol_fee_amount = collateral_amount
                     * pool_state.pool_config.protocol_liquidation_fee_rate;
+                
+                returned_collaterals_value = returned_collaterals_value * (dec!(1) - protocol_fee_amount/collateral_amount);
 
                 pool_state.reserve.put(collaterals.take_advanced(
                     protocol_fee_amount,
@@ -1349,7 +1352,7 @@ mod lending_market {
         ) -> (Vec<Bucket>, Decimal) {
             let mut expected_payment_value = payment_value.unwrap_or(dec!(0));
 
-            let (mut remainders, mut total_payment_value) = (Vec::new(), PreciseDecimal::zero());
+            let (mut remainders, mut total_payment_value) = (Vec::new(), Decimal::zero());
             for mut payment in payments {
                 let pool_res_address = payment.resource_address();
 
@@ -1427,7 +1430,7 @@ mod lending_market {
 
             if let Some(value) = payment_value {
                 assert!(
-                    expected_payment_value < ZERO_EPSILON,
+                    expected_payment_value < ZERO_EPSILON.max(total_payment_value * (1 - self.market_config.liquidation_dex_swap_rate)),
                     "Insufficient payment value, {} required, {} total, {} remaining to pay",
                     value,
                     total_payment_value,
@@ -1439,8 +1442,7 @@ mod lending_market {
                 save_cdp_macro!(self, cdp_data);
             }
 
-            (remainders, total_payment_value.checked_truncate(RoundingMode::ToNearestMidpointToEven)
-            .unwrap())
+            (remainders, total_payment_value)
         }
 
         fn _get_pool_state_without_update(

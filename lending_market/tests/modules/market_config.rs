@@ -5,7 +5,8 @@ use scrypto_test::prelude::*;
 fn test_check_valid_max_cdp_position() {
     let market_config = MarketConfig {
         max_cdp_position: 10,
-        max_liquidable_value: dec!(0.4001)
+        max_liquidable_value: dec!(0.4),
+        liquidation_dex_swap_rate: dec!(1)
     };
 
     assert_eq!(market_config.check(), Ok(()));
@@ -15,7 +16,8 @@ fn test_check_valid_max_cdp_position() {
 fn test_check_invalid_max_cdp_position() {
     let market_config = MarketConfig {
         max_cdp_position: 0,
-        max_liquidable_value: dec!(0.4001)
+        max_liquidable_value: dec!(0.4),
+        liquidation_dex_swap_rate: dec!(1)
     };
 
     assert_eq!(
@@ -28,7 +30,8 @@ fn test_check_invalid_max_cdp_position() {
 fn test_update_max_cdp_position_valid() {
     let mut market_config = MarketConfig {
         max_cdp_position: 10,
-        max_liquidable_value: dec!(0.4001)
+        max_liquidable_value: dec!(0.4),
+        liquidation_dex_swap_rate: dec!(1)
     };
 
     assert_eq!(
@@ -43,7 +46,8 @@ fn test_update_max_cdp_position_valid() {
 fn test_update_max_cdp_position_invalid() {
     let mut market_config = MarketConfig {
         max_cdp_position: 10,
-        max_liquidable_value: dec!(0.4001)
+        max_liquidable_value: dec!(0.4),
+        liquidation_dex_swap_rate: dec!(1)
     };
 
     assert_eq!(
@@ -57,7 +61,8 @@ fn test_update_max_cdp_position_invalid() {
 fn test_check_valid_max_liquidable_value() {
     let market_config = MarketConfig {
         max_cdp_position: 10,
-        max_liquidable_value: dec!(0.4001)
+        max_liquidable_value: dec!(0.4),
+        liquidation_dex_swap_rate: dec!(1)
     };
 
     assert_eq!(market_config.check(), Ok(()));
@@ -67,7 +72,8 @@ fn test_check_valid_max_liquidable_value() {
 fn test_check_invalid_max_liquidable_value() {
     let market_config = MarketConfig {
         max_cdp_position: 10,
-        max_liquidable_value: dec!(100)
+        max_liquidable_value: dec!(100),
+        liquidation_dex_swap_rate: dec!(1)
     };
 
     assert_eq!(
@@ -80,7 +86,8 @@ fn test_check_invalid_max_liquidable_value() {
 fn test_update_max_liquidable_value() {
     let mut market_config = MarketConfig {
         max_cdp_position: 10,
-        max_liquidable_value: dec!(0.4001)
+        max_liquidable_value: dec!(0.4),
+        liquidation_dex_swap_rate: dec!(1)
     };
 
     assert_eq!(
@@ -95,7 +102,8 @@ fn test_update_max_liquidable_value() {
 fn test_update_max_liquidable_value_invalid() {
     let mut market_config = MarketConfig {
         max_cdp_position: 10,
-        max_liquidable_value: dec!(0.4001)
+        max_liquidable_value: dec!(0.4),
+        liquidation_dex_swap_rate: dec!(1)
     };
 
     assert_eq!(

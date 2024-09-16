@@ -20,6 +20,7 @@ mod faucet {
             create_resource => restrict_to: [admin];
             swap => PUBLIC;
             get_resource => PUBLIC;
+            update_price_feed => restrict_to: [admin];
         }
     }
 
@@ -149,6 +150,10 @@ mod faucet {
             resource_manager
                 .expect("Resource not found")
                 .mint(to_amount)
+        }
+
+        pub fn update_price_feed(&mut self, price_feed: Global<AnyComponent>) {
+            self.price_feed = price_feed
         }
     }
 }
