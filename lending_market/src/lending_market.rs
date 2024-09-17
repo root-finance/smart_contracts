@@ -24,8 +24,8 @@ mod lending_market {
         // according to the test scenario or depoloyment
         //
         // "package_sim1p4nk9h5kw2mcmwn5u2xcmlmwap8j6dzet7w7zztzz55p70rgqs4vag", // resim sdk
-        "package_sim1pkc0e8f9yhlvpv38s2ymrplu7q366y3k8zc53zf2srlm7qm64fk043", // testing
-        // "package_tdx_2_1p5tandg8q8389vzuangeh06zjprqsjwtkuylq6awacjw0tknum5sy0",  // stokenet
+        // "package_sim1pkc0e8f9yhlvpv38s2ymrplu7q366y3k8zc53zf2srlm7qm64fk043", // testing
+        "package_tdx_2_1p57jp8na4jhnep6acjerk9thz0q3y87u6d5k30ajm9m8w6y0fdpajy",  // stokenet
         SingleResourcePool {
 
             fn instantiate(
