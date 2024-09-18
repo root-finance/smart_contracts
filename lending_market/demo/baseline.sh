@@ -78,7 +78,7 @@ echo "CALL_FUNCTION
     \"instantiate\"
     Tuple(
         10u8, 
-        Decimal(\"0.4\")
+        Decimal(\"0.4\"),
         Decimal(\"0.99\")
     )
 ;" >> tx.rtm

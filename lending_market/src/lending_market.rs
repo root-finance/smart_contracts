@@ -24,8 +24,8 @@ mod lending_market {
         // according to the test scenario or depoloyment
         //
         // "package_sim1p4nk9h5kw2mcmwn5u2xcmlmwap8j6dzet7w7zztzz55p70rgqs4vag", // resim sdk
-        // "package_sim1pkc0e8f9yhlvpv38s2ymrplu7q366y3k8zc53zf2srlm7qm64fk043", // testing
-        "package_tdx_2_1p57jp8na4jhnep6acjerk9thz0q3y87u6d5k30ajm9m8w6y0fdpajy",  // stokenet
+        "package_sim1pkc0e8f9yhlvpv38s2ymrplu7q366y3k8zc53zf2srlm7qm64fk043", // testing
+        // "package_tdx_2_1p57jp8na4jhnep6acjerk9thz0q3y87u6d5k30ajm9m8w6y0fdpajy",  // stokenet
         SingleResourcePool {
 
             fn instantiate(
@@ -491,7 +491,7 @@ mod lending_market {
                 .expect("Invalid pool config");
         }
 
-        /// Update pool state, recomputing price of the asset and accrued interest
+        /// Update pool state, recomputing price of the asset and accrued interest and allocating the collectible reserve
         /// 
         /// *Params*
         /// - `pool_res_address`: The pool resource address for which to change the interest strategy
@@ -503,11 +503,12 @@ mod lending_market {
             bypass_price_debounce: bool,
             bypass_interest_debounce: bool,
         ) {
-            self._get_pool_state(
+            let mut pool_state = self._get_pool_state(
                 &pool_res_address,
                 None,
                 Some((bypass_price_debounce, bypass_interest_debounce)),
             );
+            pool_state.allocate_reserve();
         }
 
         ///
@@ -1416,7 +1417,7 @@ mod lending_market {
                     .deposit_for_repay(payment.take_advanced(
                         repay_amount,
                         WithdrawStrategy::Rounded(RoundingMode::ToNearestMidpointToEven),
-                    ), for_liquidation)
+                    ))
                     .expect("Error in deposit_from_repay");
 
                 cdp_data

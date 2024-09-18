@@ -14,7 +14,7 @@ PRICE_FEED_PACKAGE=package_tdx_2_1p5lknmvchhuwwdecrler9edjlvguf2fzdck3jm4aq2vre7
 
 POOL_PACKAGE=package_tdx_2_1p57jp8na4jhnep6acjerk9thz0q3y87u6d5k30ajm9m8w6y0fdpajy
 
-LENDING_MARKET_PACKAGE=package_tdx_2_1p4w2a6lvmtm8n8y4n7yltpuk7et9quy5m5xzxp3qqr3g8ur5ratx2e
+LENDING_MARKET_PACKAGE=package_tdx_2_1phgcn4t8zkcrugxs9k7dhah2g6s4mcktg3fu7txh0yqsxn8vg8nfx3
 
 FAUCET_PACKAGE=package_tdx_2_1ph0c86sfdzeeyur58rz3gev8yd2ed45q8jxn3a50d807k5kqdeq7aj
 
@@ -92,7 +92,7 @@ echo "CALL_FUNCTION
     \"LendingMarket\"
     \"instantiate\"
     Tuple(
-        10u8, 
+        14u8, 
         Decimal(\"0.4\"),
         Decimal(\"0.99\")
     );" >> tx.rtm
@@ -103,13 +103,14 @@ echo "CALL_METHOD
     Expression(\"ENTIRE_WORKTOP\");" >> tx.rtm
 
 
-LENDING_MARKET_COMPONENT_ADDRESS=component_tdx_2_1czy5z94hlkuedvdhp8l36056xxufrhlfa9a6xreedvcsuc7ctpxx9u
-LENDING_MARKET_ADMIN_ADDRESS=resource_tdx_2_1ngf9lwcgkstahnwqsk9kfapcp47aaay4z9fegzsky4l0pmwlhq52nh
-LENDING_MARKET_RESERVE_COLLECTOR_BADGE=resource_tdx_2_1n2gmw92zltez2dpx2rrd460zx5d95rjkts6kqmrtw0z5ecryn8fw5j
-LENDING_MARKET_CDP_RESOURCE_ADDRESS=resource_tdx_2_1nf2qe0wuuunpylvzxndaptcxnrafmnl28k6wwp6fdjsh6es24g26c5
-LENDING_BATCH_FLASH_LOAN_RESOURCE_ADDRESS=resource_tdx_2_1n23jvm8c9kl6a0qj53cv4mr6rhf9pqa2ry5kdp2sv4mmazjjcfd5en
-LENDING_LIQUIDATION_TERM_RESOURCE_ADDRESS=resource_tdx_2_1n23jvm8c9kl6a0qj53cv4mr6rhf9pqa2ry5kdp2sv4mmazjjcfd5en
-LENDING_MARKET_LIQUIDATOR_BADGE=resource_tdx_2_1n2mz3f3wg0ux35ear7gkksf94vc8p7qctf3wss09um40r465hgnk8u
+LENDING_MARKET_COMPONENT_ADDRESS=component_tdx_2_1cz06urzruueelc34m6mnajx0z7g3xq96krt43gcvwsn0c4p0q4pfqr
+LENDING_MARKET_ADMIN_ADDRESS=resource_tdx_2_1ntrrvmz5tqgh5fgwzg450pnmp50r6pnea5zkfq7nxdeqlxtaqr6zhz
+LENDING_MARKET_RESERVE_COLLECTOR_BADGE=resource_tdx_2_1nfj8mru6xljzuhrrx4vuunn8zn8hc3p6jpgvyhvnd79uayx3aprdk3
+LENDING_MARKET_CDP_RESOURCE_ADDRESS=resource_tdx_2_1n2gw33zggksf60yn0s3crf2gr049jpgquzh09jexnshlxf5yg9ph6t
+LENDING_BATCH_FLASH_LOAN_RESOURCE_ADDRESS=resource_tdx_2_1ntxcx6s7mjwr84j60w8c7er64mcah05ms5m3utgharvq5xd0che3gc
+LENDING_LIQUIDATION_TERM_RESOURCE_ADDRESS=resource_tdx_2_1ntxcx6s7mjwr84j60w8c7er64mcah05ms5m3utgharvq5xd0che3gc
+LENDING_MARKET_LIQUIDATOR_BADGE=resource_tdx_2_1nfd7vegrkvlp9uvgdqhveqy855pnhqmhu2jwnr0ys42cxd256tw7pt
+
 
 # ------------------------------------------------------------------------------------ Create liquidity pools
 echo "CALL_METHOD Address(\"$OWNER_ADDRESS\") \"create_proof_of_non_fungibles\" Address(\"$LENDING_MARKET_ADMIN_ADDRESS\") Array<NonFungibleLocalId>(NonFungibleLocalId(\"#1#\"),NonFungibleLocalId(\"#2#\"),NonFungibleLocalId(\"#3#\"),NonFungibleLocalId(\"#4#\"));" >> tx.rtm
@@ -120,7 +121,7 @@ echo "CALL_METHOD Address(\"$LENDING_MARKET_COMPONENT_ADDRESS\") \"create_lendin
         Decimal(\"0.08\"),
         Decimal(\"0.001\"),
         0u8,
-        Decimal(\"0\"),
+        Decimal(\"0.1\"),
         Decimal(\"1\"),
         Enum<0u8>(),
         Enum<0u8>(),
@@ -135,14 +136,14 @@ echo "CALL_METHOD Address(\"$LENDING_MARKET_COMPONENT_ADDRESS\") \"create_lendin
     )
     Tuple(
         Enum<1u8>(
-            Decimal(\"0.7\")
+            Decimal(\"0.75\")
         ),
         Enum<1u8>(
-            Decimal(\"0.7\")
+            Decimal(\"0.75\")
         ),
         Map<Address, Decimal>(),
         Map<U8, Decimal>(),
-        Decimal(\"0.7\")
+        Decimal(\"0.75\")
     );" >> tx.rtm
 
 echo "CALL_METHOD Address(\"$LENDING_MARKET_COMPONENT_ADDRESS\") \"create_lending_pool\" Address(\"$PRICE_FEED_COMPONENT_ADDRESS\") Address(\"$USDT_RESOURCE_ADDRESS\")
@@ -152,7 +153,7 @@ echo "CALL_METHOD Address(\"$LENDING_MARKET_COMPONENT_ADDRESS\") \"create_lendin
         Decimal(\"0.08\"),
         Decimal(\"0.001\"),
         1u8,
-        Decimal(\"0\"),
+        Decimal(\"0.1\"),
         Decimal(\"1\"),
         Enum<0u8>(),
         Enum<0u8>(),
@@ -167,14 +168,14 @@ echo "CALL_METHOD Address(\"$LENDING_MARKET_COMPONENT_ADDRESS\") \"create_lendin
     )
     Tuple(
         Enum<1u8>(
-            Decimal(\"0.75\")
+            Decimal(\"0.8\")
         ),
         Enum<1u8>(
-            Decimal(\"0.75\")
+            Decimal(\"0.8\")
         ),
         Map<Address, Decimal>(),
         Map<U8, Decimal>(),
-        Decimal(\"0.75\")
+        Decimal(\"0.8\")
     );" >> tx.rtm
 echo "CALL_METHOD
     Address(\"$OWNER_ADDRESS\")
@@ -190,7 +191,7 @@ echo "CALL_METHOD Address(\"$LENDING_MARKET_COMPONENT_ADDRESS\") \"create_lendin
         Decimal(\"0.08\"),
         Decimal(\"0.001\"),
         0u8,
-        Decimal(\"0\"),
+        Decimal(\"0.1\"),
         Decimal(\"1\"),
         Enum<0u8>(),
         Enum<0u8>(),
@@ -205,14 +206,14 @@ echo "CALL_METHOD Address(\"$LENDING_MARKET_COMPONENT_ADDRESS\") \"create_lendin
     )
     Tuple(
         Enum<1u8>(
-            Decimal(\"0.7\")
+            Decimal(\"0.75\")
         ),
         Enum<1u8>(
-            Decimal(\"0.7\")
+            Decimal(\"0.75\")
         ),
         Map<Address, Decimal>(),
         Map<U8, Decimal>(),
-        Decimal(\"0.7\")
+        Decimal(\"0.75\")
     );" >> tx.rtm
 
 echo "CALL_METHOD Address(\"$LENDING_MARKET_COMPONENT_ADDRESS\") \"create_lending_pool\" Address(\"$PRICE_FEED_COMPONENT_ADDRESS\") Address(\"$XETH_RESOURCE_ADDRESS\")
@@ -222,7 +223,7 @@ echo "CALL_METHOD Address(\"$LENDING_MARKET_COMPONENT_ADDRESS\") \"create_lendin
         Decimal(\"0.08\"),
         Decimal(\"0.001\"),
         0u8,
-        Decimal(\"0\"),
+        Decimal(\"0.1\"),
         Decimal(\"1\"),
         Enum<0u8>(),
         Enum<0u8>(),
@@ -237,47 +238,47 @@ echo "CALL_METHOD Address(\"$LENDING_MARKET_COMPONENT_ADDRESS\") \"create_lendin
     )
     Tuple(
         Enum<1u8>(
-            Decimal(\"0.7\")
+            Decimal(\"0.75\")
         ),
         Enum<1u8>(
-            Decimal(\"0.7\")
+            Decimal(\"0.75\")
         ),
         Map<Address, Decimal>(),
         Map<U8, Decimal>(),
-        Decimal(\"0.7\")
+        Decimal(\"0.75\")
     );" >> tx.rtm
 
-echo "CALL_METHOD Address(\"$LENDING_MARKET_COMPONENT_ADDRESS\") \"create_lending_pool\" Address(\"$PRICE_FEED_COMPONENT_ADDRESS\") Address(\"$LSU_RESOURCE_ADDRESS\")
-    Tuple(
-        Decimal(\"0.35\"),
-        Decimal(\"0.15\"),
-        Decimal(\"0.08\"),
-        Decimal(\"0.001\"),
-        0u8,
-        Decimal(\"0\"),
-        Decimal(\"1\"),
-        Enum<0u8>(),
-        Enum<0u8>(),
-        Enum<0u8>(),
-        1i64,
-        4i64,
-        240i64,
-        Decimal(\"0.45\")
-    )
-    Tuple(
-        Decimal(\"0\"), Decimal(\"0.04\"), Decimal(\"3.00\")
-    )
-    Tuple(
-        Enum<1u8>(
-            Decimal(\"0.7\")
-        ),
-        Enum<1u8>(
-            Decimal(\"0.7\")
-        ),
-        Map<Address, Decimal>(),
-        Map<U8, Decimal>(),
-        Decimal(\"0.7\")
-    );" >> tx.rtm
+#echo "CALL_METHOD Address(\"$LENDING_MARKET_COMPONENT_ADDRESS\") \"create_lending_pool\" Address(\"$PRICE_FEED_COMPONENT_ADDRESS\") Address(\"$LSU_RESOURCE_ADDRESS\")
+#    Tuple(
+#        Decimal(\"0.35\"),
+#        Decimal(\"0.15\"),
+#        Decimal(\"0.08\"),
+#        Decimal(\"0.001\"),
+#        0u8,
+#        Decimal(\"0.1\"),
+#        Decimal(\"1\"),
+#        Enum<0u8>(),
+#        Enum<0u8>(),
+#        Enum<0u8>(),
+#        1i64,
+#        4i64,
+#        240i64,
+#        Decimal(\"0.45\")
+#    )
+#    Tuple(
+#        Decimal(\"0\"), Decimal(\"0.04\"), Decimal(\"3.00\")
+#    )
+#    Tuple(
+#        Enum<1u8>(
+#            Decimal(\"0.75\")
+#        ),
+#        Enum<1u8>(
+#            Decimal(\"0.75\")
+#        ),
+#        Map<Address, Decimal>(),
+#        Map<U8, Decimal>(),
+#        Decimal(\"0.75\")
+#    );" >> tx.rtm
 
 echo "CALL_METHOD Address(\"$LENDING_MARKET_COMPONENT_ADDRESS\") \"create_lending_pool\" Address(\"$PRICE_FEED_COMPONENT_ADDRESS\") Address(\"$HUG_RESOURCE_ADDRESS\")
     Tuple(
@@ -286,7 +287,7 @@ echo "CALL_METHOD Address(\"$LENDING_MARKET_COMPONENT_ADDRESS\") \"create_lendin
         Decimal(\"0.08\"),
         Decimal(\"0.001\"),
         0u8,
-        Decimal(\"0\"),
+        Decimal(\"0.1\"),
         Decimal(\"1\"),
         Enum<0u8>(),
         Enum<1u8>(Decimal(\"0\")),
@@ -301,14 +302,14 @@ echo "CALL_METHOD Address(\"$LENDING_MARKET_COMPONENT_ADDRESS\") \"create_lendin
     )
     Tuple(
         Enum<1u8>(
-            Decimal(\"0.25\")
+            Decimal(\"0.3\")
         ),
         Enum<1u8>(
-            Decimal(\"0.25\")
+            Decimal(\"0.3\")
         ),
         Map<Address, Decimal>(),
         Map<U8, Decimal>(),
-        Decimal(\"0.25\")
+        Decimal(\"0.3\")
     );" >> tx.rtm
 echo "CALL_METHOD Address(\"$LENDING_MARKET_COMPONENT_ADDRESS\") \"create_lending_pool\" Address(\"$PRICE_FEED_COMPONENT_ADDRESS\") Address(\"$XUSDC_RESOURCE_ADDRESS\")
     Tuple(
@@ -317,7 +318,7 @@ echo "CALL_METHOD Address(\"$LENDING_MARKET_COMPONENT_ADDRESS\") \"create_lendin
         Decimal(\"0.08\"),
         Decimal(\"0.001\"),
         1u8,
-        Decimal(\"0\"),
+        Decimal(\"0.1\"),
         Decimal(\"1\"),
         Enum<0u8>(),
         Enum<0u8>(),
@@ -332,14 +333,14 @@ echo "CALL_METHOD Address(\"$LENDING_MARKET_COMPONENT_ADDRESS\") \"create_lendin
     )
     Tuple(
         Enum<1u8>(
-            Decimal(\"0.8\")
+            Decimal(\"0.85\")
         ),
         Enum<1u8>(
-            Decimal(\"0.8\")
+            Decimal(\"0.85\")
         ),
         Map<Address, Decimal>(),
         Map<U8, Decimal>(),
-        Decimal(\"0.8\")
+        Decimal(\"0.85\")
     );" >> tx.rtm
 echo "CALL_METHOD
     Address(\"$OWNER_ADDRESS\")

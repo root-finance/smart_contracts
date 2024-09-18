@@ -202,7 +202,7 @@ fn test_deposit_withdraw_borrow_repay() {
         helper
             .test_runner
             .get_component_balance(lp_user_account, usd),
-        dec!(2000.000199967145115916)
+        dec!(2000.000252332354529804)
     );
 }
 
