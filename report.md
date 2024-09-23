@@ -3,8 +3,8 @@
 ## Project Overview
 
 **Project Name:** Root Finance  
-**Contract Name:** Lending Market\
-**Audit Date:** 29 September 2024  
+**Contract Name:** Lending Market
+**Audit Date:** 23 September 2024  
 **Auditor(s):** Yevhenii Bezuhlyi     
 **Programming Language:** Scrypto / Rust  
 **Blockchain Platform:** Radix
@@ -33,7 +33,8 @@ Radix platform to identify potential security vulnerabilities, code issues, and 
 
 Repository: `https://github.com/root-finance/hrc-smart_contracts`
 
-Commit: `4d8ed164b52d58bd688209a0e5ae038428620d98`
+Initial Commit: `4d8ed164b52d58bd688209a0e5ae038428620d98`
+Final Commit: `40ea51d0cb54235e2c245efbae103f77cb5001fc`
 
 The following files/contracts were included in the audit:
 
@@ -118,13 +119,13 @@ these roles are critical for the safe operation of the system.
 
 The following is a summary of the findings from the audit:
 
-| **Severity** | **Issue**                                            | **Status** | **Notes**                                                                                                             |
-|--------------|------------------------------------------------------|------------|-----------------------------------------------------------------------------------------------------------------------|
-| Critical     | Access Control Violation (C-01)                      | Fixed      |                                                                                                                       |
+| **Severity** | **Issue**                                            | **Status** | **Notes**                                                                                                              |
+|--------------|------------------------------------------------------|------------|------------------------------------------------------------------------------------------------------------------------|
+| Critical     | Access Control Violation (C-01)                      | Fixed      |                                                                                                                        |
 | Medium       | Lack of Liquidator Badge Revocation Mechanism (M-02) | Mitigated  | Since abilities of liquidators are limited by the contract logic and could not cause harm, the issue can be mitigated. |
-| Medium       | Centralized Price Feed (M-03)                        | Mitigated  | Lack of thirdparty trusted oracles on the Radix chain makes can mitigate the issue until those will appear.           |
-| Low          | Creation of Empty CDPs (L-01)                        | Mitigated  | Number of CDPs are limited to 1 per user causing no general harm to the system.                                       |
-| Low          | Lack of Decimal Precision Handling (L-02)            | Mitigated  | Impact is extremely low.                                                                                              |
+| Medium       | Centralized Price Feed (M-03)                        | Mitigated  | Lack of thirdparty trusted oracles on the Radix chain makes can mitigate the issue until those will appear.            |
+| Low          | Creation of Empty CDPs (L-01)                        | Fixed      |                                                                                                                        |
+| Low          | Lack of Decimal Precision Handling (L-02)            | Mitigated  | Impact is extremely low.                                                                                               |
 
 **Total Issues Found:** 4
 **Total Issues Found:** [Total Count]
@@ -237,7 +238,7 @@ Consider using a combination of multiple price feeds and implementing a median o
 - **Likelihood:** Medium
 - **Type:** Logic Flaw
 - **Commit:** 4d8ed164
-- **Status:** Mitigated
+- **Status:** Fixed
 - **Target:** `./lending_market/src/lending_market.rs: fn create_cdp()`
 - **Tests:** Not applicable
 
@@ -335,12 +336,3 @@ Consider creating helper functions for financial calculations that enforce consi
 #### Areas for Improvement
 
 1. Some duplication in error checking and state updates across different functions
-
-### Specific Recommendations
-
-1. Add comprehensive documentation comments to all functions
-2. Standardize error handling by using Result consistently throughout the codebase
-3. Add more explanatory comments for complex mathematical calculations
-4. In pool_state.rs, break down the `update_interest_and_price` function into smaller functions
-5. Standardize the use of Decimal and PreciseDecimal types, and document the rationale for using each
-6. Add more inline comments explaining the business logic, especially in complex operations
