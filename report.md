@@ -3,7 +3,7 @@
 ## Project Overview
 
 **Project Name:** Root Finance  
-**Contract Name:** Lending Market
+**Contract Name:** Lending Market\
 **Audit Date:** 23 September 2024  
 **Auditor(s):** Yevhenii Bezuhlyi     
 **Programming Language:** Scrypto / Rust  
@@ -33,7 +33,7 @@ Radix platform to identify potential security vulnerabilities, code issues, and 
 
 Repository: `https://github.com/root-finance/hrc-smart_contracts`
 
-Initial Commit: `4d8ed164b52d58bd688209a0e5ae038428620d98`
+Initial Commit: `4d8ed164b52d58bd688209a0e5ae038428620d98`\
 Final Commit: `40ea51d0cb54235e2c245efbae103f77cb5001fc`
 
 The following files/contracts were included in the audit:
@@ -127,8 +127,7 @@ The following is a summary of the findings from the audit:
 | Low          | Creation of Empty CDPs (L-01)                        | Fixed      |                                                                                                                        |
 | Low          | Lack of Decimal Precision Handling (L-02)            | Mitigated  | Impact is extremely low.                                                                                               |
 
-**Total Issues Found:** 4
-**Total Issues Found:** [Total Count]
+**Total Issues Found:** 5
 
 ## Detailed Findings
 
