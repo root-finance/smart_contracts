@@ -1150,14 +1150,14 @@ fn test_contribute_and_borrow_limits_usage_2() {
     for _ in 1..30 {
         helper.test_runner.load_account_from_faucet(lp_user_account);
     }
-    get_resource(&mut helper, lp_user_key, lp_user_account, dec!(300000), usd)
+    get_resource(&mut helper, lp_user_key, lp_user_account, dec!(100000), usd)
         .expect_commit_success();
-    get_resource(&mut helper, lp_user_key, lp_user_account, dec!(300000), usdt)
+    get_resource(&mut helper, lp_user_key, lp_user_account, dec!(100000), usdt)
         .expect_commit_success();
 
-    market_contribute(&mut helper, lp_user_key, lp_user_account, usd, dec!(10000))
+    market_contribute(&mut helper, lp_user_key, lp_user_account, usd, dec!(1000))
         .expect_commit_success();
-    market_contribute(&mut helper, lp_user_key, lp_user_account, usdt, dec!(10000))
+    market_contribute(&mut helper, lp_user_key, lp_user_account, usdt, dec!(1000))
         .expect_commit_success();
 
     // Set up borrower
@@ -1165,11 +1165,11 @@ fn test_contribute_and_borrow_limits_usage_2() {
     for _ in 1..30 {
         helper.test_runner.load_account_from_faucet(borrower_account);
     }
-    get_resource(&mut helper, borrower_key, borrower_account, dec!(300000), usd)
+    get_resource(&mut helper, borrower_key, borrower_account, dec!(10000), usd)
         .expect_commit_success();
 
     // Borrower contributes collateral
-    let collateral_amount = dec!(5000);
+    let collateral_amount = dec!(400);
 
     // Create CDP
     market_create_cdp(
@@ -1195,10 +1195,8 @@ fn test_contribute_and_borrow_limits_usage_2() {
     safe_borrow_receipt.expect_commit_success();
     println!("Safe borrow of {} USD succeeded", safe_borrow_amount);
 
-    let usdt = helper.faucet.usdt_resource_address;
-
     // Now try to borrow more, exceeding the LTV limit
-    let excess_borrow_amount = collateral_amount * dec!(0.7); // Additional 70%, total would be 100%
+    let excess_borrow_amount = collateral_amount * dec!(0.7); // Additional 70%, total would be 140%
     let excess_borrow_receipt = market_borrow(
         &mut helper,
         borrower_key,
@@ -1211,4 +1209,3 @@ fn test_contribute_and_borrow_limits_usage_2() {
     // This borrow should fail
     assert!(excess_borrow_receipt.is_commit_failure(), "Excess borrow should have failed");
 }
-

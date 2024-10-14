@@ -200,6 +200,40 @@ impl MarketTestHelper {
                     )
                 ),
             )
+            .call_method(
+                market_component_address,
+                "create_lending_pool",
+                manifest_args!(
+                    price_feed.price_feed_component_address,
+                    faucet.usdt_resource_address,
+                    (
+                        dec!("0.2"),
+                        dec!("0.15"),
+                        dec!("0.08"),
+                        dec!("0.001"),
+                        1u8,
+                        dec!("0"),
+                        dec!("1"),
+                        None::<Decimal>,
+                        None::<Decimal>,
+                        Some(dec!("0.99")),
+                        5i64,
+                        15i64,
+                        240i64,
+                        dec!("0.8"),
+                    ),
+                    (
+                        dec!(0), dec!(0.04), dec!(0.75)
+                    ),
+                    (
+                        Some(dec!("0.75")),
+                        Some(dec!("0.75")),
+                        IndexMap::<ResourceAddress, Decimal>::new(),
+                        IndexMap::<u8, Decimal>::new(),
+                        dec!("0.75")
+                    )
+                ),
+            )
             .deposit_batch(owner_account_address)
             .build();
 
