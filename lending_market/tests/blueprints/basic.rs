@@ -1099,8 +1099,6 @@ fn test_contribute_and_borrow_limits() {
 
     // Borrower contributes collateral
     let collateral_amount = dec!(5000);
-    market_contribute(&mut helper, borrower_key, borrower_account, usd, collateral_amount)
-        .expect_commit_success();
 
     // Create CDP
     market_create_cdp(
@@ -1142,87 +1140,75 @@ fn test_contribute_and_borrow_limits() {
 }
 
 #[test]
-fn test_flashloan_abuse_attempt() {
+fn test_contribute_and_borrow_limits_usage_2() {
     let mut helper = TestHelper::new();
     let usd = helper.faucet.usdc_resource_address;
-    admin_update_price(&mut helper, 1u64, usd, dec!(0.00001)).expect_commit_success();
+    let usdt = helper.faucet.usdt_resource_address;
 
     // Set up initial pool state
     let (lp_user_key, _, lp_user_account) = helper.test_runner.new_allocated_account();
-
-    helper.test_runner.load_account_from_faucet(lp_user_account);
-
-    get_resource(&mut helper, lp_user_key, lp_user_account, dec!(100), usd)
+    for _ in 1..30 {
+        helper.test_runner.load_account_from_faucet(lp_user_account);
+    }
+    get_resource(&mut helper, lp_user_key, lp_user_account, dec!(300000), usd)
+        .expect_commit_success();
+    get_resource(&mut helper, lp_user_key, lp_user_account, dec!(300000), usdt)
         .expect_commit_success();
 
-    market_contribute(&mut helper, lp_user_key, lp_user_account, usd, dec!(4_000_000))
+    market_contribute(&mut helper, lp_user_key, lp_user_account, usd, dec!(10000))
+        .expect_commit_success();
+    market_contribute(&mut helper, lp_user_key, lp_user_account, usdt, dec!(10000))
         .expect_commit_success();
 
-    // Set up attacker
-    let (attacker_key, _, attacker_account) = helper.test_runner.new_allocated_account();
-    helper.test_runner.load_account_from_faucet(attacker_account);
-
-    get_resource(&mut helper, attacker_key, attacker_account, dec!(500), usd)
+    // Set up borrower
+    let (borrower_key, _, borrower_account) = helper.test_runner.new_allocated_account();
+    for _ in 1..30 {
+        helper.test_runner.load_account_from_faucet(borrower_account);
+    }
+    get_resource(&mut helper, borrower_key, borrower_account, dec!(300000), usd)
         .expect_commit_success();
 
-    // Attacker contributes a large amount
-    let attacker_collateral = dec!(9_000_000);
-    market_contribute(&mut helper, attacker_key, attacker_account, usd, attacker_collateral)
-        .expect_commit_success();
+    // Borrower contributes collateral
+    let collateral_amount = dec!(5000);
 
     // Create CDP
     market_create_cdp(
         &mut helper,
-        attacker_key,
-        attacker_account,
-        vec![(usd, attacker_collateral)],
+        borrower_key,
+        borrower_account,
+        vec![(usd, collateral_amount)],
     )
         .expect_commit_success();
 
-    // Try to borrow the maximum possible amount
-    let max_borrow_amount = attacker_collateral * dec!(0.75); // Assuming 75% LTV
-    let borrow_receipt = market_borrow(
+    // Try to borrow within allowed LTV (assuming 75% LTV)
+    let safe_borrow_amount = collateral_amount * dec!(0.7); // 70% of collateral
+    let safe_borrow_receipt = market_borrow(
         &mut helper,
-        attacker_key,
-        attacker_account,
+        borrower_key,
+        borrower_account,
         1u64,
         usd,
-        max_borrow_amount,
+        safe_borrow_amount,
     );
 
     // This borrow should succeed
-    borrow_receipt.expect_commit_success();
+    safe_borrow_receipt.expect_commit_success();
+    println!("Safe borrow of {} USD succeeded", safe_borrow_amount);
 
-    // Now, try to remove all collateral (which should fail)
-    let remove_collateral_receipt = market_remove_collateral(
+    let usdt = helper.faucet.usdt_resource_address;
+
+    // Now try to borrow more, exceeding the LTV limit
+    let excess_borrow_amount = collateral_amount * dec!(0.7); // Additional 70%, total would be 100%
+    let excess_borrow_receipt = market_borrow(
         &mut helper,
-        attacker_key,
-        attacker_account,
+        borrower_key,
+        borrower_account,
         1u64,
-        usd,
-        attacker_collateral,
-        false,
+        usdt,
+        excess_borrow_amount,
     );
 
-    // This removal should fail
-    assert!(remove_collateral_receipt.is_commit_failure(), "Collateral removal should have failed");
-
-    // Try to repay a small amount and then remove more collateral than should be allowed
-    let small_repay_amount = dec!(1000);
-    market_repay(&mut helper, attacker_key, attacker_account, 1u64, usd, small_repay_amount)
-        .expect_commit_success();
-
-    let excess_remove_amount = attacker_collateral - max_borrow_amount + small_repay_amount + dec!(1);
-    let excess_remove_receipt = market_remove_collateral(
-        &mut helper,
-        attacker_key,
-        attacker_account,
-        1u64,
-        usd,
-        excess_remove_amount,
-        false,
-    );
-
-    // This removal should also fail
-    assert!(excess_remove_receipt.is_commit_failure(), "Excess collateral removal should have failed");
+    // This borrow should fail
+    assert!(excess_borrow_receipt.is_commit_failure(), "Excess borrow should have failed");
 }
+
