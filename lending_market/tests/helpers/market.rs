@@ -200,40 +200,6 @@ impl MarketTestHelper {
                     )
                 ),
             )
-            .call_method(
-                market_component_address,
-                "create_lending_pool",
-                manifest_args!(
-                    price_feed.price_feed_component_address,
-                    faucet.usdt_resource_address,
-                    (
-                        dec!("0.2"),
-                        dec!("0.15"),
-                        dec!("0.08"),
-                        dec!("0.001"),
-                        1u8,
-                        dec!("0"),
-                        dec!("1"),
-                        None::<Decimal>,
-                        None::<Decimal>,
-                        Some(dec!("0.99")),
-                        5i64,
-                        15i64,
-                        240i64,
-                        dec!("0.8"),
-                    ),
-                    (
-                        dec!(0), dec!(0.04), dec!(0.75)
-                    ),
-                    (
-                        Some(dec!("0.75")),
-                        Some(dec!("0.75")),
-                        IndexMap::<ResourceAddress, Decimal>::new(),
-                        IndexMap::<u8, Decimal>::new(),
-                        dec!("0.75")
-                    )
-                ),
-            )
             .deposit_batch(owner_account_address)
             .build();
 
@@ -448,6 +414,72 @@ impl MarketTestHelper {
             (
                 result6.new_component_addresses()[0],
                 result6.new_resource_addresses()[0],
+            ),
+        );
+
+        // Initialize USDT lending pool
+
+        let manifest7 = ManifestBuilder::new()
+            .lock_fee_from_faucet()
+            .create_proof_from_account_of_non_fungibles(
+                owner_account_address,
+                market_admin_badge,
+                vec![
+                    NonFungibleLocalId::integer(1),
+                    NonFungibleLocalId::integer(2),
+                    NonFungibleLocalId::integer(3),
+                    NonFungibleLocalId::integer(6),
+                ],
+            )
+            .call_method(
+                market_component_address,
+                "create_lending_pool",
+                manifest_args!(
+                    price_feed.price_feed_component_address,
+                    faucet.usdt_resource_address,
+                    (
+                        dec!("0.2"),
+                        dec!("0.15"),
+                        dec!("0.08"),
+                        dec!("0.001"),
+                        1u8,
+                        dec!("0"),
+                        dec!("1"),
+                        None::<Decimal>,
+                        None::<Decimal>,
+                        Some(dec!("0.99")),
+                        5i64,
+                        15i64,
+                        240i64,
+                        dec!("0.8"),
+                    ),
+                    (
+                        dec!(0), dec!(0.04), dec!(0.75)
+                    ),
+                    (
+                        Some(dec!("0.75")),
+                        Some(dec!("0.75")),
+                        IndexMap::<ResourceAddress, Decimal>::new(),
+                        IndexMap::<u8, Decimal>::new(),
+                        dec!("0.75")
+                    )
+                ),
+            )
+            .deposit_batch(owner_account_address)
+            .build();
+
+        let receipt7 = test_runner.execute_manifest(
+            manifest7,
+            vec![NonFungibleGlobalId::from_public_key(&owner_public_key)],
+        );
+
+        let result7 = receipt7.expect_commit(true);
+
+        pools.insert(
+            faucet.usdt_resource_address,
+            (
+                result7.new_component_addresses()[0],
+                result7.new_resource_addresses()[0],
             ),
         );
 

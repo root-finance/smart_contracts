@@ -1209,3 +1209,143 @@ fn test_contribute_and_borrow_limits_usage_2() {
     // This borrow should fail
     assert!(excess_borrow_receipt.is_commit_failure(), "Excess borrow should have failed");
 }
+
+#[test]
+fn test_zeroing_of_pool_and_contribution() {
+    let mut helper = TestHelper::new();
+    let usd = helper.faucet.usdc_resource_address;
+    let usdt = helper.faucet.usdt_resource_address;
+
+    // Set up initial pool state
+    let (lp_user_key, _, lp_user_account) = helper.test_runner.new_allocated_account();
+    for _ in 1..30 {
+        helper.test_runner.load_account_from_faucet(lp_user_account);
+    }
+
+    get_resource(&mut helper, lp_user_key, lp_user_account, dec!(100000), usd)
+        .expect_commit_success();
+
+    market_contribute(&mut helper, lp_user_key, lp_user_account, usd, dec!(500))
+        .expect_commit_success();
+
+    let pool = helper.market.pools.get(&usd).unwrap().clone();
+
+    let balanceAfterContribution = helper.test_runner.get_component_balance(pool.0, usd);
+    assert_eq!(balanceAfterContribution, dec!(500));
+
+    // Set up borrower
+    let (borrower_key, _, borrower_account) = helper.test_runner.new_allocated_account();
+    for _ in 1..30 {
+        helper.test_runner.load_account_from_faucet(borrower_account);
+    }
+    get_resource(&mut helper, borrower_key, borrower_account, dec!(25000), usdt)
+        .expect_commit_success();
+
+    // Borrower contributes collateral
+    let collateral_amount = dec!(1000);
+
+    // Create CDP (usdt)
+    market_create_cdp(
+        &mut helper,
+        borrower_key,
+        borrower_account,
+        vec![(usdt, collateral_amount)],
+    )
+        .expect_commit_success();
+
+    let borrow_amount = dec!(500);
+    // Borrow 100% USDT from the pool.
+    let borrow_receipt = market_borrow(
+        &mut helper,
+        borrower_key,
+        borrower_account,
+        1u64,
+        usd,
+        borrow_amount,
+
+    );
+    borrow_receipt.expect_commit_success();
+    //get usd pool state
+    let balance = helper.test_runner.get_component_balance(pool.0, usd);
+    assert_eq!(balance, dec!(0));
+
+    market_update_pool_state(&mut helper, usd).expect_commit_success();
+
+    //Deposit some more:
+    market_contribute(&mut helper, lp_user_key, lp_user_account, usd, dec!(500))
+        .expect_commit_success();
+
+}
+
+
+#[test]
+fn test_zeroing_of_pool_and_contribution_2() {
+    let mut helper = TestHelper::new();
+    let usd = helper.faucet.usdc_resource_address;
+    let usdt = helper.faucet.usdt_resource_address;
+
+    // Set up initial pool state
+    let (lp_user_key, _, lp_user_account) = helper.test_runner.new_allocated_account();
+    for _ in 1..30 {
+        helper.test_runner.load_account_from_faucet(lp_user_account);
+    }
+
+    get_resource(&mut helper, lp_user_key, lp_user_account, dec!(100000), usd)
+        .expect_commit_success();
+
+    market_contribute(&mut helper, lp_user_key, lp_user_account, usd, dec!(500))
+        .expect_commit_success();
+
+    let pool = helper.market.pools.get(&usd).unwrap().clone();
+
+    let balanceAfterContribution = helper.test_runner.get_component_balance(pool.0, usd);
+    assert_eq!(balanceAfterContribution, dec!(500));
+
+    // Set up borrower
+    let (borrower_key, _, borrower_account) = helper.test_runner.new_allocated_account();
+    for _ in 1..30 {
+        helper.test_runner.load_account_from_faucet(borrower_account);
+    }
+    get_resource(&mut helper, borrower_key, borrower_account, dec!(25000), usdt)
+        .expect_commit_success();
+
+    // Borrower contributes collateral
+    let collateral_amount = dec!(1000);
+
+    // Create CDP (usdt)
+    market_create_cdp(
+        &mut helper,
+        borrower_key,
+        borrower_account,
+        vec![(usdt, collateral_amount)],
+    )
+        .expect_commit_success();
+
+    let borrow_amount = dec!(500);
+    // Borrow 100% USDT from the pool.
+    let borrow_receipt = market_borrow(
+        &mut helper,
+        borrower_key,
+        borrower_account,
+        1u64,
+        usd,
+        borrow_amount,
+
+    );
+    borrow_receipt.expect_commit_success();
+    //get usd pool state
+    let balance = helper.test_runner.get_component_balance(pool.0, usd);
+    assert_eq!(balance, dec!(0));
+
+    market_update_pool_state(&mut helper, usd).expect_commit_success();
+
+    //Deposit some more:
+    market_create_cdp(
+        &mut helper,
+        lp_user_key,
+        lp_user_account,
+        vec![(usd, dec!(100))],
+    )
+        .expect_commit_success();
+
+}
