@@ -25,7 +25,8 @@ mod lending_market {
         //
         // "package_sim1p4nk9h5kw2mcmwn5u2xcmlmwap8j6dzet7w7zztzz55p70rgqs4vag", // resim sdk
         // "package_sim1pkc0e8f9yhlvpv38s2ymrplu7q366y3k8zc53zf2srlm7qm64fk043", // testing
-        "package_tdx_2_1p456y0v4nvgvdv0v6at8zt7zwlkye59xvpzde5jjgje7wqplvumjp0",  // stokenet
+        // "package_tdx_2_1p456y0v4nvgvdv0v6at8zt7zwlkye59xvpzde5jjgje7wqplvumjp0",  // stokenet
+        "package_rdx1pkhvtjl4m968u3jlxmehnszxwn0kzake49wvfw4x45lu43eqm96c80", //mainnet
         SingleResourcePool {
 
             fn instantiate(

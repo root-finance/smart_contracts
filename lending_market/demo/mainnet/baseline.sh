@@ -3,20 +3,17 @@
 echo "" > tx.rtm;
 
 # ------------------------------------------------------------------------------------ Reinitialize
-OWNER_ADDRESS=account_tdx_2_12y5yhfvsd7ya0jsvv5p8v5m9jvmudkfqjknwy2j84uduh90kpvk8ch
-XRD=resource_tdx_2_1tknxxxxxxxxxradxrdxxxxxxxxx009923554798xxxxxxxxxtfd2jc
-SUPRA_PROOF=5c2101202101040a000000000000000020072097005e53b1a210741ce728e51ee02345267f7c429086d199b67f870b3f1799ee2007608ae6587fbd751aced028d0e5314e6a5dd606b760aea03a077e0b6f4ac2efdd42c3f559284e305dade21569980761f8a9138edd0a2423fc07348457f3564350795b0e00ee8ec713d818099e57b6907e3a4c673fe076bc7931169225314b839c2420210102210509140100000b0080a4a61971d60000000000000000000a9016e8e08e0100000812000a5015e8e08e0100002020090720dd5490e8c99e44e441c86b514cf4f7c1d3b0b1e82d6a2efcefbc3c3c236b6a520720d9503c6895245d1c69b261d083687abb08a4a21ffe33f0405b8ea16c42f9647e07208fb25af57390a0555ed7d04b1ece82c00df85fd5b5cf4985bcbb160cc8fa318807205ff7d20a6d4b8e63d9feeae85564195f40e70cac0a10a39ed286451efa0fd96007205ca0c5d8981c5bebf80eb759450add92176e6b04a8c1e8062be3a31a790a17dd0720daff9a68fbb4762377d825c2ab4c84fee793a818d82fe7e49fd77dd852547fc7072063ec35bd32b820452f8e5dd329484d6189daca59f38bd318f717fda4677cccd307200a6eaeb7e0927c73e734d29363f833b6d39dcaec225fabb11e0aa28dc16a919107200b6e5c5d2ad0b3e32eb90343b3a71e1aeeeeb25d2a4540d9fb1627e830bee6b0
+OWNER_ADDRESS=account_rdx12ykkpf2v0f3hdqtez9yjhyt04u5ct455aqkq5scd5hlecwf20hcvd2
+XRD=resource_rdx1tknxxxxxxxxxradxrdxxxxxxxxx009923554798xxxxxxxxxradxrd
 
 
 # ------------------------------------------------------------------------------------ Instantiate packages
 
-PRICE_FEED_PACKAGE=package_tdx_2_1p5lknmvchhuwwdecrler9edjlvguf2fzdck3jm4aq2vre7v27r9sjl
+PRICE_FEED_PACKAGE=package_rdx1phwl26ara0qfcjl4f2w2fjl7jpsc432aa382uswqj88sj6jqc6anrh
 
-POOL_PACKAGE=package_tdx_2_1p456y0v4nvgvdv0v6at8zt7zwlkye59xvpzde5jjgje7wqplvumjp0
+POOL_PACKAGE=package_rdx1pkhvtjl4m968u3jlxmehnszxwn0kzake49wvfw4x45lu43eqm96c80
 
-LENDING_MARKET_PACKAGE=package_tdx_2_1pk07dw324vwcvr75dk2p39yjt33jc6ndvd5zmn8p5k66a6zwjshdnr
-
-FAUCET_PACKAGE=package_tdx_2_1ph0c86sfdzeeyur58rz3gev8yd2ed45q8jxn3a50d807k5kqdeq7aj
+LENDING_MARKET_PACKAGE=package_rdx1phwak2lr7nczzl6rxzvtnjwszmvxqycp9h8pckcmy6uwdcucnjeu0p
 
 # ------------------------------------------------------------------------------------ Mint badges
 
@@ -29,44 +26,16 @@ echo "CALL_METHOD
     Address(\"$OWNER_ADDRESS\")
     \"deposit_batch\"
     Expression(\"ENTIRE_WORKTOP\");" >> tx.rtm
-PRICE_FEED_COMPONENT_ADDRESS=component_tdx_2_1cq4nv43cdntjn6wcas7wlf7fa7eaq0p9y7e5ekytlg54k6rm6v6hv5
-PRICE_FEED_ADMIN_BADGE=resource_tdx_2_1ntc5r00pcamge975rfnl5zu9tc9e303vdegephxpx4ex0ud4wv4gq0
-PRICE_FEED_UPDATER_BADGE=resource_tdx_2_1ngpcsxhyc2q0a05hsycp2yrase0whd6hwkexrdtt8qnpc94ulc2455
+PRICE_FEED_COMPONENT_ADDRESS=component_rdx1cr9alunsmm5c42275fh0rh3kvqfupdhlf84tnkawspq6as7cysqn98
+PRICE_FEED_ADMIN_BADGE=resource_rdx1nt72dpj5meu9nemwprkr0w7jqsywy7g9qafcgsvt6s4vnc0lk8lm8h
+PRICE_FEED_UPDATER_BADGE=resource_rdx1nf0ktp0jqhn46t9rk3sgsa3dhwjz7asd9g72kx3l5u38d2zapxkrcf
 
-echo "CALL_FUNCTION
-    Address(\"$FAUCET_PACKAGE\")
-    \"Faucet\"
-    \"instantiate\"
-    Address(\"$PRICE_FEED_COMPONENT_ADDRESS\");" >> tx.rtm
-
-echo "CALL_METHOD
-    Address(\"$OWNER_ADDRESS\")
-    \"deposit_batch\"
-    Expression(\"ENTIRE_WORKTOP\");" >> tx.rtm
-FAUCET_COMPONENT_ADDRESS=component_tdx_2_1cqzu85x8sa34sgxn05dz03jq492c3f5q5k9vusjm6pl0ca6ths4ymd
-FAUCET_ADMIN_BADGE=resource_tdx_2_1nt6l07kdv4w3ssaf7k9n5zvvyntwgtw4927vz5hjg9x56pq50qpnmk
-
-# ------------------------------------------------------------------------------------ Instantiate resources
-echo "CALL_METHOD Address(\"$OWNER_ADDRESS\") \"create_proof_of_non_fungibles\"  Address(\"$FAUCET_ADMIN_BADGE\")  Array<NonFungibleLocalId>(NonFungibleLocalId(\"#1#\"));" >> tx.rtm
-echo "CALL_METHOD Address(\"$FAUCET_COMPONENT_ADDRESS\") \"create_resource\" \"xUSDT\" \"xUSDT\" \"https://res.cloudinary.com/daisvxhyu/image/upload/v1679440531/825_lkjddk.png\"  Decimal(\"1000000\");" >> tx.rtm
-echo "CALL_METHOD Address(\"$OWNER_ADDRESS\") \"create_proof_of_non_fungibles\"  Address(\"$FAUCET_ADMIN_BADGE\")  Array<NonFungibleLocalId>(NonFungibleLocalId(\"#1#\"));" >> tx.rtm
-echo "CALL_METHOD Address(\"$FAUCET_COMPONENT_ADDRESS\") \"create_resource\" \"xWBTC\" \"xWBTC\" \"https://res.cloudinary.com/daisvxhyu/image/upload/v1679440531/825_lkjddk.png\"  Decimal(\"1000000\");" >> tx.rtm
-echo "CALL_METHOD Address(\"$OWNER_ADDRESS\") \"create_proof_of_non_fungibles\"  Address(\"$FAUCET_ADMIN_BADGE\")  Array<NonFungibleLocalId>(NonFungibleLocalId(\"#1#\"));" >> tx.rtm
-echo "CALL_METHOD Address(\"$FAUCET_COMPONENT_ADDRESS\") \"create_resource\" \"xETH\" \"xETH\" \"https://res.cloudinary.com/daisvxhyu/image/upload/v1679440531/825_lkjddk.png\"  Decimal(\"1000000\");" >> tx.rtm
-echo "CALL_METHOD Address(\"$OWNER_ADDRESS\") \"create_proof_of_non_fungibles\"  Address(\"$FAUCET_ADMIN_BADGE\")  Array<NonFungibleLocalId>(NonFungibleLocalId(\"#1#\"));" >> tx.rtm
-echo "CALL_METHOD Address(\"$FAUCET_COMPONENT_ADDRESS\") \"create_resource\" \"LSU\" \"LSU\" \"https://res.cloudinary.com/daisvxhyu/image/upload/v1679440531/825_lkjddk.png\"  Decimal(\"1000000\");" >> tx.rtm
-echo "CALL_METHOD Address(\"$OWNER_ADDRESS\") \"create_proof_of_non_fungibles\"  Address(\"$FAUCET_ADMIN_BADGE\")  Array<NonFungibleLocalId>(NonFungibleLocalId(\"#1#\"));" >> tx.rtm
-echo "CALL_METHOD Address(\"$FAUCET_COMPONENT_ADDRESS\") \"create_resource\" \"HUG\" \"HUG\" \"https://res.cloudinary.com/daisvxhyu/image/upload/v1679440531/825_lkjddk.png\"  Decimal(\"1000000\");" >> tx.rtm
-echo "CALL_METHOD Address(\"$OWNER_ADDRESS\") \"create_proof_of_non_fungibles\"  Address(\"$FAUCET_ADMIN_BADGE\")  Array<NonFungibleLocalId>(NonFungibleLocalId(\"#1#\"));" >> tx.rtm
-echo "CALL_METHOD Address(\"$FAUCET_COMPONENT_ADDRESS\") \"create_resource\" \"xUSDC\" \"xUSDC\" \"https://res.cloudinary.com/daisvxhyu/image/upload/v1679440531/825_lkjddk.png\"  Decimal(\"1000000\");" >> tx.rtm
-echo "CALL_METHOD Address(\"$OWNER_ADDRESS\") \"deposit_batch\" Expression(\"ENTIRE_WORKTOP\");" >> tx.rtm
-
-USDT_RESOURCE_ADDRESS=resource_tdx_2_1t4mnpjclyk5w994fgercpyfpprqt839wwjywqnxunq96pkdkssx80r
-XWBTC_RESOURCE_ADDRESS=resource_tdx_2_1thc05pngjmyrvjnwultf3ajtx8z4z9q8pn4qnhrknwpax7yeld0h8m
-XETH_RESOURCE_ADDRESS=resource_tdx_2_1t4m9d5493yz9uux0jc95gz0kwu6zhxa3cwwycnuy4tul4ess6apdyp
-LSU_RESOURCE_ADDRESS=resource_tdx_2_1t5q69gymymlleyxx2y8glsjvs6x30hs9dknhce6ten3v7zhrd6lwrd
-HUG_RESOURCE_ADDRESS=resource_tdx_2_1thvu4phuexzp794xa6p0ng0p4768pv6lgszx62lsxxk49jd0p2kgyy
-XUSDC_RESOURCE_ADDRESS=resource_tdx_2_1t5u0vxy0f95dyhk5frz50z4qae0hc760lr4gr6e63jaray7xl03cx4
+USDT_RESOURCE_ADDRESS=resource_rdx1thrvr3xfs2tarm2dl9emvs26vjqxu6mqvfgvqjne940jv0lnrrg7rw
+XWBTC_RESOURCE_ADDRESS=resource_rdx1t580qxc7upat7lww4l2c4jckacafjeudxj5wpjrrct0p3e82sq4y75
+XETH_RESOURCE_ADDRESS=resource_rdx1th88qcj5syl9ghka2g9l7tw497vy5x6zaatyvgfkwcfe8n9jt2npww
+LSU_RESOURCE_ADDRESS=resource_rdx1thksg5ng70g9mmy9ne7wz0sc7auzrrwy7fmgcxzel2gvp8pj0xxfmf
+HUG_RESOURCE_ADDRESS=resource_rdx1t5kmyj54jt85malva7fxdrnpvgfgs623yt7ywdaval25vrdlmnwe97
+XUSDC_RESOURCE_ADDRESS=resource_rdx1t4upr78guuapv5ept7d7ptekk9mqhy605zgms33mcszen8l9fac8vf
 
 # ------------------------------------------------------------------------------------ Set prices
 echo "CALL_METHOD Address(\"$OWNER_ADDRESS\") \"create_proof_of_non_fungibles\"  Address(\"$PRICE_FEED_ADMIN_BADGE\")  Array<NonFungibleLocalId>(NonFungibleLocalId(\"#1#\"));" >> tx.rtm
@@ -103,20 +72,20 @@ echo "CALL_METHOD
     Expression(\"ENTIRE_WORKTOP\");" >> tx.rtm
 
 
-LENDING_MARKET_COMPONENT_ADDRESS=component_tdx_2_1cpymwmdxzgshkjl86lw2fakd9kgkvqtqapudhdtmralfcsy5zay8cu
-LENDING_MARKET_ADMIN_ADDRESS=resource_tdx_2_1nfkqcvcu9x88tlnwkwvryphqpnrq0jjns8nh7v3fr90m25hxp4h8pe
-LENDING_MARKET_RESERVE_COLLECTOR_BADGE=resource_tdx_2_1nf8rrrcs96uyjl3nmr8vfknejnhv0qhlgswxw3my8lz20ja8c062gs
-LENDING_MARKET_CDP_RESOURCE_ADDRESS=resource_tdx_2_1nfza24sm2yat9qjqnmzjvv00d84p4jclznq0vpyw7m49ycuwj4r4r0
-LENDING_BATCH_FLASH_LOAN_RESOURCE_ADDRESS=resource_tdx_2_1nt6vjncnvguw2kzgfmj32w48nlrw5xl78mkr5wrzjw8vy2uzj2za88
-LENDING_LIQUIDATION_TERM_RESOURCE_ADDRESS=resource_tdx_2_1nt6vjncnvguw2kzgfmj32w48nlrw5xl78mkr5wrzjw8vy2uzj2za88
-LENDING_MARKET_LIQUIDATOR_BADGE=resource_tdx_2_1nf3lvgl02y5qnxwh0edvawsyzcghswe0vka82ec3jqswzga2jk7men
+LENDING_MARKET_COMPONENT_ADDRESS=component_rdx1crwusgp2uy9qkzje9cqj6pdpx84y94ss8pe7vehge3dg54evu29wtq
+LENDING_MARKET_ADMIN_ADDRESS=resource_rdx1nf7n5vnkqmuja5l0wukkmzqkg73xa9gg0pzm9ykh89yuw4qz6a69d5
+LENDING_MARKET_RESERVE_COLLECTOR_BADGE=resource_rdx1ngn0nm64u90m2gd376axlq5nr64cplx2m7r6ut5lejv8s6ywhf47lc
+LENDING_MARKET_CDP_RESOURCE_ADDRESS=resource_rdx1ngekvyag42r0xkhy2ds08fcl7f2ncgc0g74yg6wpeeyc4vtj03sa9f
+LENDING_BATCH_FLASH_LOAN_RESOURCE_ADDRESS=resource_rdx1ntegfaj82psqes6hd8pk22qdmy3npj0eyjzx47cynfnrd4czkh9ffg
+LENDING_LIQUIDATION_TERM_RESOURCE_ADDRESS=resource_rdx1ntegfaj82psqes6hd8pk22qdmy3npj0eyjzx47cynfnrd4czkh9ffg
+LENDING_MARKET_LIQUIDATOR_BADGE=resource_rdx1n23fjz2v7fm6wz48r6q728h5kqtwf3qswmdgfuzd558zvs9ezfwv9q
 
 
 # ------------------------------------------------------------------------------------ Create liquidity pools
 echo "CALL_METHOD Address(\"$OWNER_ADDRESS\") \"create_proof_of_non_fungibles\" Address(\"$LENDING_MARKET_ADMIN_ADDRESS\") Array<NonFungibleLocalId>(NonFungibleLocalId(\"#1#\"),NonFungibleLocalId(\"#2#\"),NonFungibleLocalId(\"#3#\"),NonFungibleLocalId(\"#4#\"));" >> tx.rtm
 echo "CALL_METHOD Address(\"$LENDING_MARKET_COMPONENT_ADDRESS\") \"create_lending_pool\" Address(\"$PRICE_FEED_COMPONENT_ADDRESS\") Address(\"$XRD\")
     Tuple(
-        Decimal(\"0.35\"),
+        Decimal(\"0.3\"),
         Decimal(\"0.15\"),
         Decimal(\"0.08\"),
         Decimal(\"0.001\"),
@@ -250,7 +219,7 @@ echo "CALL_METHOD Address(\"$LENDING_MARKET_COMPONENT_ADDRESS\") \"create_lendin
 
 #echo "CALL_METHOD Address(\"$LENDING_MARKET_COMPONENT_ADDRESS\") \"create_lending_pool\" Address(\"$PRICE_FEED_COMPONENT_ADDRESS\") Address(\"$LSU_RESOURCE_ADDRESS\")
 #    Tuple(
-#        Decimal(\"0.35\"),
+#        Decimal(\"0.3\"),
 #        Decimal(\"0.15\"),
 #        Decimal(\"0.08\"),
 #        Decimal(\"0.001\"),
